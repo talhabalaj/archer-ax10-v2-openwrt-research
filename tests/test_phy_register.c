@@ -53,7 +53,7 @@ struct trace {
     struct axd_phy_register *cancel_job;
     uint16_t bookkeeping, last_read, result, saved[2];
     uint8_t valid;
-    unsigned snapshot_active;
+    unsigned snapshot_active, result_valid;
 };
 static struct axd_phy_context context_for(unsigned cores)
 {
@@ -106,12 +106,13 @@ static void run(struct axd_phy_register *job, struct trace *t)
             const struct event *e = &t->events[before];
             if (e->kind == AXD_D11_READ16) t->last_read = (uint16_t)e->reply;
             if (e->effects & BOOK_ZERO) t->bookkeeping = 0;
-            if (e->effects & RESULT) t->result = e->result;
+            if (e->effects & RESULT) { t->result = e->result; t->result_valid = 1; }
             if (e->effects & SLOT0) { t->saved[0] = e->saved; t->valid |= 1; }
             if (e->effects & SLOT1) { t->saved[1] = e->saved; t->valid |= 2; }
         }
         assert(job->context.bookkeeping == t->bookkeeping && job->last_read == t->last_read);
-        assert(job->result == t->result && job->context.snapshot_valid == t->valid);
+        assert(job->result == t->result && job->result_valid == t->result_valid);
+        assert(job->context.snapshot_valid == t->valid);
         assert(job->context.saved_tssi[0] == t->saved[0] && job->context.saved_tssi[1] == t->saved[1]);
         if (phase != AXD_PHY_RUNNING) return;
     }

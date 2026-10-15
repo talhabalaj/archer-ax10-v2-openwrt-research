@@ -170,4 +170,6 @@ The packed helper's own selector-at-least-`0xc000` table-write branch was not
 expanded, since the read path only writes logical selectors `0x0d/0x0e`.
 Other table widths/IDs, physical table automatic cursor behavior, runtime bus
 and threshold acquisition, host ownership, and later calibration/radio paths
-remain outside this bounded read contract. This report does not implement the recovered table-reader path.
+remain outside this bounded read contract. The separate
+[table model](PHY_TABLE_MODEL.md) and [TSSI coordinator](PHY_TSSI_MODEL.md) now
+implement this recovered read/callback subset; runtime hardware remains untested.

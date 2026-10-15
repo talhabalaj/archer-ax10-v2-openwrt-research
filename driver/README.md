@@ -41,6 +41,13 @@ All original code here uses the repository's MIT license.
 - `phy_register.c`: direct PHY read/modify, analog/reset pulse and one/two-core
   TSSI snapshot/restore with explicit partial validity and commit boundaries.
   High reads and three/four-core TSSI expose table dependency.
+- `phy_table.c`: table29/count1/width32 wrapper using real PHY and PSM children,
+  packed32 header writes, counter-dependent flushes and explicit partial words.
+- `phy_tssi.c`: all-core-count callback with a four-slot buffer, real repeated
+  table reads for extra slots and direct lower-slot masked restores. Outer
+  MAC/PHY-entry/wake nesting remains separate required work.
+- `phy_clock.c`: AI core-flags, PHY clock enable/disable, bandwidth preparation
+  and optional secondary-core workaround, with typed owned wrapper resources.
 - `effective_init.c`: context-dependent initialization semantics with explicit
   `0x130` addend, width truncation and a separate semantic object-copy operation.
   Whole-table preflight validates caller-supplied bounds before callbacks.
@@ -133,7 +140,14 @@ The checks passed on 2026-10-15:
 - The optional Unicorn2.1.4 harness executes actual selected stock ARM functions:
   264 synthetic PHY read/modify/analog cases match C, widths, barriers and
   bookkeeping. Mutants and rejection probes fail as expected.
-- All twelve C files cross-compile with Clang for `armv7-none-eabi` in freestanding
+- Composed table/TSSI/PHY-clock independent tests cover actual child calls,
+  partial contexts/results, exact widths/ordering, all core counts, fresh samples
+  and callback error/cancellation boundaries.
+- A separate composed ARM harness matches 512 all-count TSSI and 270 table /
+  high-selector C cases using ten actual selected functions; 16 standalone
+  packed-write literal fixtures and seven call/dispatch rejection probes pass.
+  MAC is inactive in those comparisons; active paths remain C trace tests.
+- All fifteen C files cross-compile with Clang for `armv7-none-eabi` in freestanding
   mode with warnings treated as errors. This proves compilation, not linking
   into Linux, execution on ARM or hardware behavior.
 
@@ -188,9 +202,9 @@ firmware/table versions must not be silently mixed.
 
 ## Next implementation boundary
 
-Use the tested D11/ChipCommon and direct PHY/TSSI/reset jobs. Implement the
-recovered table-read/packed-write and PHY-clock/core-flags/wake contracts,
-resolve resource/optional dependencies, and compose the full higher reset
+Use the tested D11/ChipCommon, table/TSSI, PHY-clock and direct reset jobs.
+Implement outer PHY-register/wake nesting, actual SI/clock composition and
+remaining resource/optional dependencies, then compose the full higher reset
 with proven runtime resources. Complete wake policy and MBSS/fatal callouts;
 main-enable `DEPENDENCY` remains unfinished work. See
 [resource evidence](../docs/DRIVER_RESOURCE_AUDIT.md),
@@ -198,6 +212,10 @@ main-enable `DEPENDENCY` remains unfinished work. See
 [ChipCommon model](../docs/CHIPCOMMON_CLOCK_MODEL.md),
 [PHY model and optional ARM comparison](../docs/PHY_REGISTER_MODEL.md),
 [table-read contract](../docs/DRIVER_AC_TABLE_READ_AUDIT.md),
+[table model](../docs/PHY_TABLE_MODEL.md),
+[all-core TSSI](../docs/PHY_TSSI_MODEL.md),
+[composed ARM comparisons](../docs/PHY_COMPOSED_ARM_CHECKS.md),
+[PHY-clock model](../docs/PHY_CLOCK_MODEL.md),
 [external research and harness plan](../docs/EXISTING_REVERSE_ENGINEERING.md),
 [PSM control policies](../docs/PSM_CONTROL_MODEL.md),
 [DMA reset policies](../docs/DMA_RESET_MODEL.md) and

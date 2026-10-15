@@ -42,6 +42,10 @@ prove that an unpublished or later port cannot exist.
 - [Core 130 attach, table and microcode-selection analysis](docs/DRIVER_ATTACH_AUDIT.md)
 - [Wake/suspend/enable model and policies](docs/PSM_CONTROL_MODEL.md)
 - [Current DMA reset model and limits](docs/DMA_RESET_MODEL.md)
+- [Composed stock-ARM comparisons and relocation limits](docs/PHY_COMPOSED_ARM_CHECKS.md)
+- [Composed table-29 read and partial state](docs/PHY_TABLE_MODEL.md)
+- [All-core PHY-51 TSSI callback](docs/PHY_TSSI_MODEL.md)
+- [PHY-clock/core-flags and RSDB workaround](docs/PHY_CLOCK_MODEL.md)
 - [PHY-register/TSSI/reset model and stock-ARM comparison](docs/PHY_REGISTER_MODEL.md)
 - [ChipCommon clock body and ownership limits](docs/CHIPCOMMON_CLOCK_MODEL.md)
 - [AC table-29 read and packed PHY-write contract](docs/DRIVER_AC_TABLE_READ_AUDIT.md)
@@ -72,9 +76,9 @@ prove that an unpublished or later port cannot exist.
 Driver-first offline development is the current priority. Selection, raw-table
 replay, effective initialization, upload simulation and reset/start subsets are
 implemented; the next task is composing the remaining lifecycle/resource
-contracts, including SI/clock composition, PHY table/clock operations and wake
-policy. D11/ChipCommon clock, direct PHY/TSSI/reset, wake/suspend/enable and
-DMA-reset subsets have tests. Selected actual ARM primitives also match C under
+contracts, including SI/clock composition, outer PHY-wake nesting and reset
+coordination. Composed table reads, all-core TSSI callback and PHY-clock jobs
+join the tested D11/ChipCommon, direct PHY/reset, PSM and DMA-reset subsets. Selected actual ARM primitives also match C under
 synthetic emulation; unfinished dependencies remain explicit. PHY, DMA, RX/TX and Linux WLAN
 integration follow their recovered dependencies.
 

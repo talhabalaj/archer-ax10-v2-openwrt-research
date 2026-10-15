@@ -30,13 +30,16 @@ are bytes from the supplied current-D11 map, not physical addresses.
 
 API selectors, mask and value are explicitly u16, and successful read replies
 are narrowed to u16. `last_read` exposes that sample. READ's full16 result is
-committed after its successful final SY. Reset-pulse and analog direct writes
+committed after its successful final SY, with explicit `result_valid` even
+when the value is zero. Reset-pulse and analog direct writes
 do not acquire the helper's unrelated software-bookkeeping effects.
 
 READ selectors at least `0xc000` end `DEPENDENCY_TABLE_READ` before I/O. Their
 actual table-29 contract has now been [recovered](DRIVER_AC_TABLE_READ_AUDIT.md),
-including packed W32 header writes and MAC/PHY guards, but has not yet been
-implemented/composed here. It is not a flat direct-port read or zero result.
+including packed W32 header writes and MAC/PHY guards. The
+[separate composed table job](PHY_TABLE_MODEL.md) now implements it; the direct
+primitive still exposes a dependency for callers to dispatch explicitly. It is
+not a flat direct-port read or zero result.
 
 ## TSSI slot mapping and partial state
 
@@ -59,7 +62,8 @@ an explicit stricter policy than the stock raw buffer. Restart from
 API exposes table dependency for count three/four before I/O or context mutation.
 The [resolved stock behavior](DRIVER_AC_TABLE_READ_AUDIT.md) uses repeated
 `0xffff` table snapshot reads for those extra slots, but no-op modifies during
-restore; future implementation must preserve this asymmetry.
+restore; the [four-slot TSSI coordinator](PHY_TSSI_MODEL.md) now preserves this
+asymmetry through actual direct/table children.
 
 Each step issues at most one callback or a bounded internal transition. Errors
 and cancellation are terminal, with no invented retry, cleanup or rollback.

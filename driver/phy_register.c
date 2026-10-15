@@ -196,6 +196,7 @@ enum axd_phy_phase axd_phy_register_step(struct axd_phy_register *job,
             job->context.bookkeeping = 0;
         if (op->kind == AXD_D11_FULL_BARRIER && job->stage == READ_FINISH) {
             job->result = job->last_read;
+            job->result_valid = 1;
             if (job->command == AXD_PHY_TSSI_SNAPSHOT) {
                 job->context.saved_tssi[job->tssi_slot] = job->last_read & 0x3ffu;
                 job->context.snapshot_valid |= (uint8_t)(1u << job->tssi_slot);

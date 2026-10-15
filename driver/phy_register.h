@@ -29,7 +29,7 @@ struct axd_phy_register {
     enum axd_phy_dependency dependency;
     struct axd_phy_context context;
     uint16_t selector, mask, value, last_read, result, pulse_original;
-    unsigned stage, after_read, queued, cursor, tssi_slot;
+    unsigned stage, after_read, queued, cursor, tssi_slot, result_valid;
     struct axd_d11_operation operations[4];
     uint64_t attempted_ops, completed_ops;
 };
@@ -48,7 +48,7 @@ struct axd_phy_register {
  * context on failure/cancellation distinct from a completed snapshot.
  * RESET_PULSE includes the core130 following100us delay, then completes; it
  * excludes outer core-flags/PHY-clock, analog dispatch and TSSI operations.
- * result commits the last full16 READ/SNAPSHOT reply after successful SY;
+ * result/result_valid commit the last full16 READ/SNAPSHOT reply after SY;
  * saved_tssi stores its low10. Other commands leave result zero.
  */
 int axd_phy_register_begin(struct axd_phy_register *job,
