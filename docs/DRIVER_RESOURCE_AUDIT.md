@@ -8,6 +8,12 @@ contains actual Evidence IDs. Raw disassembly,
 pseudocode, descriptor bytes, and the exported bundle remain private. The
 session was exported and closed; the input digest was checked again.
 
+Follow-up: the [HND fallback/resource audit](DRIVER_CLOCK_FALLBACK_AUDIT.md)
+and [PHY wake/workaround addendum](DRIVER_PHY_WAKE_ADDENDUM.md) now resolve
+the bounded callees marked unexpanded below. Their implementation and runtime
+resource acquisition remain open. The [D11 clock/PLL model](CLOCK_CONTROL_MODEL.md)
+implements the direct trace subset; the original session scope below is retained.
+
 This establishes stock operation contracts, not tested hardware behavior or a
 complete driver. No router, target execution, or physical MMIO was used.
 Runtime capability, SI mapping, band/PHY context, and queue pointers remain

@@ -59,8 +59,9 @@ mutating bring-up must follow the dependencies actually recovered from stock.
 
 1. **Use the saved implementation:** effective initialization, wrapper reset and
    startup subsets have tests/evidence; preserve their exact operation contracts.
-2. **Implement the recovered clock/PLL/PHY reset contracts:** resolve runtime
-   mapping and remaining optional/imported prerequisites, then compose with
+2. **Finish recovered clock/PHY reset contracts:** D11 clock/PLL jobs are tested;
+   implement HND fallback and PHY reset, resolve runtime mapping and remaining
+   optional/imported prerequisites, then compose with
    tested AI-wrapper/DMA reset and PSM stages using explicit state.
 3. **Finish wake policy and callouts:** wake/suspend/enable register paths now
    have tests; actual BSS/scan/association policy, MBSS and fatal recovery remain
@@ -81,6 +82,15 @@ mutating bring-up must follow the dependencies actually recovered from stock.
 See the milestone acceptance criteria below. Step 5 can begin offline when its
 contracts are established; hardware completion requires step 6. The exact local
 files, validation and first action for the next session are in [PROGRESS.md](PROGRESS.md).
+
+The [external reverse-engineering research](docs/EXISTING_REVERSE_ENGINEERING.md)
+adds a concrete comparison-harness work package alongside composition: original
+bank-aware event adapters, explicit independent read queues, rejection of unknown/
+exhausted/unconsumed reads, and consumed-bit perturbation checks. The recent AC
+fork is core 42/PHY 1, not core 130/PHY 51. Its harness and data-path boundaries
+are design references; tables, firmware and register assumptions are not imported.
+An ARM inline-access coverage design is optional offline work, not a deployed
+tracer or a prerequisite replacing current PHY/lifecycle implementation.
 
 ## Driver milestones
 
@@ -108,7 +118,10 @@ is provided. See [driver/README.md](driver/README.md) for exact restrictions.
    [PROGRESS.md](PROGRESS.md). Their bounded report and wrapper/startup models
    are retained along with PSM-control and current DMA-reset models. The
    [resource ledger](docs/DRIVER_RESOURCE_AUDIT.md) recovers clock/PLL/PHY/TSSI
-   operations; implementation/composition and actual runtime resources remain.
+   operations; the [D11 clock/PLL model](docs/CLOCK_CONTROL_MODEL.md) now passes
+   host checks. [HND fallback](docs/DRIVER_CLOCK_FALLBACK_AUDIT.md) and
+   [PHY-wake/workaround](docs/DRIVER_PHY_WAKE_ADDENDUM.md) call boundaries are
+   recovered; implementation/composition and actual runtime resources remain.
 2. Follow callers and reset/control helpers only as necessary to establish the
    core-130 main and extended PSM sequences. Resolve register descriptors rather
    than assuming older b43/brcmsmac offsets or masks.

@@ -1,16 +1,18 @@
 # Current progress and continuation checkpoint
 
-Updated 2026-10-15. This checkpoint adds PSM wake/suspend/enable and current
-TX/RX DMA-reset subsets, plus clock/PLL/PHY/TSSI/wake-policy evidence. Previous
-implementation checkpoint:
-[`2a80787`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/2a807872a27d2085cb5c8640fd9e7bebf0a5f783).
+Updated 2026-10-15. This checkpoint adds the core-130 clock/PLL trace model,
+closes bounded HND/PHY-wake dependency analysis, and incorporates fresh research
+on existing Broadcom reverse-engineering projects. Previous implementation:
+[`295813f`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/295813f5d675fdf8211f082e747069d63b3d9579).
 Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
 
 ## Resume here
 
-**Next: implement the recovered clock/PLL and PHY-register/TSSI reset operations,
-resolve required optional/imported branches and compose the higher lifecycle with
-actual runtime resources.** Reuse the resource ledger; do not repeat queries.
+**Next: implement PHY-register/TSSI/reset operations and the retained HND clock
+fallback; resolve resource/wake dependencies and compose the higher lifecycle.**
+Clock/PLL D11 jobs are now host-tested. Reuse the closed-session ledgers; do not
+repeat queries. Build the original differential harness alongside composition,
+using the [external research](docs/EXISTING_REVERSE_ENGINEERING.md) as methodology.
 
 Current priority is driver work first. Offline analysis/simulation remains
 unblocked by pending UART/recovery work. No device upload, radio initialization
@@ -23,7 +25,7 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | --- | --- | --- |
 | Target and reference inventory | Established for inspected inputs | [Hardware](findings/HARDWARE_INVENTORY.json), [binary](docs/DRIVER_BINARY_AUDIT.md), [GPL](docs/GPL_AUDIT.md). Reverify drift-prone device state before device work. |
 | D0 offline foundation | Implemented and host-tested within stated limits | Four C components, pinned object inspector, synthetic/fault tests and private-input comparisons. |
-| D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper/startup, PSM control and current DMA-reset subsets implemented; clock/PLL/PHY reset and wake-policy evidence retained. Higher composition, optional branches and runtime resources remain. |
+| D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper/startup, PSM control, current DMA-reset and D11 clock/PLL subsets implemented; HND fallback/PHY-wake dependencies recovered, not yet implemented. Higher composition, optional branches and runtime resources remain. |
 | D2 complete register/SHM/context contracts | Partial implementation, host-tested | Effective-init semantics and startup SHM16 FIFO read implemented; addend acquisition, physical init-object writes, complete register map and SHM ABI remain. |
 | D3 PHY 51/radio/channel/calibration | Attach dispatch mapped; initialization pending | Radio-specific callbacks and required private board inputs remain to be recovered. |
 | D4 DMA/interrupt/RX | Reset helpers only; data path not implemented | Current reset paths tested offline; common older source mapped. Current queue/resources, descriptors, IRQ and RX remain to establish. |
@@ -48,6 +50,7 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | `driver/psm_start.c` | Cached main/extended controls, exact ACK loops/final reads, physical SHM16 FIFO verification. | Startup-suspended predicate only; explicit fail-stop policy, no hardware backend. |
 | `driver/psm_control.c` | Wake, main/extended suspend and enable, depth/cache state and bounded SHM polling. | Main enable can end with unimplemented wake-control/MBSS dependency; stricter failure policy, no real callouts. |
 | `driver/dma_reset.c` | Current TX/RX reset, direct/indirect selector, status masks, bounds and cache semantics. | No queue mapping, buffers, reclaim or IRQ; returned success need not be an observed disabled state. |
+| `driver/clock_control.c` | D11 clock selection, PLL and owned secondary-core traces, exact polling/sample distinctions and observation freshness. | HND fallback/real SI ownership remain dependencies; completion does not establish lock/readiness. |
 | `driver/status_poll.c` | Caller-defined status predicate and monotonic timestamps; bounded steps, timeout and cancellation. | Synthetic configurable infrastructure; no recovered device-ready register/mask. |
 | `scripts/radio_firmware_inventory.py` | Exact hash, ELF object bounds/relocation checks, size companions and metadata inventory. | Payloads remain private; different/older modules rejected. |
 | `scripts/test_driver.sh` | Public ASan/UBSan suite; optional private stock comparison. | Host validation only. |
@@ -80,6 +83,13 @@ checks when code or inputs change; do not imply a new hardware test occurred.
   [DMA-reset implementation/policies](docs/DMA_RESET_MODEL.md),
   [prior lifecycle ledger](docs/DRIVER_LIFECYCLE_AUDIT.md) and
   [earlier reset/start boundaries](docs/LIFECYCLE_MODEL.md).
+- [Clock/PLL implementation and limits](docs/CLOCK_CONTROL_MODEL.md),
+  [actual HND clock fallback/mapping](docs/DRIVER_CLOCK_FALLBACK_AUDIT.md),
+  [PHY wake/workaround closure](docs/DRIVER_PHY_WAKE_ADDENDUM.md) and
+  [26 new plus eight reused Evidence records](findings/DRIVER_RESOURCE_DEPENDENCY_EVIDENCE.json).
+- [Existing reverse-engineering attempts](docs/EXISTING_REVERSE_ENGINEERING.md):
+  Quarkslab methodology, recent core-42 AC driver/harness/logs, D11 emulation
+  tools and concrete ARM/core-130 compatibility gaps. No external code imported.
 - [Published DMA64 source map](docs/DMA64_SOURCE_AUDIT.md) pins seven source
   members/hashes. It is older-version corroboration, not current queue support.
 - [Effective-init semantics](docs/EFFECTIVE_INIT_AUDIT.md),
@@ -88,8 +98,14 @@ checks when code or inputs change; do not imply a new hardware test occurred.
 
 Latest validation (host/build only):
 
-- All eight synthetic test programs pass under ASan/UBSan; all nine portable C
+- All nine synthetic test programs pass under ASan/UBSan; all ten portable C
   components compile for freestanding ARMv7 with strict warnings.
+- Clock/PLL literal traces cover all three commands, separate A/B samples,
+  no-I/O guards, request-already-set shortcut, owned secondary directions and
+  no-owner dependencies. Independent boundary expectations cover 1,500/no-final
+  and 10,000/mandatory-final polling, partial masks, final-only ready and final
+  loss. Per-success telemetry, every-event errors/cancellation/coincident errors,
+  aliased context restart and terminal silence pass.
 - PSM-control literal traces cover all five commands, forced-wake/mirror and
   cached/no-band paths, 40-us wake plus rounded u16 budget through 65,535,
   suspend's 8,300-delay limit/final confirmation, main enable's 1,001 reads/
@@ -108,7 +124,12 @@ Latest validation (host/build only):
 - No MMIO, firmware execution, calibration access, RF operation, Linux module
   linking or router test occurred. Private bytes remain outside this checkout.
 
-The new exact-WL resource session was exported and closed with unchanged input
+Two further exact-HND/WL dependency sessions were exported and closed. Their
+26 new Evidence IDs and eight reused records were checked against retained raw
+records. Runtime mapping/backend, complete wake policy and optional branches
+remain open; recovered descriptions are not implemented callouts.
+
+The earlier exact-WL resource session was exported and closed with unchanged input
 SHA-256. Retained raw records live privately under `driver-private/rea-resources`;
 older private directories are `rea-lifecycle`, `rea-hnd-reset` and `rea-fifo-shm`.
 The public reports/JSON contain original descriptions and selected metadata, not
@@ -144,13 +165,15 @@ Critical distinctions to preserve:
    implementation notes and Git status. Preserve unrelated work; check remote
    main before publication. Reuse closed-session Evidence instead of repeating
    installation/analysis.
-2. Implement clock request and PLL jobs from the retained exact operations.
-   Preserve RMW ordering (`ST,read,SY,write`), condition-dependent 64-us delays,
-   distinct status samples, counter limits and PLL's already-requested shortcut.
-   Expose unverified/timeout postconditions; do not map void return to readiness.
-3. Expand actual missing dependency callees only: imported `si_clkctl_cc` fallback
-   in HND, RSDB secondary mapping/interrupt contract and optional PHY-clock
-   workaround. Make runtime capability/core-count/ownership state explicit.
+2. Use the tested D11 clock/PLL jobs; preserve separate current/unit-1 resources,
+   observation freshness, distinct A/B samples and the void-helper limitations.
+   Implement the now-recovered HND `si_clkctl_cc` fallback from its dedicated
+   ledger: ChipCommon selection/restore, revision/capability/mode gates and PCI
+   crystal branches. It is not the D11 register despite equal offset `0x1e0`.
+3. Implement required SI ownership/mapping contracts from retained analysis;
+   runtime enumeration, addresses and OS backends remain missing. PHY-register
+   reason-2 set/clear and RSDB workaround have been expanded; do not requery
+   them or confuse the latter's lack of IRQ wrapping with the PLL helper.
 4. Implement PHY-register read/modify and core-130 analog/PHY-reset operations,
    TSSI low10 snapshot/restore for proven core counts, and core-flags updates.
    Resolve PHY-register enter/exit wake overrides, optional beamforming and
@@ -162,10 +185,16 @@ Critical distinctions to preserve:
    SHM ABI; then continue D3 radio/channel/calibration, D4 descriptors/IRQ/RX,
    TX/Linux integration and full features. The separate recovery/RAM-boot/board
    workstream is required before exact-board execution and persistent firmware.
-7. Add independent traces/boundaries/failure/cancel regressions, run affected
+7. Build an original common differential trace schema/adapters informed by
+   the pinned core-42 AC harness, without importing its code/tables. Preserve
+   bank/core/space/width/barriers/delays and independently supplied read queues;
+   reject missing/exhausted/unconsumed reads and implicit zero/write-echo.
+   Preserve observation freshness and explicit dependencies. The optional ARM
+   accessor/inline-coverage design does not displace PHY/lifecycle implementation.
+8. Add independent traces/boundaries/failure/cancel regressions, run affected
    ASan/UBSan/private comparisons and strict ARMv7 builds. Export/close sessions,
    verify exact input identity and update this checkpoint/roadmap with limitations.
-8. Review/scan an exact public allowlist, commit/push and verify remote commit/
+9. Review/scan an exact public allowlist, commit/push and verify remote commit/
    tree. Keep private payloads, calibration, credentials and local host paths out.
 
 **D1 remains partial.** Higher clock/PLL/PHY composition, optional dependencies,
