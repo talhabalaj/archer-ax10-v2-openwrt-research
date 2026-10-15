@@ -36,6 +36,8 @@ prove that an unpublished or later port cannot exist.
 - [Initial REA native-driver findings](docs/REA_INITIAL_FINDINGS.md)
 - [First offline driver components and validation](driver/README.md)
 - [Core 130 attach, table and microcode-selection analysis](docs/DRIVER_ATTACH_AUDIT.md)
+- [Exact microcode upload trace and its limits](docs/DRIVER_UPLOAD_AUDIT.md)
+- [Upload register/source corroboration](docs/UPLOAD_SOURCE_NOTES.md)
 - [Vendor driver source map](docs/DRIVER_SOURCE_MAP.md)
 - [Upstream driver baseline and missing blocks](docs/DRIVER_BASELINE_AUDIT.md)
 - [Pinned radio firmware/table object inventory](findings/RADIO_FIRMWARE_INVENTORY.json)

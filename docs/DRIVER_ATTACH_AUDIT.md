@@ -195,3 +195,7 @@ selectors, AC registration/reset callbacks, and the initialization-record consum
 `wlc_ucode_write`, and `wlc_ucodex_write` upload formatting were not inspected.
 A raw offline replay that rejects object-memory rows and
 omits the runtime fixup at offset `0x130` must retain that limited scope explicitly.
+
+The separate [upload writer audit](DRIVER_UPLOAD_AUDIT.md) covers the subsequent
+bounded analysis of the writers and fresh-chunk transfer trace. It establishes
+no hardware start or readiness acknowledgement.

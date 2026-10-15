@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "scope": "Original selected static upload-writer observations; no payload bytes, pseudocode, host paths, or runtime proof.",
+  "artifact": {
+    "name": "wl.ko",
+    "bytes": 5803056,
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c",
+    "format": "ELF32 ARM little-endian ET_REL"
+  },
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4"
+  },
+  "reused_evidence": [
+    {
+      "name": "core130 register selector assembly",
+      "evidence_id": "ev_9dbe57e9a416183dae3bc38ee22556593edd481aab909f720000b0c0246db4bb"
+    },
+    {
+      "name": "core130 nested register descriptor pointer",
+      "evidence_id": "ev_1586c82b5f5725d0c4a6f51d3761fdbc2e1bb4a03454b82de0dfef1c8b2110af"
+    },
+    {
+      "name": "wlc_ucode_download selector pseudocode",
+      "evidence_id": "ev_7f48cfafb1f084d3640a7f70a42b4f8be443dd4bc791c1e10fe551ed62a828ab"
+    }
+  ],
+  "proved_contract": {
+    "core_revision": 130,
+    "ports": {
+      "object_address_offset": "0x160",
+      "object_data_offset": "0x164",
+      "access_width_bits": 32,
+      "same_ports_for_both_writers": true
+    },
+    "main_selector": "0x03000000",
+    "extended_selector": "0x03080000",
+    "selector_difference_bit": 19,
+    "length": {
+      "input_type": "u32 byte length",
+      "word_count": "length>>2",
+      "source_word_bytes": 4,
+      "source_stride_bytes": 4,
+      "trailing_bytes": "ignored",
+      "zero_words_fresh_chunk": "address setup and readback still occur"
+    },
+    "source_order": "native little-endian 32-bit loads, no software byte swap observed",
+    "fresh_chunk_condition": "ucode_chunk==0",
+    "fresh_chunk_setup_events": [
+      {
+        "operation": "barrier",
+        "kind": "DSB ST"
+      },
+      {
+        "operation": "write32",
+        "offset": "0x160",
+        "value": "writer-specific selector"
+      },
+      {
+        "operation": "read32",
+        "offset": "0x160",
+        "value_checked": false
+      },
+      {
+        "operation": "barrier",
+        "kind": "DSB SY"
+      }
+    ],
+    "per_word_events": [
+      {
+        "operation": "barrier",
+        "kind": "DSB ST"
+      },
+      {
+        "operation": "source_load32",
+        "decode": "little-endian",
+        "source_advance_bytes": 4
+      },
+      {
+        "operation": "write32",
+        "offset": "0x164",
+        "value": "source word"
+      }
+    ],
+    "final_barrier_or_data_readback": false,
+    "nonzero_chunk": "omits setup events but retains per-word loop; preceding address/bank state unresolved",
+    "chunk_global_modified_by_writers": false,
+    "writer_return_type": "void",
+    "writer_readiness_poll": false,
+    "writer_error_check_or_rollback": false,
+    "wrapper": {
+      "call_order": [
+        "wlc_ucode_write",
+        "wlc_ucodex_write"
+      ],
+      "already_uploaded_field": "hardware object byte+0x186",
+      "already_uploaded_nonzero": "skip both writers and return0",
+      "after_both_writers": [
+        "set software byte+0x186=1",
+        "wlc_bmac_autod11_shm_upd",
+        "return0"
+      ],
+      "hardware_ready_attested": false
+    }
+  },
+  "model_assumptions": [
+    "Fake-bank cursor, address stride, capacity, wrapping, and committed contents model hardware consequences rather than observed writer software",
+    "Readback values are caller-configured and are not compared by stock writers",
+    "Fresh-chunk-only mode may require explicit zero and reject nonzero continuation state",
+    "Input validation, injected callback failure, partial trace retention, and rollback are simulator policies; no stock failure-clearing path was observed",
+    "Any generic status poll, fake clock, ready register, mask, or timeout is separate caller configuration and not established by this contract"
+  ],
+  "limits": [
+    "No router actions or target-code loading",
+    "No microcode payload bytes included",
+    "No complete hardware bank/PSMx semantics established",
+    "No reset/start/readiness protocol or radio operation established",
+    "Downstream PHY setter and later BMAC start paths were not expanded"
+  ],
+  "evidence": [
+    {
+      "name": "wlc_ucode_write",
+      "evidence_id": "ev_7a136b0e58daa470b8ed8ad6993726e032a8965eb103dfb6fdae98d1c0a78ab1",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "wlc_ucode_write assembly",
+      "evidence_id": "ev_20aa19ccfd016073b6f893c31e353ec221858f52c76da22f0774901f1dd7edc2",
+      "operation": "procedure_assembly"
+    },
+    {
+      "name": "wlc_ucodex_write exact-symbol search",
+      "evidence_id": "ev_ffc6246f7ab60922de2cc73ba7792b95300b45722900c727c5750f738d13015d",
+      "operation": "search_procedures"
+    },
+    {
+      "name": "wlc_ucodex_write",
+      "evidence_id": "ev_b6e8debdd89d6770e35471d7dd46761271f33512c55d8d09ca302dd81e1fb0de",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "wlc_ucodex_write assembly",
+      "evidence_id": "ev_113fffd811c1d544eec02001cc9899a84cd5206c8ab25ff91a1e19eee3ca3a00",
+      "operation": "procedure_assembly"
+    },
+    {
+      "name": "core130 object address/data register offsets",
+      "evidence_id": "ev_c7a806df4445457fcf4e4146375b55a3c001032dd3862f9ebee30e0705cc8c72",
+      "operation": "read_bytes"
+    },
+    {
+      "name": "ucode_chunk resolved references",
+      "evidence_id": "ev_776cf1db0cdb91bb461a03846c68366ee5f9f65f92c333bab5cd0610431b4b76",
+      "operation": "find_xrefs_to_name"
+    },
+    {
+      "name": "wlc_ucode_download assembly",
+      "evidence_id": "ev_8878a904df47294b4350735409eb1a530a950af82fb0d7f8ea4001806caf2c30",
+      "operation": "procedure_assembly"
+    },
+    {
+      "name": "wlc_bmac_autod11_shm_upd",
+      "evidence_id": "ev_ff5f05f5eb8af8b8787a12f9c6ce2c9e43b1b9a23f6b8728be02f559b8bba3c9",
+      "operation": "procedure_pseudo_code"
+    }
+  ],
+  "session": {
+    "closed_successfully": true,
+    "source_digest_unchanged": true,
+    "private_evidence_bundle_retained": true
+  }
+}
