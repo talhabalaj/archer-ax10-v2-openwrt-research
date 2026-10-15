@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "scope": "higher_wlc_bmac_corereset_order_and_four_helper_closures",
+  "analysis_mode": "offline_static",
+  "artifact": {
+    "name": "wl.ko",
+    "size": 5803056,
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4"
+  },
+  "records": [
+    {
+      "record": "assembly-clear-suspended-fifo",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_e8b87160197a8547961adced946d734e6b87fbdd31d1904f7d9d26241a0a505c"
+    },
+    {
+      "record": "assembly-mctrl-reset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_64702f5aed65c2175f3869f9bd9daf0f721b3e301d4d5d6e30c5e970b12add81"
+    },
+    {
+      "record": "assembly-phy-clock-state-update",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_d3ef52d41a13922b1b979838fb3868f5307839fe03e6460c8203c8abe61e4868"
+    },
+    {
+      "record": "assembly-rxfifo-enable",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_4900fa4f559a2d74bfaefd2c5b2bc36d8ad4e48096ae2896ac602bc8c24ec303"
+    },
+    {
+      "record": "bytes-phy-version-field",
+      "operation": "read_bytes",
+      "evidence_id": "ev_51f5b2477147507e801f1530fc48d5c6af77aed91924f01b127edd4ddd96480d"
+    }
+  ],
+  "reused_records": [
+    {
+      "record": "assembly-corereset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_3d6f855a87fe26c03023390d6ff2a4e493ee0df874ff7f6de2e5820bb60bf5c9"
+    },
+    {
+      "record": "assembly-core-reset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_9c93f83d75db3bb4f7f3d67e5958c9956d7bb94ebfd33885338ca2c774e84f83"
+    },
+    {
+      "record": "assembly-main-control",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_00eaeb8439237d4720e1b8f092424dceecb355b626647fcf242902c0e8c3ab6f"
+    },
+    {
+      "record": "assembly-phy-reset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_88ab7f82543911a0b6e796994a952e2664124975ae6a818227a16cdc0611ab2b"
+    },
+    {
+      "record": "assembly-phy-pll-control",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_016dd5d002c6b5efa7225455e99b153ff6fd12a89a75c4f2bef7d1e7e2852237"
+    },
+    {
+      "record": "assembly-dma-txreset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_c95a387ad02ec4432934600cc17adffa630bb3abe76441534d8a59ccaa8594dd"
+    },
+    {
+      "record": "assembly-dma-rxreset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_f3cfd40664db9b3784e0e9b5e09e05dd447431bf7c103c343cb3801e9384dcd4"
+    },
+    {
+      "record": "assembly-clock-control",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_fcc33e70b1e7b43825b239589a5d0e106190027002658aae1f07a6061446202e"
+    }
+  ],
+  "verification": {
+    "date": "2026-10-15",
+    "selected_higher_records": 13,
+    "higher_and_lower_unique_records_verified": 20,
+    "retained_structured_records_and_subject_digests_match": true,
+    "wl_and_hnd_pinned_sha256_rehashed": true,
+    "related_lower_metadata": "CORE_RESET_LOW_EVIDENCE.json"
+  },
+  "implemented_scope": [
+    "Offline higher core-reset coordinator with actual WL clock, SI core predicates/flags, DMA, lower reset, main control, PSM wake, target PHY reset and PLL children.",
+    "Caller-supplied immutable runtime facts, bounded queue storage and explicit partial state."
+  ],
+  "remaining_dependencies": [
+    "Actual object/catalog/DMA metadata acquisition, resource ownership, OS mapping/MMIO/PCI/IRQ adapters and kernel serialization.",
+    "SB interconnect handling, runtime wake-policy inputs and reached MBSS/fatal recovery.",
+    "Physical reset/upload/start proof, PHY/radio/channel/calibration, DMA/interrupt/RX/TX and Linux integration."
+  ],
+  "limitations": [
+    "Static observed instruction order is not a device execution or hardware-ready result.",
+    "The new coordinator and tests execute original portable C with synthetic inputs; they do not execute the complete stock binary.",
+    "The copied immutable queue count narrows stock live reload behavior; the model bounds queue indexes to72 and the suspended bitmap to9 bytes.",
+    "No raw firmware, proprietary arrays, raw analysis records, calibration, personal identifiers or local host paths are included."
+  ]
+}

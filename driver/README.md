@@ -67,6 +67,12 @@ All original code here uses the repository's MIT license.
   and explicit post-callback SI state, independent restore guard/index handling.
 - `wl_clock.c`: complete D11-versus-HND clock-select caller; fallback stores
   cache byte before inline reason0x10 without adding PSM helpers.
+- `core_reset.c`: enclosing clock/core-up/DMA/FIFO/low-reset/cache/PHY/PLL
+  sequence, with original-fast tail decisions and explicit reached metadata.
+- `core_reset_low.c` / `core_reset_low_ai.c`: actual lower callback/auxiliary
+  core849 path, generic AI reset and real primary/secondary selection.
+- `si_core.c`: actual selected-wrapper core-up and coreflags protocols.
+- `mctrl.c`: exact cached main-control/mirror and reset software-field helpers.
 - `effective_init.c`: context-dependent initialization semantics with explicit
   `0x130` addend, width truncation and a separate semantic object-copy operation.
   Whole-table preflight validates caller-supplied bounds before callbacks.
@@ -93,7 +99,7 @@ runtime addend when used; no active board value is assumed.
 See [effective-init semantics and tests](../docs/EFFECTIVE_INIT_AUDIT.md) for
 exact termination, widths, address units, policies and cancellation behavior.
 
-Hardware microcode upload, the complete higher reset/clock/PHY/DMA lifecycle,
+Hardware microcode upload, higher initialization around the implemented reset lifecycle,
 runtime wake-policy acquisition/fatal/MBSS handling, complete register/SHM typing, resource
 ownership, calibration, AC-PHY 51 initialization and Linux TX/RX integration
 remain absent. Offline wrapper reset and startup subsets are described in
@@ -120,7 +126,7 @@ sh scripts/test_driver.sh /private/path/to/wl.ko
 
 The checks passed on 2026-10-15:
 
-- All 24 public headers compile together before runtime tests. AI reset uses
+- All 29 public headers compile together before runtime tests. AI reset uses
   `axd_ai_reset_*` types and `AXD_AI_*` constants to avoid the PHY reset namespace.
   Function names and numeric transport/state values are preserved and checked.
   Add newly introduced public headers to `tests/check_driver_headers.c`.
@@ -179,10 +185,14 @@ The checks passed on 2026-10-15:
   timing and every selected event error/cancellation/coincident errors.
 - Target PHY reset/BF cleaner tests check literal composition, metadata/binding
   boundaries, partial contexts and callback fault/cancellation behavior.
+- Enclosing/lower reset, mctrl and SI-core tests check actual composition,
+  lazy pointer bindings, queue gates, independent reads, software commitment,
+  callback failure/cancellation and aliases. The 72-queue limit and immutable
+  copied metadata are explicit model policies; stock reloads live TX count.
 - SI/WL composition tests check map/PCI/IRQ ordering, independent restore guards,
   post-disable index changes, unknown SI freshness, separate software commits and
   partial callback effects; no native kernel/backend behavior is implied.
-- All twenty-three C files cross-compile with Clang for `armv7-none-eabi` in freestanding
+- All twenty-eight C files cross-compile with Clang for `armv7-none-eabi` in freestanding
   mode with warnings treated as errors. This proves compilation, not linking
   into Linux, execution on ARM or hardware behavior.
 
@@ -237,11 +247,14 @@ firmware/table versions must not be silently mixed.
 
 ## Next implementation boundary
 
-Use the complete WL clock caller, SI selection, target PHY reset and AI/DMA/PSM
-jobs to compose the enclosing device-reset lifecycle. Acquire actual runtime
+Use the implemented enclosing/lower core-reset jobs when following the actual
+BMAC initialization caller and its upload/start/radio/calibration context. Acquire actual runtime
 catalog/queue/resources and implement OS mapping/PCI/IRQ/MMIO adapters. Policy/
 metadata acquisition, synchronization, MBSS/fatal recovery and optional higher
 initialization remain unfinished; reached dependencies stay explicit. See
+[enclosing reset](../docs/CORE_RESET_MODEL.md),
+[lower reset](../docs/CORE_RESET_LOW_MODEL.md),
+[main-control/reset fields](../docs/MCTRL_MODEL.md),
 [SI selection](../docs/SI_SELECT_MODEL.md),
 [HND wrapper](../docs/SI_CLOCK_MODEL.md),
 [WL caller](../docs/WL_CLOCK_MODEL.md),

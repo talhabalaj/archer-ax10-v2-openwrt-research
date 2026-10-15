@@ -15,6 +15,7 @@ struct axd_clock_context {
     uint16_t core, minor;
     uint32_t si_capabilities, si_word20, wake_reasons;
     uint8_t core_clock_valid, fast_clock, pll_inhibit, core_up;
+    /* fast_clock retains the full stock byte; only SELECT overwrites it0/1. */
     uint8_t rsdb, secondary_owned;
 };
 enum axd_clock_phase {

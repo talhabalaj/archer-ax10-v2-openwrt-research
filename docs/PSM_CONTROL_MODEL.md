@@ -127,3 +127,20 @@ recovery, physical init-object writes and full SHM ABI remain required.
 [PHY nesting and outer TSSI](PHY_GUARD_IDLE_MODEL.md) now use these real override
 and policy-action paths. The [roadmap](../ROADMAP.md) retains PHY/radio/channel/calibration,
 DMA data path, RX/TX, Linux and exact-board hardware milestones.
+
+## Optional nullable-band binding
+
+Enclosing lifecycle jobs can set `band_binding_required=1` and explicitly supply
+`band_presence_known` plus the normalized `band_present` predicate. A reached
+wait-for-wake band guard with unknown presence stops as `DEPENDENCY` with
+`AXD_PSM_BAND_STATE` (mask `0x10`). Earlier physical control reads, cache changes,
+mirror updates and writes remain committed. Unknown bands are not rejected
+when public-down, a SLEEP decision or an already-awake physical sample avoids
+the wait. Known null skips the wait; known present uses the existing delay/SHM
+protocol. Invalid enabled binding flags are rejected at begin. Legacy zero
+`band_binding_required` retains the existing caller-known predicate behavior.
+
+The focused override suite checks both placeholder values for unknown presence,
+known-null/present behavior, lazy guards, alias restart and every callback fault,
+cancellation and combined exit in the preceding/complete wake traces. This is
+synthetic context validation with no new hardware operations.

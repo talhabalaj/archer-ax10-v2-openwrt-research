@@ -1,0 +1,70 @@
+{
+  "scope": "Original selected static evidence metadata; no raw disassembly or device execution",
+  "inputs": {
+    "wl.ko": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c",
+    "hnd.ko": "d05ff061b3a636630955a13fdd20a953f3dfb07ee92904a987dd4c77b648b45a"
+  },
+  "provider": {
+    "name": "Ghidra",
+    "version": "12.1.4",
+    "rea": "6.5.0"
+  },
+  "evidence": [
+    {
+      "procedure": "wlc_bmac_core_reset",
+      "subject": "wl.ko",
+      "evidence_id": "ev_9c93f83d75db3bb4f7f3d67e5958c9956d7bb94ebfd33885338ca2c774e84f83",
+      "contract": "lower flags and ordered auxiliary/mctrl/halfword path",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "ai_wrapper_selection",
+      "subject": "hnd.ko",
+      "evidence_id": "ev_02372daf06bcf7dece85fc6762be573c7162e34bd2e4df2702396a3fe2f6d82a",
+      "contract": "primary/secondary selector, mapping and software stores",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "ai_selected_wrapper_reset",
+      "subject": "hnd.ko",
+      "evidence_id": "ev_08d03c209e4089c58adf8c6080598e38221affb7b2e3ba0a9d5347974556c3db",
+      "contract": "generic reset versus D11-special predicate and bounded polls",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "ai_core_reset",
+      "subject": "hnd.ko",
+      "evidence_id": "ev_deb39f7810cc3c42b3ba2cc027be7535bbed7e147e35a91fbede040b2b2c034f",
+      "contract": "secondary-select/reset then primary-select/reset",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "ai_core_cflags",
+      "subject": "hnd.ko",
+      "evidence_id": "ev_5413942715ff279c774a941023fa41ca39b7ea9fb3b340ace6ab3fb1c35dfa4f",
+      "contract": "chip/core exemptions and exact read/barrier/write protocol",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "ai_iscoreup",
+      "subject": "hnd.ko",
+      "evidence_id": "ev_5dbbc8460994fd90d1e8c1a6f1bfde304fd55959d52e2ea27f4ceeb8ef82b321",
+      "contract": "short-circuit predicate with fresh physical samples",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "si_core_reset",
+      "subject": "hnd.ko",
+      "evidence_id": "ev_a1b850dcf7dcd8814e20adf7f5f3a83dbad6bc2494b9082826dce085889c3078",
+      "contract": "SI interconnect dispatch",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "si_iscoreup",
+      "subject": "hnd.ko",
+      "evidence_id": "ev_4f8fe8816166fae5b910830e4a70f9d75c2d28a6215939770bcb164377483a51",
+      "contract": "SI iscoreup interconnect dispatch",
+      "evidence_type": "observed static pseudocode"
+    }
+  ]
+}

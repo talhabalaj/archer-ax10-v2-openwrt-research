@@ -1,41 +1,33 @@
 # Current progress and continuation checkpoint
 
-Updated 2026-10-15. This checkpoint fixes the AI/PHY reset header namespace
-collision and makes the combined-header compilation check part of the runner.
-Previous implementation:
-[`b9b2877`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/b9b2877a1f52cae2498737f6e0c4a39aaddcb0d5).
+Updated 2026-10-15. This checkpoint implements the enclosing core-reset
+coordinator and actual lower auxiliary-reset path, with independent offline
+trace tests. It follows the received T3 handoff at baseline `1deea16`.
 Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
 
-## Requested T3 handoff
+## Current reset checkpoint
 
-The user requested transfer through T3 MCP. No receiving T3 task was launched:
-T3 tools are not connected to this session, and its local MCP endpoint requires
-authentication. The local transfer briefing is retained outside this public
-checkout at `driver-private/T3_HANDOFF.md`, relative to the parent working
-directory. It lists exact private input/evidence paths, current verified state,
-remaining lower-wrapper dependencies and the next implementation/test package.
-The briefing contains no credential values and is not a public artifact.
+[The enclosing reset](docs/CORE_RESET_MODEL.md) composes real WL clocks, actual
+SI core-up/coreflags, per-slot DMA reset, suspended-FIFO wake policy, lower
+reset, main/extended caches, target PHY reset and a freshly guarded PLL child.
+[The lower wrapper](docs/CORE_RESET_LOW_MODEL.md) composes actual D11 AI reset,
+generic auxiliary reset and primary/secondary SI selection, preserving the
+auxiliary zero-map early return. [Main-control helpers](docs/MCTRL_MODEL.md)
+preserve cache/mirror timing and the exact reset software fields.
 
-The prior open AI namespace fix is now integrated: types use distinct
-`axd_ai_reset_*` names and constants use `AXD_AI_*`, so AI and PHY-reset headers
-can be included together. Function names, numeric values and behavior are
-unchanged; reverse substitution matches the previous source/header/test exactly.
-`tests/check_driver_headers.c` includes all 24 current public headers and checks
-numeric transport/state values. The runner compiles it before the 23 runtime
-test programs. Add future public headers to that probe.
-
-The newly completed core-reset/helper analysis and independent test oracle remain
-private and are linked by the local briefing. All analysis sessions are exported/
-closed. No enclosing core-reset coordinator was started. Keep firmware, raw
-records, calibration, credentials and local paths out of public commits.
+SI selection now has an explicit secondary-wrapper entry; the existing primary
+entry shares the same implementation. The clock cache accepts the stock's full
+fast-clock byte. Optional PSM band bindings distinguish an unknown pointer from
+a known null pointer at the actual wait guard. These are original offline
+components, with no hardware backend or claimed working Wi-Fi driver.
 
 ## Resume here
 
-**Next: compose higher device/core reset around the implemented WL clock,
-SI selection, PHY reset and AI/DMA/PSM jobs with explicit runtime resources.**
-Use retained `wlc_bmac_corereset`/HND evidence to order clock/PLL, queue reset,
-wrapper reset, software caches and later PHY work. Do not substitute the PHY
-reset function or a ready-looking mode/cache flag for that enclosing lifecycle.
+**Next: recover the enclosing BMAC initialization context and runtime adapters
+around the now implemented core-reset package.** Follow the retained actual
+caller order for reset/upload/start, radio/table initialization and calibration
+inputs. Implement known operations and expose reached gaps. Do not substitute a
+completed reset trace or clock-cache byte for physical readiness.
 
 [SI selection](docs/SI_SELECT_MODEL.md) now preserves actual map/cache/index
 stores and typed OS requests. [HND selection/IRQ/clock composition](docs/SI_CLOCK_MODEL.md)
@@ -61,7 +53,7 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | --- | --- | --- |
 | Target and reference inventory | Established for inspected inputs | [Hardware](findings/HARDWARE_INVENTORY.json), [binary](docs/DRIVER_BINARY_AUDIT.md), [GPL](docs/GPL_AUDIT.md). Reverify drift-prone device state before device work. |
 | D0 offline foundation | Implemented and host-tested within stated limits | Four C components, pinned object inspector, synthetic/fault tests and private-input comparisons. |
-| D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper/startup, PSM control, DMA reset, D11/ChipCommon clock, table/all-core TSSI, target PHY reset and BF cleaner implemented. SI/WL clock composition is implemented offline; higher device reset, runtime/OS resources and MBSS/fatal recovery remain. |
+| D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper/startup, PSM control, DMA reset, D11/ChipCommon clock, table/all-core TSSI, target PHY reset and BF cleaner implemented. SI/WL clock and enclosing core-reset composition are implemented offline; higher initialization, runtime/OS resources and MBSS/fatal recovery remain. |
 | D2 complete register/SHM/context contracts | Partial implementation, host-tested | Effective-init semantics and startup SHM16 FIFO read implemented; addend acquisition, physical init-object writes, complete register map and SHM ABI remain. |
 | D3 PHY 51/radio/channel/calibration | Attach dispatch mapped; initialization pending | Table/TSSI/PHY-clock subsets host-tested; radio-specific initialization/calibration and board inputs remain. |
 | D4 DMA/interrupt/RX | Reset helpers only; data path not implemented | Current reset paths tested offline; common older source mapped. Current queue/resources, descriptors, IRQ and RX remain to establish. |
@@ -82,7 +74,7 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | `driver/init_table.c` | Strict 8-byte LE record validation and raw ordered replay, offsets below `0x1000`. | Omits runtime adjustment at `0x130` and object-memory translation. Not a hardware-write emulator. |
 | `driver/ucode_upload.c` | Explicit fresh chunk zero; main then extended; selector/readback/barrier and LE word-write trace; one event per step. | No MMIO, reset/start, SHM publication or hardware acknowledgement. Nonzero chunk state rejected. |
 | `driver/effective_init.c` | Runtime `0x130` adjustment, width truncation and bounded semantic object-copy events. | Explicit synthetic/caller context; no object-helper port lowering. |
-| `driver/ai_reset.c` | AI primary/optional-secondary wrapper trace, bounded busy/release loops and readback-dependent control. | No SI mapping or higher reset; trace completion can include stuck reset. |
+| `driver/ai_reset.c` | AI primary/optional-secondary wrapper trace, bounded busy/release loops and readback-dependent control. | Used by actual lower reset composition; trace completion can include stuck reset. |
 | `driver/psm_start.c` | Cached main/extended controls, exact ACK loops/final reads, physical SHM16 FIFO verification. | Startup-suspended predicate only; explicit fail-stop policy, no hardware backend. |
 | `driver/psm_control.c` | Wake, suspend/enable, generic override set/clear, actual wake-control action and current-mask policy integration. | Reached unknown policy/public state or MBSS/fatal recovery remains explicit; stricter fail-stop policy, no backend. |
 | `driver/dma_reset.c` | Current TX/RX reset, direct/indirect selector, status masks, bounds and cache semantics. | No queue mapping, buffers, reclaim or IRQ; returned success need not be an observed disabled state. |
@@ -93,13 +85,17 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | `driver/phy_tssi.c` | PHY51 callback for all four core counts, repeated table reads and masked/no-op restores. | Four-slot buffer validity is explicit; outer idle-TSSI is a separate implemented job, not implied by callback completion. |
 | `driver/phy_clock.c` | AI core-flags, enable/disable, bandwidth/reset preparation and RSDB workaround. | Typed owned wrappers; no mapper/IRQ execution or clock-ready proof; bandwidth recording is separate post-pulse work. |
 | `driver/phy_guard.c` | Byte-depth PHY enter/exit and real reason-2 override child; partial depth retained. | Rejects nesting wrap; requires explicit MAC/policy/ownership. |
-| `driver/idle_tssi.c` | Main suspend → PHY enter → all-core callback → PHY exit → main enable, with absent-callback no-op. | Higher device reset remains absent; no invented failure unwind. |
+| `driver/idle_tssi.c` | Main suspend → PHY enter → all-core callback → PHY exit → main enable, with absent-callback no-op. | Enclosing reset now composes this child; no invented failure unwind. |
 | `driver/wake_policy.c` | Ordered globals, actual RRM/association/override and three 16-BSS passes; explicit availability/access provenance. | Pure immutable input bindings; no runtime acquisition or hardware action in this component. |
-| `driver/phy_reset.c` | Target AC/band PHY51 sequence with real outer TSSI, clock/pulse/analog and optional BF children. | Stable explicit inputs; no higher device reset or device/backend proof. |
+| `driver/phy_reset.c` | Target AC/band PHY51 sequence with real outer TSSI, clock/pulse/analog and optional BF children. | Stable explicit inputs; enclosing reset uses this child, with no device/backend proof. |
 | `driver/bf_clean.c` | Real main/extended MAC, ordered primary-inclusive/secondary-exclusive scans and core130 no-SHM leaves. | Reached metadata/bindings explicit; strict 256-slot cap, no acquisition or ownership discovery. |
 | `driver/si_select.c` | Bounded core-ID/unit or index selection, map/cache/store order, PCI window requests and actual zero-return behavior. | Borrowed runtime catalog and OS adapter required; SB remains dependency; stricter count32 cap. |
 | `driver/si_clock.c` | Fast/ordinary CC selection, real body, post-disable SI snapshot/index reload, independent restore guard and token. | Typed backend requests only; reached unknown/invalid state and owners explicit, no physical clock/IRQ proof. |
-| `driver/wl_clock.c` | Complete clock-select dispatch, real D11/HND children and fallback byte-before-inline-reason10 stores. | No PSM helper on fallback; no higher device reset or operating-system backend. |
+| `driver/wl_clock.c` | Complete clock-select dispatch, real D11/HND children and fallback byte-before-inline-reason10 stores. | No PSM helper on fallback or operating-system backend. |
+| `driver/core_reset.c` | Actual enclosing clock/DMA/FIFO/low-reset/cache/PHY/PLL ordering and partial state. | Copied runtime facts, strict 72-queue cap, no hardware-ready result or backend. |
+| `driver/core_reset_low.c` / `core_reset_low_ai.c` | Actual lower wrapper and generic auxiliary AI reset with real SI selection and existing D11 reset child. | Explicit registered callback/resource bindings; SB remains dependency. |
+| `driver/si_core.c` | Actual selected-wrapper core-up and coreflags samples, masks and barriers. | Actual mapping/catalog ownership and MMIO adapter remain caller obligations. |
+| `driver/mctrl.c` | Exact main-cache update/mirror and reset fields, preserving both depths. | Software snapshots and recorded writes, no physical commitment proof. |
 | `driver/status_poll.c` | Caller-defined status predicate and monotonic timestamps; bounded steps, timeout and cancellation. | Synthetic configurable infrastructure; no recovered device-ready register/mask. |
 | `scripts/radio_firmware_inventory.py` | Exact hash, ELF object bounds/relocation checks, size companions and metadata inventory. | Payloads remain private; different/older modules rejected. |
 | `tests/check_phy_arm.py` | Exact selected stock ARM instructions versus C under 264 synthetic contexts; strict read queues and access bounds. | Requires private pinned input/Unicorn; three primitives only, no physical timing or device state. |
@@ -174,10 +170,26 @@ checks when code or inputs change; do not imply a new hardware test occurred.
 
 Latest validation (host/build and isolated synthetic ARM execution only):
 
-- All twenty-three synthetic test programs pass under ASan/UBSan; all twenty-three portable C
+
+- New independent reset tests cover source-ordered callbacks and software stores,
+  original full fast byte, paired/null DMA rules, RX eligibility, real FIFO-clear
+  policy, lower reset flags/auxiliary selection, two fresh version samples,
+  no-delay AC flags, exact cache clearing, real target PHY reset and fresh PLL.
+  Callback failure/cancellation/coincident errors preserve partial contexts;
+  terminal calls are silent and each step enters at most one callback.
+- Ten private coordinator mutants, six mctrl mutants and three optional-band
+  binding mutants are rejected. The actual SI helper has separate literal and
+  gate tests. These are synthetic trace checks; no whole-reset ARM execution,
+  physical reset/readiness, calibration or radio behavior is proved.
+
+- All three retained Unicorn2.1.4 instruction-comparison harnesses were rerun
+  successfully: 264 primitive cases, 512 TSSI and 270 table/high-selector cases
+  plus16 packed fixtures, and373 wake-policy decisions plus139 missing prefixes.
+  This does not execute the enclosing core-reset chain as ARM instructions.
+- All twenty-seven synthetic test programs pass under ASan/UBSan; all twenty-eight portable C
   components compile for freestanding ARMv7 with strict warnings.
 - The combined-header probe passes strict host and ARMv7 compilation, covering
-  all 24 current public headers and preserved AI event/phase/error numbers. The
+  all 29 current public headers and preserved AI event/phase/error numbers. The
   AI namespace migration is a mechanically verified rename; all runtime tests
   and optional private stock comparisons pass after it.
 - SI selection covers literal map/PCI tuples, 64 cache/physical-presence cases,
@@ -335,10 +347,12 @@ Critical distinctions to preserve:
    implementation notes and Git status. Preserve unrelated work; check remote
    main before publication. Reuse closed-session Evidence instead of repeating
    installation/analysis.
-2. Compose `wlc_bmac_corereset` and its actual higher callers using the new WL
-   clock selection plus tested PLL, AI-wrapper, DMA/PSM and target PHY reset jobs.
-   Reuse retained exact call order and derive required runtime queue/core flags.
-   Resolve remaining optional VASIP/SMC/diagnostic branches only where reached.
+2. Reuse the implemented [enclosing reset](docs/CORE_RESET_MODEL.md) and
+   [lower wrapper](docs/CORE_RESET_LOW_MODEL.md) when following the actual BMAC
+   initialization caller. Recover required context/queue/resource acquisition,
+   upload/start postconditions and reached radio/table/calibration callbacks.
+   Higher optional VASIP/SMC/diagnostic initialization remains separate; no
+   direct VASIP/SMC call occurs in this core-reset body.
 3. Integrate actual runtime catalog/resource discovery and OS mapping, PCI and
    IRQ adapters. Preserve typed spaces, map ownership/lifetime, current index
    restoration and explicit post-IRQ SI state. SB selection remains a dependency;
@@ -368,7 +382,7 @@ Critical distinctions to preserve:
 9. Review/scan an exact public allowlist, commit/push and verify remote commit/
    tree. Keep proprietary bytes, calibration, credentials and local paths private.
 
-**D1 remains partial.** Higher device-reset composition, actual OS/runtime resources, optional dependencies,
+**D1 remains partial.** Enclosing core-reset composition is implemented offline; actual OS/runtime resources, higher initialization, optional dependencies,
 policy input acquisition/MBSS/fatal recovery and actual resource ownership remain unfinished. Maintain the full
 working-driver and modern-OpenWrt objective; host tests do not meet hardware gates.
 
@@ -450,7 +464,8 @@ assembly, typed references and descriptor reads as required by the evidence.
 | `86ab211` | PHY nesting, complete outer idle-TSSI, actual wake predicate/action and ARM load-trace comparisons; mirror-cache prefix fix and reset/beamforming evidence. |
 | `af031a9` | Composed target PHY reset, real core130 BF cleaner and exact analog/bandwidth assembly closure. |
 | `b9b2877` | SI selector, HND resource/IRQ/clock wrapper and complete WL clock-select composition with exact inline cache/reason stores. |
-| This checkpoint | AI/PHY header namespace integration fix, combined-header compile gate and verified T3 handoff checkpoint. |
+| `1deea16` | AI/PHY header namespace integration fix and combined-header compile gate. |
+| This checkpoint | Enclosing/lower core reset, generic auxiliary AI reset, selected-wrapper SI helpers, exact mctrl reset and independent trace regressions. |
 
 At each future checkpoint, add a concise milestone entry and replace the active
 next-work package with the actual next task. Keep unresolved defects visible.

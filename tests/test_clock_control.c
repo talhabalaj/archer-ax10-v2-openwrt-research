@@ -380,6 +380,11 @@ static void alias_and_arguments(void)
         if (i == 3) c.core_up = 2;
         if (i == 4) c.rsdb = 2;
         if (i == 5) c.secondary_owned = 2;
+        if (i == 1) {
+            assert(axd_clock_control_begin(&job, AXD_CLOCK_PLL, 1, &c) == 0);
+            assert(job.context.fast_clock == 2);
+            continue;
+        }
         assert(axd_clock_control_begin(&job, AXD_CLOCK_PLL, 1, &c) != 0);
         assert(job.error == AXD_CLOCK_BAD_ARGUMENT && job.attempted_ops == 0);
         terminal(&job, &t, AXD_CLOCK_FAILED);

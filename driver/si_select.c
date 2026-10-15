@@ -70,8 +70,8 @@ static int pci(struct axd_si_select *j, enum axd_si_resource resource,
     j->operation = op;
     return perform(j, io, context, &ignored);
 }
-int axd_si_select_begin(struct axd_si_select *j, enum axd_si_command command,
-                        uint32_t requested, uint32_t unit,
+int axd_si_select_begin_wrapper(struct axd_si_select *j, enum axd_si_command command,
+                        uint32_t requested, uint32_t unit, unsigned wrapper_selector,
                         const struct axd_si_context *context,
                         const struct axd_si_state *state)
 {
@@ -84,11 +84,12 @@ int axd_si_select_begin(struct axd_si_select *j, enum axd_si_command command,
     *j = empty;
     fail(j, AXD_SI_BAD_ARGUMENT);
     if (context == NULL || state == NULL || command < AXD_SI_BY_ID || command > AXD_SI_BY_INDEX ||
-        context->pci_config_owned > 1) return -1;
+        context->pci_config_owned > 1 || wrapper_selector > 1) return -1;
     j->context = *context;
     j->state = *state;
     if (context->core_count > AXD_SI_MAX_CORES) { fail(j, AXD_SI_BOUNDS); return -1; }
     j->command = command;
+    j->wrapper_selector = wrapper_selector;
     j->requested = requested;
     j->unit = unit;
     j->selected_index = requested;
@@ -96,6 +97,13 @@ int axd_si_select_begin(struct axd_si_select *j, enum axd_si_command command,
     j->phase = AXD_SI_RUNNING;
     j->error = AXD_SI_NO_ERROR;
     return 0;
+}
+int axd_si_select_begin(struct axd_si_select *j, enum axd_si_command command,
+                        uint32_t requested, uint32_t unit,
+                        const struct axd_si_context *context,
+                        const struct axd_si_state *state)
+{
+    return axd_si_select_begin_wrapper(j,command,requested,unit,0,context,state);
 }
 enum axd_si_phase axd_si_select_step(struct axd_si_select *j, axd_si_io_fn io, void *context)
 {
@@ -152,7 +160,7 @@ enum axd_si_phase axd_si_select_step(struct axd_si_select *j, axd_si_io_fn io, v
         j->stage = STORE_WRAPPER;
         break;
     case STORE_WRAPPER:
-        j->state.primary_wrapper = j->state.cache[j->selected_index].primary;
+        j->state.primary_wrapper = j->wrapper_selector ? j->state.cache[j->selected_index].secondary : j->state.cache[j->selected_index].primary;
         j->wrapper_stores++;
         j->stage = FINAL_MAP;
         break;
@@ -161,7 +169,7 @@ enum axd_si_phase axd_si_select_step(struct axd_si_select *j, axd_si_io_fn io, v
         break;
     case PCI_WRAPPER:
         if (pci(j, AXD_SI_PRIMARY_WRAPPER, j->context.bus_core_id == 0x83cu ? 0x70u : 0xacu,
-                 j->selected_core.primary_physical, io, context)) j->stage = FINAL_MAP;
+                 j->wrapper_selector ? j->selected_core.secondary_physical : j->selected_core.primary_physical, io, context)) j->stage = FINAL_MAP;
         break;
     case FINAL_MAP:
         if (j->context.bus == 0) j->state.current_map = j->state.cache[j->selected_index].core;

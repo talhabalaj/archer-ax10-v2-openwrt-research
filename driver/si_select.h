@@ -49,7 +49,7 @@ struct axd_si_select {
     struct axd_si_state state;
     struct axd_si_core selected_core;
     uint32_t requested, unit, search_index, matches, selected_index, return_value;
-    unsigned selected_index_valid, stage, zero_map_mask, zero_map_results;
+    unsigned wrapper_selector, selected_index_valid, stage, zero_map_mask, zero_map_results;
     unsigned current_map_stores, wrapper_stores, index_stores;
     struct axd_si_operation operation;
     uint64_t attempted_ops, completed_ops;
@@ -65,6 +65,13 @@ struct axd_si_select {
  */
 int axd_si_select_begin(struct axd_si_select *job, enum axd_si_command command,
                         uint32_t id_or_index, uint32_t unit,
+                        const struct axd_si_context *context,
+                        const struct axd_si_state *state);
+/* Internal AI reset's selected-wrapper entry. Selector0 primary, selector1
+ * secondary. Physical maps/cache ordering is unchanged; only final wrapper
+ * selection and PCI wrapper-window physical value differ. */
+int axd_si_select_begin_wrapper(struct axd_si_select *job, enum axd_si_command command,
+                        uint32_t id_or_index, uint32_t unit, unsigned wrapper_selector,
                         const struct axd_si_context *context,
                         const struct axd_si_state *state);
 /* At most one logical MAP/PCI callback or bounded internal transition per step.

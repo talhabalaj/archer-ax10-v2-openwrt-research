@@ -18,6 +18,11 @@ struct axd_psm_context {
     uint32_t chip_id, main_control, extended_control, mirror_control;
     uint32_t main_depth, extended_depth, wake_reasons, fatal_reason, timeout_flags;
     uint8_t band_present, mute_override, mirror_enabled, wake_hint, mbss_enabled;
+    /* Optional nullable-band binding. Default0 retains the legacy explicit
+     * band_present predicate. Required1/known0 becomes a dependency only if
+     * actual wait-for-wake reaches its band guard, after prior cache/I/O.
+     */
+    uint8_t band_binding_required, band_presence_known;
 };
 /* Explicit facts or an immutable input binding for the actual pure predicate.
  * Unknown public-up/policy is a dependency. Known public-up false is the
@@ -49,7 +54,7 @@ enum axd_psm_error {
 /* Unexecuted callout requirements. They never mean a successful stub ran. */
 enum axd_psm_callout {
     AXD_PSM_CALLOUT_NONE = 0, AXD_PSM_WAKE_CONTROL = 1, AXD_PSM_MBSS_PRQ = 2,
-    AXD_PSM_FATAL = 4, AXD_PSM_DOWN = 8
+    AXD_PSM_FATAL = 4, AXD_PSM_DOWN = 8, AXD_PSM_BAND_STATE = 16
 };
 struct axd_psm_control {
     enum axd_psm_phase phase;

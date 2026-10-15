@@ -451,9 +451,70 @@ static void alias_and_arguments(void)
     terminal(&job, &t, AXD_PSM_CANCELLED);
     terminal(&empty, &t, AXD_PSM_INVALID);
 }
+static void band_binding(void)
+{
+    const struct event set_prefix[] = {P(3), FB, SB, W(0x120, 0x04000003)};
+    struct request r = request(WAKE);
+    struct axd_psm_control job;
+    struct trace t;
+    unsigned present;
+    r.policy = policy(1, 1, 1, 1);
+    r.context.band_binding_required = 1;
+    /* Unknown is not a null band. The actual physical sample/policy/cache
+     * update and primary write finish before the wait's band dependency.
+     * Either placeholder predicate must produce the same dependency.
+     */
+    for (present = 0; present < 2; present++) {
+        r.context.band_present = (uint8_t)present;
+        job = execute(&r, set_prefix, N(set_prefix), AXD_PSM_DEPENDENCY,
+                      AXD_PSM_NO_RESULT, AXD_PSM_BAND_STATE);
+        assert(job.context.main_control == 0x04000003);
+        assert(job.context.wake_reasons == 8 && job.context.wake_hint == 0);
+        assert(job.wake_control_observed && job.wake_control_sample == 3);
+        sweep(&r, set_prefix, N(set_prefix));
+    }
+    r.context.band_presence_known = 1;
+    r.context.band_present = 0;
+    job = execute(&r, set_prefix, N(set_prefix), AXD_PSM_DONE, AXD_PSM_WAKE_UPDATED, 0);
+    assert(job.context.main_control == 0x04000003 && job.context.wake_hint == 0);
+    sweep(&r, set_prefix, N(set_prefix));
+    r.context.band_present = 1;
+    job = execute(&r, set_and_wait, N(set_and_wait), AXD_PSM_DONE, AXD_PSM_WAKE_UPDATED, 0);
+    assert(job.context.wake_hint == 1 && job.completed_ops == N(set_and_wait));
+    sweep(&r, set_and_wait, N(set_and_wait));
+
+    /* Unknown unused band does not reject at begin or any earlier guard. */
+    r.context.band_presence_known = 0;
+    r.policy = policy(1, 0, 0, 0);
+    execute(&r, NULL, 0, AXD_PSM_DONE, AXD_PSM_WAKE_UPDATED, 0);
+    r.policy = policy(1, 1, 1, 0);
+    execute(&r, policy_read, N(policy_read), AXD_PSM_DONE, AXD_PSM_WAKE_UPDATED, 0);
+    r.policy = policy(1, 1, 1, 1);
+    job = execute(&r, original_wake, N(original_wake), AXD_PSM_DONE, AXD_PSM_WAKE_UPDATED, 0);
+    assert(job.context.main_control == 0x04000003 && !job.context.wake_hint);
+
+    /* Alias restart retains the opt-in and its explicit unknown status. */
+    assert(axd_psm_wake_control_begin(&job, &job.context, &job.policy) == 0);
+    assert(job.context.band_binding_required == 1 && !job.context.band_presence_known);
+    t = trace_for(cached_but_wait, 2);
+    run(&job, &t);
+    assert(job.phase == AXD_PSM_DEPENDENCY && job.pending_callouts == AXD_PSM_BAND_STATE);
+    assert(job.context.main_control == 0x04000003 && job.completed_ops == 2);
+    terminal(&job, &t, AXD_PSM_DEPENDENCY);
+
+    r.context.band_binding_required = 2;
+    assert(begin(&job, &r) == -1 && job.error == AXD_PSM_BAD_ARGUMENT);
+    r.context.band_binding_required = 1;
+    r.context.band_presence_known = 2;
+    assert(begin(&job, &r) == -1 && job.error == AXD_PSM_BAD_ARGUMENT);
+    /* Legacy contexts ignore the unused known byte, retaining old behavior. */
+    r.context.band_binding_required = 0;
+    job = execute(&r, set_and_wait, N(set_and_wait), AXD_PSM_DONE, AXD_PSM_WAKE_UPDATED, 0);
+    assert(job.context.band_presence_known == 2 && job.context.wake_hint == 1);
+}
 int main(void)
 {
-    override_paths(); policy_paths(); enable_policy_paths(); actual_policy_inputs(); alias_and_arguments();
+    override_paths(); policy_paths(); enable_policy_paths(); actual_policy_inputs(); alias_and_arguments(); band_binding();
     puts("PSM override: independent reason/policy/cache/mirror/enable traces and callback exits passed");
     return 0;
 }

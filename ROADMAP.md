@@ -64,8 +64,9 @@ mutating bring-up must follow the dependencies actually recovered from stock.
    The target PHY-reset coordinator and real core130 beamforming cleaner are
    implemented, with SI selection, HND IRQ/resource/clock composition and the WL
    clock caller. Continue with actual runtime/OS adapters and remaining optional
-   prerequisites. Compose higher device reset with
-   tested AI-wrapper/DMA reset and PSM stages using explicit state.
+   prerequisites. The enclosing core-reset coordinator now composes actual AI/SI auxiliary reset,
+   per-slot DMA/PSM, caches and fresh PLL checks. Continue the enclosing BMAC
+   initialization caller and runtime acquisition with explicit state.
 3. **Finish policy acquisition and callouts:** the actual BSS/RRM/association
    predicate and wake-control action have tests, including actual ARM predicate
    comparisons. Runtime state acquisition/synchronization, MBSS and fatal recovery
@@ -140,8 +141,11 @@ is provided. See [driver/README.md](driver/README.md) for exact restrictions.
    [target coordinator](docs/PHY_RESET_MODEL.md) and [core130 cleaner](docs/BF_CLEAN_MODEL.md)
    now compose the real children with explicit bindings. [SI selector](docs/SI_SELECT_MODEL.md),
    [HND clock wrapper](docs/SI_CLOCK_MODEL.md) and [WL caller](docs/WL_CLOCK_MODEL.md)
-   preserve actual mapping/index/IRQ and inline reason updates. Higher device-reset
-   composition, policy/metadata acquisition and actual OS/runtime resources remain.
+   preserve actual mapping/index/IRQ and inline reason updates. The
+   [enclosing core reset](docs/CORE_RESET_MODEL.md),
+   [lower auxiliary reset](docs/CORE_RESET_LOW_MODEL.md) and
+   [mctrl/reset helpers](docs/MCTRL_MODEL.md) now compose those children offline.
+   Higher initialization, policy/metadata acquisition and actual OS/runtime resources remain.
 2. Follow callers and reset/control helpers only as necessary to establish the
    core-130 main and extended PSM sequences. Resolve register descriptors rather
    than assuming older b43/brcmsmac offsets or masks.

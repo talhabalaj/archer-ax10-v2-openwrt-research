@@ -200,7 +200,7 @@ int axd_clock_control_begin(struct axd_clock_control *job,
     fail(job, AXD_CLOCK_BAD_ARGUMENT);
     if (context == NULL || command < AXD_CLOCK_SELECT || command > AXD_CLOCK_SECONDARY ||
         (command != AXD_CLOCK_SELECT && argument > 1) || context->core_clock_valid > 1 ||
-        context->fast_clock > 1 || context->pll_inhibit > 1 || context->core_up > 1 ||
+        context->pll_inhibit > 1 || context->core_up > 1 ||
         context->rsdb > 1 || context->secondary_owned > 1)
         return -1;
     if (context->core != 130 || context->minor > 1) {

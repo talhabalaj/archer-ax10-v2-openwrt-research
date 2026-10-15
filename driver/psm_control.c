@@ -261,7 +261,10 @@ static void prepare(struct axd_psm_control *job)
             done(job, AXD_PSM_SUSPENDED);
         break;
     case WAKE_DELAY:
-        if (!job->context.band_present) {
+        if (job->context.band_binding_required && !job->context.band_presence_known) {
+            job->pending_callouts |= AXD_PSM_BAND_STATE;
+            job->phase = AXD_PSM_DEPENDENCY;
+        } else if (!job->context.band_present) {
             if (job->command == AXD_PSM_WAIT_WAKE)
                 done(job, AXD_PSM_NOOP);
             else
@@ -435,7 +438,9 @@ int axd_psm_control_begin(struct axd_psm_control *job,
     fail(job, AXD_PSM_BAD_ARGUMENT);
     if (context == NULL || command < AXD_PSM_WAIT_WAKE || command > AXD_PSM_ENABLE_EXT ||
         context->band_present > 1 || context->mute_override > 1 ||
-        context->mirror_enabled > 1 || context->wake_hint > 1 || context->mbss_enabled > 1)
+        context->mirror_enabled > 1 || context->wake_hint > 1 || context->mbss_enabled > 1 ||
+        context->band_binding_required > 1 ||
+        (context->band_binding_required && context->band_presence_known > 1))
         return -1;
     if (context->core != 130 || context->minor > 1) {
         job->error = AXD_PSM_UNSUPPORTED;
