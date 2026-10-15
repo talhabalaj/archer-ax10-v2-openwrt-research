@@ -7,6 +7,10 @@ Broadcom BCM63178/BCM963178. Findings checked on 2026-10-15.
 OpenWrt image or functioning AX radio driver in this repository.** This is a device-specific investigation;
 AX10 v1, v2, and v3 are not interchangeable.
 
+**Continue here:** [current progress and exact next task](PROGRESS.md),
+[full implementation roadmap](ROADMAP.md), and
+[agent continuation instructions](AGENTS.md).
+
 ## What we know
 
 | Component | Evidence and current conclusion |
@@ -50,20 +54,18 @@ prove that an unpublished or later port cannot exist.
 
 ## Intended implementation sequence
 
-Offline driver development can proceed while boot/recovery evidence is pending.
-The initial components are implemented and tested against private stock input;
-the sequence below describes dependencies for eventual hardware validation.
+Driver-first offline development is the current priority. Selection, raw-table
+replay and upload simulation are implemented; the next task is recovering the
+actual reset/start/hardware-acknowledgement path. PHY, DMA, RX/TX and Linux WLAN
+integration follow their recovered dependencies.
 
-1. Establish exact board, flash, boot and recovery evidence.
-2. Add an ARMv7 BCMBCA OpenWrt target and AX10-specific device tree; prepare an
-   initramfs research image with no flash-upgrade path.
-3. Validate a recoverable RAM boot before testing hardware drivers.
-4. Bring up Ethernet and PCIe using vendor source and upstream conventions.
-5. Evaluate existing BCMA/b43 for the BCM43217 with correct board calibration.
-6. Use REA/Ghidra for missing BCM63178 radio/core behavior, then implement and
-   test that support separately.
-7. Only after board/network validation, implement the correct persistent-image
-   wrapper, upgrade layout, calibration preservation and recovery tests.
+The separate board workstream establishes console/recovery, minimal OpenWrt RAM
+boot, Ethernet and radio resources before hardware validation. Persistent image
+and upgrade support follow validated board/radio behavior. The optional 2.4 GHz
+BCMA/b43 investigation remains independent.
+
+[ROADMAP.md](ROADMAP.md) defines all milestones and acceptance criteria;
+[PROGRESS.md](PROGRESS.md) records completed work, limits and next-session steps.
 
 A vendor-BSP fork that retains the old kernel and proprietary modules is a
 different option. It could preserve more stock functionality but does not
