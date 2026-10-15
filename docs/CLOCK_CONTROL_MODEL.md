@@ -23,7 +23,7 @@ physical address. RSDB work without that owner ends `DEPENDENCY_SECONDARY_OWNER`
 
 Clock selection with capability bit `0x10000000` clear ends
 `DEPENDENCY_HND_FALLBACK` before I/O. The actual imported HND fallback has now
-been [recovered](DRIVER_CLOCK_FALLBACK_AUDIT.md), but is not implemented here. It
+been [recovered](DRIVER_CLOCK_FALLBACK_AUDIT.md), and its [operation body is now implemented separately](CHIPCOMMON_CLOCK_MODEL.md). It
 uses ChipCommon, whose register `0x1e0` is a different resource from D11 `0x1e0`.
 Do not route this dependency through the D11 job or treat it as a successful
 stub. The caller's wake reasons remain unchanged by the implemented capability
@@ -97,10 +97,11 @@ elapsed timing, clock lock, PHY initialization or any router execution.
 
 ## Next work
 
-Implement the retained ChipCommon fallback behind its actual SI/PCI/mapping
-contracts; keep its capability/revision/mode behavior distinct. Implement
-PHY-register read/modify, low10 TSSI snapshot/restore and reset operations, then
-their wake/nesting and optional dependencies. Compose with the existing reset,
+Compose the implemented ChipCommon body behind its actual SI/PCI/mapping
+contracts, applying the WL cached-mode/wake result separately; keep its
+capability/revision/mode behavior distinct. Use the implemented
+[PHY primitives](PHY_REGISTER_MODEL.md) and complete their table-read,
+wake/nesting, PHY-clock and optional dependencies. Compose with the existing reset,
 PSM and DMA jobs only when the required resources and caller state are explicit.
 Use the [new external research](EXISTING_REVERSE_ENGINEERING.md) to build an
 original bank-aware differential harness; it supplies methodology, not

@@ -35,6 +35,12 @@ All original code here uses the repository's MIT license.
 - `clock_control.c`: core-130 D11 clock/PLL/secondary traces with separate
   samples, exact wait/final-read contracts and observation freshness. HND
   fallback and actual SI ownership remain explicit dependencies.
+- `chipcommon_clock.c`: retained HND clock-operation body, typed ChipCommon/PCI
+  resources, crystal paths and exact mode/poll semantics. SI/IRQ lifetime and
+  WL cached-mode/wake updates remain external composition work.
+- `phy_register.c`: direct PHY read/modify, analog/reset pulse and one/two-core
+  TSSI snapshot/restore with explicit partial validity and commit boundaries.
+  High reads and three/four-core TSSI expose table dependency.
 - `effective_init.c`: context-dependent initialization semantics with explicit
   `0x130` addend, width truncation and a separate semantic object-copy operation.
   Whole-table preflight validates caller-supplied bounds before callbacks.
@@ -122,7 +128,12 @@ The checks passed on 2026-10-15:
 - Clock/PLL traces cover both polling bounds, A/B distinctions, final-only
   ready/final loss, guarded/skipped paths, unit-1 ownership and per-success
   observation freshness, including every-event errors/cancellation.
-- All ten C files cross-compile with Clang for `armv7-none-eabi` in freestanding
+- Direct PHY/TSSI/reset and ChipCommon tests cover exact traces, software commit
+  boundaries, mode/ownership gates and callback exits under ASan/UBSan.
+- The optional Unicorn2.1.4 harness executes actual selected stock ARM functions:
+  264 synthetic PHY read/modify/analog cases match C, widths, barriers and
+  bookkeeping. Mutants and rejection probes fail as expected.
+- All twelve C files cross-compile with Clang for `armv7-none-eabi` in freestanding
   mode with warnings treated as errors. This proves compilation, not linking
   into Linux, execution on ARM or hardware behavior.
 
@@ -177,13 +188,16 @@ firmware/table versions must not be silently mixed.
 
 ## Next implementation boundary
 
-Use the tested D11 clock/PLL jobs; implement the retained HND clock fallback
-and PHY-register/TSSI/analog-reset operations, resolve optional/resource
-dependencies, and compose the full higher reset
+Use the tested D11/ChipCommon and direct PHY/TSSI/reset jobs. Implement the
+recovered table-read/packed-write and PHY-clock/core-flags/wake contracts,
+resolve resource/optional dependencies, and compose the full higher reset
 with proven runtime resources. Complete wake policy and MBSS/fatal callouts;
 main-enable `DEPENDENCY` remains unfinished work. See
 [resource evidence](../docs/DRIVER_RESOURCE_AUDIT.md),
 [clock model](../docs/CLOCK_CONTROL_MODEL.md),
+[ChipCommon model](../docs/CHIPCOMMON_CLOCK_MODEL.md),
+[PHY model and optional ARM comparison](../docs/PHY_REGISTER_MODEL.md),
+[table-read contract](../docs/DRIVER_AC_TABLE_READ_AUDIT.md),
 [external research and harness plan](../docs/EXISTING_REVERSE_ENGINEERING.md),
 [PSM control policies](../docs/PSM_CONTROL_MODEL.md),
 [DMA reset policies](../docs/DMA_RESET_MODEL.md) and

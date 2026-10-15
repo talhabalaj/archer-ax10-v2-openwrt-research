@@ -59,8 +59,9 @@ mutating bring-up must follow the dependencies actually recovered from stock.
 
 1. **Use the saved implementation:** effective initialization, wrapper reset and
    startup subsets have tests/evidence; preserve their exact operation contracts.
-2. **Finish recovered clock/PHY reset contracts:** D11 clock/PLL jobs are tested;
-   implement HND fallback and PHY reset, resolve runtime mapping and remaining
+2. **Finish recovered clock/PHY reset contracts:** D11/ChipCommon clock and
+   direct PHY/TSSI/reset jobs are tested. Implement table-read/PHY-clock/core-flags
+   and surrounding SI/wake composition, resolve runtime mapping and remaining
    optional/imported prerequisites, then compose with
    tested AI-wrapper/DMA reset and PSM stages using explicit state.
 3. **Finish wake policy and callouts:** wake/suspend/enable register paths now
@@ -121,6 +122,10 @@ is provided. See [driver/README.md](driver/README.md) for exact restrictions.
    operations; the [D11 clock/PLL model](docs/CLOCK_CONTROL_MODEL.md) now passes
    host checks. [HND fallback](docs/DRIVER_CLOCK_FALLBACK_AUDIT.md) and
    [PHY-wake/workaround](docs/DRIVER_PHY_WAKE_ADDENDUM.md) call boundaries are
+   recovered; [ChipCommon body](docs/CHIPCOMMON_CLOCK_MODEL.md) and
+   [direct PHY/TSSI/reset primitives](docs/PHY_REGISTER_MODEL.md) now pass host
+   checks. Three actual stock ARM primitives match C under synthetic emulation.
+   [Table-read/packed-write dependencies](docs/DRIVER_AC_TABLE_READ_AUDIT.md) are
    recovered; implementation/composition and actual runtime resources remain.
 2. Follow callers and reset/control helpers only as necessary to establish the
    core-130 main and extended PSM sequences. Resolve register descriptors rather

@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "scope": "ac_phy_table29_width32_count1_read_and_phy51_tssi_ffff",
+  "analysis_mode": "offline_static",
+  "artifact": {
+    "name": "wl.ko",
+    "size": 5803056,
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4"
+  },
+  "session_exported_and_closed": true,
+  "source_digest_rechecked": true,
+  "records": [
+    {
+      "record": "assembly-ac-table-read-ext",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_0f192c1faa720bb8b0fa0980a641a789f90b3524dc992fbd5ed5e54951dc7909"
+    },
+    {
+      "record": "assembly-ac-table-read",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_4a186a09cef75165a0cca40054e4181339a462feca0ff6b8849c53a05fcfef14"
+    },
+    {
+      "record": "assembly-disable-hwaci-trigger",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_593c5d551224a1bef9bb502a24c615eae4c223672e129588a06511a493c3f20c"
+    },
+    {
+      "record": "assembly-phy-register-write",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_4456d4d9d52841e9e9f571371f489f9ef1e8022d869a71dce732b8ae0297995e"
+    },
+    {
+      "record": "assembly-phy-table-reader",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_032934c91efa19fa40472ea8c8b4dca3922538702a253c7fa9117e7bf8efd848"
+    },
+    {
+      "record": "assembly-restore-hwaci-trigger",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_390eb51f0422c4c329372cf8bde8f1e0b60493fae25a5cbfecf3b98168d3c967"
+    },
+    {
+      "record": "assembly-stf-get-data",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_61c933b514d24b78df4938d48710e041139e1c2c812709d380ff02650decf6f4"
+    },
+    {
+      "record": "bytes-table-mac-control-field",
+      "operation": "read_bytes",
+      "evidence_id": "ev_49274a659f78010f7edacd91d7bfc496544b4273da004f8dda9eae7592d16c02"
+    },
+    {
+      "record": "bytes-width32-dispatch-target",
+      "operation": "read_bytes",
+      "evidence_id": "ev_6d396692d0b1bd5bd031a6caf253d141d026dec22ee410bfa2403660b3d8d8ad"
+    },
+    {
+      "record": "pseudo-ac-table-read-ext",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_11edc795edfabf8cc7c8aeeab66f8f28a3443078a96d8ddcf269f156db5f99c2"
+    },
+    {
+      "record": "pseudo-ac-table-read",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_edd3de114670ff56573450b6d85d8e8464c558a0875f08e8d4c58944c8f2699d"
+    },
+    {
+      "record": "pseudo-disable-hwaci-trigger",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_e6f6ce9e49cad2f5bb3d5f4be3bc7319ed8e048e1e02cecb941049f2575d5feb"
+    },
+    {
+      "record": "pseudo-phy-register-write",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_46b7d5b2dac8d9ec1cbd077f8d8d20ac856d47ca2f54d8601cbc128dafcb18db"
+    },
+    {
+      "record": "pseudo-phy-table-reader",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_955c765861bbd9df7cd1842dfb526f83b0350201e29c63a7cc3577410127e41a"
+    },
+    {
+      "record": "pseudo-restore-hwaci-trigger",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_02f8af6a400f8a24efff915b3c4527c0428790cf3287bd97fa8ca3f31f0cd7f5"
+    },
+    {
+      "record": "pseudo-stf-get-data",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_27dcc10a07a283d99786286861634802271d62d97e5c6ba569b766eacbc1e8a0"
+    }
+  ],
+  "reused_records": [
+    {
+      "session": "rea-resources",
+      "record": "assembly-phy-register-read",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_2b12a9e501d6e400d43b4748e95dddd2a845669b912c6ff03a13644a70e8c33c"
+    },
+    {
+      "session": "rea-resources",
+      "record": "assembly-phy-register-modify",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_ba74c33fde85cab3ba8b4e66e6981d0406bcbd4bbb5abe6490002ab0f44c60a0"
+    },
+    {
+      "session": "rea-resources",
+      "record": "assembly-ac-idle-tssi-force",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_1d4fc437c331fd1eb9da1b87ed8f6a02e57a135d6551ba7b5d6b81f9dbd71626"
+    },
+    {
+      "session": "rea-resources",
+      "record": "assembly-idle-tssi-force",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_d2a071d2ba25e3342b40e5d79b5c27e0fd33459df3c9bdfa0eba0bb72f721b30"
+    },
+    {
+      "session": "rea-resources",
+      "record": "bytes-phy-address-data-fields",
+      "operation": "read_bytes",
+      "evidence_id": "ev_26f8365d1f1b453fc5d85f240e23d5a3ef0f9df39c1c9d46b790161178bedad6"
+    },
+    {
+      "session": "rea-attach",
+      "record": "bytes-core130-phyversion-offset",
+      "operation": "read_bytes",
+      "evidence_id": "ev_51f5b2477147507e801f1530fc48d5c6af77aed91924f01b127edd4ddd96480d"
+    }
+  ],
+  "limitations": [
+    "No router access, target execution or physical MMIO.",
+    "Raw proprietary output and host paths excluded.",
+    "Bus word, threshold and ownership remain explicit runtime inputs.",
+    "Other table widths/IDs and table write branch are not implemented by these observations."
+  ]
+}

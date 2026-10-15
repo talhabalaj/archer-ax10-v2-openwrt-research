@@ -13,7 +13,8 @@ enum axd_d11_kind {
     AXD_D11_WRITE32,
     AXD_D11_READ32,
     AXD_D11_READ16,
-    AXD_D11_DELAY_US
+    AXD_D11_DELAY_US,
+    AXD_D11_WRITE16
 };
 struct axd_d11_operation {
     enum axd_d11_kind kind;

@@ -1,18 +1,21 @@
 # Current progress and continuation checkpoint
 
-Updated 2026-10-15. This checkpoint adds the core-130 clock/PLL trace model,
-closes bounded HND/PHY-wake dependency analysis, and incorporates fresh research
-on existing Broadcom reverse-engineering projects. Previous implementation:
-[`295813f`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/295813f5d675fdf8211f082e747069d63b3d9579).
+Updated 2026-10-15. This checkpoint adds direct PHY/TSSI/reset primitives,
+the ChipCommon clock-operation body, and an actual stock-ARM differential
+harness. The AC table-reader dependency is now recovered. Previous implementation:
+[`ef8dfb0`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/ef8dfb0e4fab0bffa9033b2d4ee14814d727999d).
 Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
 
 ## Resume here
 
-**Next: implement PHY-register/TSSI/reset operations and the retained HND clock
-fallback; resolve resource/wake dependencies and compose the higher lifecycle.**
-Clock/PLL D11 jobs are now host-tested. Reuse the closed-session ledgers; do not
-repeat queries. Build the original differential harness alongside composition,
-using the [external research](docs/EXISTING_REVERSE_ENGINEERING.md) as methodology.
+**Next: implement the recovered AC table-29 read/packed-write contract and
+PHY-clock/core-flags/wake nesting; compose the higher reset/clock lifecycle
+with explicit runtime resource ownership.** Direct PHY/TSSI one/two-core
+primitives and the ChipCommon clock body are implemented and host-tested.
+The D11 clock-select fallback still needs orchestration of SI selection/restore,
+the separate ChipCommon job and WL cached-mode/wake-reason result updates.
+Reuse closed-session ledgers instead of repeating analysis. Extend the original
+ARM comparison and common trace adapters as composition expands.
 
 Current priority is driver work first. Offline analysis/simulation remains
 unblocked by pending UART/recovery work. No device upload, radio initialization
@@ -25,9 +28,9 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | --- | --- | --- |
 | Target and reference inventory | Established for inspected inputs | [Hardware](findings/HARDWARE_INVENTORY.json), [binary](docs/DRIVER_BINARY_AUDIT.md), [GPL](docs/GPL_AUDIT.md). Reverify drift-prone device state before device work. |
 | D0 offline foundation | Implemented and host-tested within stated limits | Four C components, pinned object inspector, synthetic/fault tests and private-input comparisons. |
-| D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper/startup, PSM control, current DMA-reset and D11 clock/PLL subsets implemented; HND fallback/PHY-wake dependencies recovered, not yet implemented. Higher composition, optional branches and runtime resources remain. |
+| D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper/startup, PSM control, DMA reset, D11/ChipCommon clock and direct PHY/TSSI/reset subsets implemented; table/wake/core-flags composition remains. Higher composition, optional branches and runtime resources remain. |
 | D2 complete register/SHM/context contracts | Partial implementation, host-tested | Effective-init semantics and startup SHM16 FIFO read implemented; addend acquisition, physical init-object writes, complete register map and SHM ABI remain. |
-| D3 PHY 51/radio/channel/calibration | Attach dispatch mapped; initialization pending | Radio-specific callbacks and required private board inputs remain to be recovered. |
+| D3 PHY 51/radio/channel/calibration | Attach dispatch mapped; initialization pending | Direct register/TSSI primitives host-tested; table reader recovered. Radio-specific initialization/calibration and board inputs remain. |
 | D4 DMA/interrupt/RX | Reset helpers only; data path not implemented | Current reset paths tested offline; common older source mapped. Current queue/resources, descriptors, IRQ and RX remain to establish. |
 | D5 TX/Linux WLAN integration | Not implemented | Integration architecture and baseline feature implementation remain open. |
 | D6 HE/features/stability | Not implemented | Requires validated baseline driver and hardware tests. |
@@ -51,8 +54,11 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | `driver/psm_control.c` | Wake, main/extended suspend and enable, depth/cache state and bounded SHM polling. | Main enable can end with unimplemented wake-control/MBSS dependency; stricter failure policy, no real callouts. |
 | `driver/dma_reset.c` | Current TX/RX reset, direct/indirect selector, status masks, bounds and cache semantics. | No queue mapping, buffers, reclaim or IRQ; returned success need not be an observed disabled state. |
 | `driver/clock_control.c` | D11 clock selection, PLL and owned secondary-core traces, exact polling/sample distinctions and observation freshness. | HND fallback/real SI ownership remain dependencies; completion does not establish lock/readiness. |
+| `driver/chipcommon_clock.c` | Signed-revision/capability/mode clock body, typed PCI crystal path and exact polling. | Requires actual selected resource ownership; no SI/IRQ lifecycle or WL cache/wake orchestration. |
+| `driver/phy_register.c` | Direct read/modify, analog/reset pulse and one/two-core low10 TSSI snapshot/restore. | No outer MAC/PHY-wake/core-flags lifecycle; high reads and three/four-core TSSI expose table dependency. |
 | `driver/status_poll.c` | Caller-defined status predicate and monotonic timestamps; bounded steps, timeout and cancellation. | Synthetic configurable infrastructure; no recovered device-ready register/mask. |
 | `scripts/radio_firmware_inventory.py` | Exact hash, ELF object bounds/relocation checks, size companions and metadata inventory. | Payloads remain private; different/older modules rejected. |
+| `tests/check_phy_arm.py` | Exact selected stock ARM instructions versus C under 264 synthetic contexts; strict read queues and access bounds. | Requires private pinned input/Unicorn; three primitives only, no physical timing or device state. |
 | `scripts/test_driver.sh` | Public ASan/UBSan suite; optional private stock comparison. | Host validation only. |
 
 Earlier baseline validation (retained and still checked where relevant):
@@ -95,11 +101,29 @@ checks when code or inputs change; do not imply a new hardware test occurred.
 - [Effective-init semantics](docs/EFFECTIVE_INIT_AUDIT.md),
   [context/source notes](docs/D2_CONTEXT_SOURCE_NOTES.md) and earlier table/upload
   comparisons remain available; do not discard the independent raw recorder.
+- [PHY primitives and stock-ARM comparison](docs/PHY_REGISTER_MODEL.md),
+  [ChipCommon body/resource limits](docs/CHIPCOMMON_CLOCK_MODEL.md),
+  [actual AC table-29 read](docs/DRIVER_AC_TABLE_READ_AUDIT.md) and
+  [16 new plus six reused Evidence records](findings/DRIVER_AC_TABLE_READ_EVIDENCE.json).
+  Table ID/index use packed W32, with bus-dependent counter/flush behavior;
+  high-half reads cannot be skipped merely because the outer helper returns low16.
 
-Latest validation (host/build only):
+Latest validation (host/build and isolated synthetic ARM execution only):
 
-- All nine synthetic test programs pass under ASan/UBSan; all ten portable C
+- All eleven synthetic test programs pass under ASan/UBSan; all twelve portable C
   components compile for freestanding ARMv7 with strict warnings.
+- PHY literal fixtures cover read/modify, analog/reset pulse, one/two-core TSSI
+  slot mapping, mask/truncation, original-A reuse and per-event bookkeeping /
+  partial snapshot validity. Every-event errors/cancellation/coincident errors,
+  alias-safe snapshot-to-restore, invalid inputs and table dependencies pass.
+- ChipCommon literals cover signed revisions, capability/mode gates, three
+  register generations, crystal PCI and ignored-return paths, both 1,500-delay
+  poll directions, ownership dependencies before/after writes, observation
+  freshness, alias-safe restart and callback exit boundaries.
+- Actual pinned ARM instructions for three PHY primitives match C across 264
+  deterministic synthetic boundary/random cases using Unicorn 2.1.4. Six C
+  removal/width/mask/bookkeeping mutants and eight original ARM rejection probes
+  fail as intended. No kernel module, radio microcode or physical MMIO executed.
 - Clock/PLL literal traces cover all three commands, separate A/B samples,
   no-I/O guards, request-already-set shortcut, owned secondary directions and
   no-owner dependencies. Independent boundary expectations cover 1,500/no-final
@@ -121,13 +145,17 @@ Latest validation (host/build only):
 - The optional private-input suite still matches 1,404 raw records, 4,212
   effective-record cases under three synthetic addends, eight selector cases/
   five unsupported identities and 104,440 upload words across four stock pairs.
-- No MMIO, firmware execution, calibration access, RF operation, Linux module
-  linking or router test occurred. Private bytes remain outside this checkout.
+- No physical MMIO, device-firmware execution, calibration access, RF operation,
+  Linux module linking or router test occurred. Private bytes remain outside this checkout.
 
-Two further exact-HND/WL dependency sessions were exported and closed. Their
+The AC table-reader session was exported and closed with unchanged input digest;
+its 16 new Evidence IDs and six reused records were verified against retained
+raw records. Only reviewed descriptions/metadata are public.
+
+Two earlier exact-HND/WL dependency sessions were exported and closed. Their
 26 new Evidence IDs and eight reused records were checked against retained raw
 records. Runtime mapping/backend, complete wake policy and optional branches
-remain open; recovered descriptions are not implemented callouts.
+remain open; the published body models do not implement surrounding callouts.
 
 The earlier exact-WL resource session was exported and closed with unchanged input
 SHA-256. Retained raw records live privately under `driver-private/rea-resources`;
@@ -165,39 +193,39 @@ Critical distinctions to preserve:
    implementation notes and Git status. Preserve unrelated work; check remote
    main before publication. Reuse closed-session Evidence instead of repeating
    installation/analysis.
-2. Use the tested D11 clock/PLL jobs; preserve separate current/unit-1 resources,
-   observation freshness, distinct A/B samples and the void-helper limitations.
-   Implement the now-recovered HND `si_clkctl_cc` fallback from its dedicated
-   ledger: ChipCommon selection/restore, revision/capability/mode gates and PCI
-   crystal branches. It is not the D11 register despite equal offset `0x1e0`.
-3. Implement required SI ownership/mapping contracts from retained analysis;
-   runtime enumeration, addresses and OS backends remain missing. PHY-register
-   reason-2 set/clear and RSDB workaround have been expanded; do not requery
-   them or confuse the latter's lack of IRQ wrapping with the PLL helper.
-4. Implement PHY-register read/modify and core-130 analog/PHY-reset operations,
-   TSSI low10 snapshot/restore for proven core counts, and core-flags updates.
-   Resolve PHY-register enter/exit wake overrides, optional beamforming and
-   relevant table-read branches before claiming the entire PHY-reset path.
-5. Compose the higher reset coordinator around proven clock/AI/DMA/PHY jobs,
-   correct caller mode/reset bits and actual queue/resources. Resolve optional
-   VASIP/SMC and full wake policy/MBSS dependencies; do not introduce success stubs.
-6. Complete D2 physical init-object writes, addend acquisition and full needed
-   SHM ABI; then continue D3 radio/channel/calibration, D4 descriptors/IRQ/RX,
-   TX/Linux integration and full features. The separate recovery/RAM-boot/board
-   workstream is required before exact-board execution and persistent firmware.
-7. Build an original common differential trace schema/adapters informed by
-   the pinned core-42 AC harness, without importing its code/tables. Preserve
-   bank/core/space/width/barriers/delays and independently supplied read queues;
-   reject missing/exhausted/unconsumed reads and implicit zero/write-echo.
-   Preserve observation freshness and explicit dependencies. The optional ARM
-   accessor/inline-coverage design does not displace PHY/lifecycle implementation.
+2. Implement table-29 count1/width32 reads from the new dedicated ledger:
+   original index, mandatory low/high halves, packed W32 ID/index writes,
+   explicit bus word/threshold/counter and conditional PHY-version flush.
+   Compose conditional MAC suspend/enable and fresh PHY19e bit2 set/clear.
+   Extend saved TSSI slots to three/four only with the actual repeatedffff read /
+   no-op-modify asymmetry. Current two-slot API intentionally exposes dependency.
+3. Implement PHY-clock/core-flags operations, RSDB workaround and PHY-register
+   reason-2 wake nesting from retained exact evidence. Caller resources, runtime
+   RSDB state and wake-policy input acquisition remain explicit requirements.
+4. Use tested D11 and ChipCommon jobs to compose clock selection through actual
+   SI ordinary/fast mapping and IRQ lifecycle. Apply returned mode byte and
+   wake-reason bit0x10 in the WL caller; a mode return never establishes ready.
+   The separately implemented ChipCommon body alone does not complete fallback.
+5. Compose higher reset around clock/AI/DMA/PHY jobs and proven caller state,
+   queue/resources, bandwidth flags, analog dispatch and TSSI save/restore.
+   Resolve optional beamforming/VASIP/SMC and complete wake policy/MBSS/fatal
+   callouts; no successful placeholders or invented failure cleanup.
+6. Complete D2 physical init-object writes, addend acquisition and needed SHM
+   ABI; continue D3 radio/channel/calibration, D4 descriptors/IRQ/RX, TX/Linux
+   integration and full features. Separate recovery/RAM-boot/board work remains
+   required before exact-board hardware execution and persistent firmware.
+7. Extend the original strict differential harness and common trace adapters:
+   independent read queues, bank/core/space/width/barriers/delays, no implicit
+   zero/write-echo, missing/exhausted/unconsumed read rejection and consumed-bit
+   checks. ARM execution currently covers only direct read/modify/analog helpers.
+   Optional ARM live-accessor coverage design does not replace implementation.
 8. Add independent traces/boundaries/failure/cancel regressions, run affected
-   ASan/UBSan/private comparisons and strict ARMv7 builds. Export/close sessions,
-   verify exact input identity and update this checkpoint/roadmap with limitations.
+   ASan/UBSan/private/ARM checks. Reuse/export/close REA sessions, verify exact
+   input identity and maintain this checkpoint with scope and remaining gaps.
 9. Review/scan an exact public allowlist, commit/push and verify remote commit/
-   tree. Keep private payloads, calibration, credentials and local host paths out.
+   tree. Keep proprietary bytes, calibration, credentials and local paths private.
 
-**D1 remains partial.** Higher clock/PLL/PHY composition, optional dependencies,
+**D1 remains partial.** Higher clock/PHY/table composition, optional dependencies,
 wake policy and actual resource ownership remain unfinished. Maintain the full
 working-driver and modern-OpenWrt objective; host tests do not meet hardware gates.
 

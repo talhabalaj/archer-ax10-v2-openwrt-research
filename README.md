@@ -42,6 +42,9 @@ prove that an unpublished or later port cannot exist.
 - [Core 130 attach, table and microcode-selection analysis](docs/DRIVER_ATTACH_AUDIT.md)
 - [Wake/suspend/enable model and policies](docs/PSM_CONTROL_MODEL.md)
 - [Current DMA reset model and limits](docs/DMA_RESET_MODEL.md)
+- [PHY-register/TSSI/reset model and stock-ARM comparison](docs/PHY_REGISTER_MODEL.md)
+- [ChipCommon clock body and ownership limits](docs/CHIPCOMMON_CLOCK_MODEL.md)
+- [AC table-29 read and packed PHY-write contract](docs/DRIVER_AC_TABLE_READ_AUDIT.md)
 - [Clock/PLL model, observations and dependencies](docs/CLOCK_CONTROL_MODEL.md)
 - [Actual HND fallback and resource-selection contracts](docs/DRIVER_CLOCK_FALLBACK_AUDIT.md)
 - [PHY-register wake override and RSDB workaround](docs/DRIVER_PHY_WAKE_ADDENDUM.md)
@@ -69,9 +72,10 @@ prove that an unpublished or later port cannot exist.
 Driver-first offline development is the current priority. Selection, raw-table
 replay, effective initialization, upload simulation and reset/start subsets are
 implemented; the next task is composing the remaining lifecycle/resource
-contracts, including HND fallback, PHY operations and wake policy. D11 clock/PLL,
-wake/suspend/enable and DMA-reset subsets now have tests, with unfinished
-dependencies explicit. PHY, DMA, RX/TX and Linux WLAN
+contracts, including SI/clock composition, PHY table/clock operations and wake
+policy. D11/ChipCommon clock, direct PHY/TSSI/reset, wake/suspend/enable and
+DMA-reset subsets have tests. Selected actual ARM primitives also match C under
+synthetic emulation; unfinished dependencies remain explicit. PHY, DMA, RX/TX and Linux WLAN
 integration follow their recovered dependencies.
 
 The separate board workstream establishes console/recovery, minimal OpenWrt RAM
