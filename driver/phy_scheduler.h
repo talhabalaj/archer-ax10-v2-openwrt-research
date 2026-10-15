@@ -2,7 +2,8 @@
 #ifndef AXD_PHY_SCHEDULER_H
 #define AXD_PHY_SCHEDULER_H
 #include "phy_init.h"
-#include "radio_control.h"
+#include "radio_power.h"
+#include "phy_channel_init.h"
 #include "si_core.h"
 
 #define AXD_PHY_REGISTRY_CAPACITY 23u
@@ -51,6 +52,10 @@ struct axd_phy_scheduler_context {
      * table.hardware on dispatch and after every radio child transition. */
     struct axd_phy_init_context table;
     struct axd_radio_control_context radio;
+    /* radio is the compatible canonical old control snapshot; the new private
+     * spans/calibration fields live here, with .radio synchronized on dispatch. */
+    struct axd_radio_power_context radio_power;
+    struct axd_phy_channel_context channel;
     struct axd_phy_scheduler_cache cache;
     struct axd_wake_u32 allocator, flags3b0, chanspec, bandwidth_state;
     struct axd_wake_u32 hardware_chanspec, interference2g, interference5g;
@@ -58,6 +63,7 @@ struct axd_phy_scheduler_context {
     struct axd_wake_u32 interference_current, channel_state_pointer;
     struct axd_wake_u32 slice_unit, slice_up;
     struct axd_wake_u8 forced_interference, clocks, rxgcrs_enabled;
+    struct axd_wake_u8 radar_enabled;
     uint8_t phy_core_count_known;
     uint8_t tpc_min[4], tpc_max[4], btcx_byte18, rxgcrs_bytea8;
     uint8_t hirssi_byte16, hirssi_byte17;
@@ -95,7 +101,8 @@ struct axd_phy_scheduler {
     struct axd_phy_registry registry;
     struct axd_phy_scheduler_context context;
     struct axd_phy_init table_job;
-    struct axd_radio_control radio_job;
+    struct axd_radio_power radio_job;
+    struct axd_phy_channel_init channel_job;
     struct axd_phy_register phy_job;
     struct axd_psm_control mac_job;
     struct axd_si_core_job si_job;

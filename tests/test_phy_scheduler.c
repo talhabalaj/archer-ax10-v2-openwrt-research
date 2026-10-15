@@ -124,9 +124,14 @@ static int io(void *opaque,const struct axd_phy_scheduler_operation *op,struct a
     if(f->job->current==AXD_INIT_ANTDIV && f->job->mac_job.phase==AXD_PSM_RUNNING)
         assert(!memcmp(&f->job->context.table.hardware.mac,&f->job->mac_job.context,sizeof(f->job->mac_job.context)));
     if(f->job->current==AXD_INIT_RADIO){
-        assert(!memcmp(&f->job->context.radio,&f->job->radio_job.context,sizeof(f->job->context.radio)));
-        assert(!memcmp(&f->job->context.table.hardware,&f->job->radio_job.context.hardware,sizeof(f->job->context.table.hardware)));
+        assert(!memcmp(&f->job->context.radio,&f->job->radio_job.context.radio,sizeof(f->job->context.radio)));
+        assert(!memcmp(&f->job->context.radio_power,&f->job->radio_job.context,sizeof(f->job->context.radio_power)));
+        assert(!memcmp(&f->job->context.table.hardware,&f->job->radio_job.context.radio.hardware,sizeof(f->job->context.table.hardware)));
         assert(f->job->context.radio.pi47e==0 && f->job->context.radio.chanmgr_data10==0);
+    }
+    if(f->job->current==AXD_INIT_RADAR){
+        assert(!memcmp(&f->job->context.channel,&f->job->channel_job.context,sizeof(f->job->context.channel)));
+        assert(!memcmp(&f->job->context.table.hardware,&f->job->channel_job.context.hardware,sizeof(f->job->context.table.hardware)));
     }
     if(f->prefix){
         if(n==0)assert(f->job->context.cache.reuse_state.value==255 && f->job->context.cache.reuse_buffer.value==0xcafe);
@@ -304,7 +309,30 @@ static void radio_child(void)
     for(cut=0;cut<s.count;cut++)for(mode=0;mode<3;mode++){
         assert(!axd_phy_scheduler_begin(&j,&r,&c));f=fixture(&j,&s);if(mode!=1)f.fail_at=cut;if(mode!=0)f.cancel_at=cut;run(&j,&f);
         assert(j.phase==(mode==1?AXD_PS_CANCELLED:AXD_PS_FAILED) && !j.callbacks_completed);
-        assert(j.completed_ops==cut+(mode==1));assert(!memcmp(&j.context.table.hardware,&j.radio_job.context.hardware,sizeof(j.context.table.hardware)));terminal(&j,&f);
+        assert(j.completed_ops==cut+(mode==1));assert(!memcmp(&j.context.table.hardware,&j.radio_job.context.radio.hardware,sizeof(j.context.table.hardware)));terminal(&j,&f);
+    }
+}
+static void radar_child(void)
+{
+    static const struct event events[]={P(0x25c,0),P(0x25e,0xb4a3),P(0x260,0x3237),P(0x261,0x14),
+        P(0x25b,8),P(0x262,200),P(0x263,25),P(0x262,600),P(0x250,0xa419)};
+    struct axd_phy_scheduler j;struct axd_phy_scheduler_context c=context();struct axd_phy_registry r=one(AXD_INIT_RADAR);
+    struct script s={0};struct fixture f;struct axd_wake_u32 label={0x5555,1};unsigned mode;size_t cut;
+    c.chanspec=(struct axd_wake_u32){0x5047,1};c.radar_enabled=(struct axd_wake_u8){1,0};
+    c.channel.radar_state_pointer=(struct axd_wake_u32){0x1234,1};
+    c.channel.thresholds[4].first=(struct axd_wake_u32){0xaaaa,1};c.channel.thresholds[4].second=(struct axd_wake_u32){0xbbbb,1};
+    c.channel.current_band=(struct axd_wake_u32){0,1};c.channel.pi47c=0xcccc;
+    c.table.hardware.shared_bus_word=1;c.table.hardware.write_threshold=65535;
+    assert(!axd_phy_registry_add(&r,AXD_INIT_BTCX,&label,20));append(&s,events,N(events));
+    assert(!axd_phy_scheduler_begin(&j,&r,&c));f=fixture(&j,&s);run(&j,&f);
+    assert(j.phase==AXD_PS_TRACE_COMPLETE && j.callbacks_completed==2 && j.slice_up_stored && f.cursor==18);
+    assert(j.context.channel.state170==0xaaaa && j.context.channel.state172==0xbbbb && j.context.channel.pi47c==0xcccc && j.context.btcx_byte18==255);
+    assert(j.context.table.hardware.phy.bookkeeping==0x123d);terminal(&j,&f);
+    for(cut=0;cut<s.count;cut++)for(mode=0;mode<3;mode++){
+        assert(!axd_phy_scheduler_begin(&j,&r,&c));f=fixture(&j,&s);if(mode!=1)f.fail_at=cut;if(mode!=0)f.cancel_at=cut;run(&j,&f);
+        assert(j.phase==(mode==1?AXD_PS_CANCELLED:AXD_PS_FAILED) && !j.callbacks_completed && !j.slice_up_stored);
+        assert(j.context.btcx_byte18==0x55 && j.context.channel.state170==0xaaaa && j.context.channel.state172==0xbbbb);
+        assert(j.completed_ops==cut+(mode==1));terminal(&j,&f);
     }
 }
 int main(void)
@@ -312,6 +340,6 @@ int main(void)
     for(size_t i=0;i<sizeof(table0);i+=4){table0[i]=0x44;table0[i+1]=0x33;table0[i+2]=0x22;table0[i+3]=0x11;}
     for(size_t i=0;i<sizeof(table1);i+=4){table1[i]=0xd4;table1[i+1]=0xc3;table1[i+2]=0xb2;table1[i+3]=0xa1;}
     table2[0]=0x88;table2[1]=0x77;table2[2]=0x66;table2[3]=0x55;
-    insertion();full_prefix();software_and_dependencies();software_prefix_cancellation();table_child();antdiv();radio_child();
+    insertion();full_prefix();software_and_dependencies();software_prefix_cancellation();table_child();antdiv();radio_child();radar_child();
     puts("PHY scheduler: registry order, real prefix/table children, software stores and callback exits passed");return 0;
 }

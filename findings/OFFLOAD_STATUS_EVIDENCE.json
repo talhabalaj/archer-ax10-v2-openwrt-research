@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "scope": "Actual registered offload status release, HND SI switch/restore and RX timeout pool composition",
+  "analysis_mode": "offline_static_and_original_host_implementation",
+  "artifacts": [
+    {
+      "name": "wl.ko",
+      "size": 5803056,
+      "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+    },
+    {
+      "name": "hnd.ko",
+      "size": 366060,
+      "sha256": "d05ff061b3a636630955a13fdd20a953f3dfb07ee92904a987dd4c77b648b45a"
+    }
+  ],
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4",
+    "unicorn": "2.1.4"
+  },
+  "records": [
+    {
+      "artifact": "wl.ko",
+      "procedure": "wlc_offload_release_rxstatus",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_2bb9db2e5301e3d6841635d8e2afe3a44e50f0a430fb5c57e332b2992680bddc",
+      "bytes": 284
+    },
+    {
+      "artifact": "hnd.ko",
+      "procedure": "si_switch_core",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_0eb07b0298c73828d09f053734bc6e635ce4d2ff9d468fb1d4c4242f37a1f1bc",
+      "bytes": 228
+    },
+    {
+      "artifact": "hnd.ko",
+      "procedure": "si_restore_core",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_e7dd1d9da1aa937e4d2fa129d27e33788efeabdf4968222c3216fbc36f85e1b7",
+      "bytes": 152
+    },
+    {
+      "artifact": "wl.ko",
+      "procedure": "wlc_bmac_init",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_7b8cf3de67af1e32149aaef74ae8d54800d7b08959164480419134f4bc2c5be6"
+    },
+    {
+      "artifact": "wl.ko",
+      "procedure": "dma_sts_mp_set",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_20eefb8fdcd2b216ef5b1ec62097ddddf101735ce77f19c347c8f3518d5a3515",
+      "bytes": 8
+    },
+    {
+      "artifact": "wl.ko",
+      "procedure": "wlc_bmac_attach_dmapio.constprop.54",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_0679e4ab2c44916f9be1adf961ffc451800ffd1207cba8df08049f3f878ee21f"
+    }
+  ],
+  "registration": {
+    "observed": "wlc_bmac_init writes offload argument to HW+0x534 and callback address to HW+0x538 when pub byte0x1c1 is nonzero",
+    "pool_relationship": "Pool base HW+0x524; callback and argument offsets0x14/0x10. Attach pseudocode passes this base to dma_sts_mp_set; its assembly stores DI+0x100.",
+    "implementation": "A matching known callback AND argument label compose the real child; runtime pool acquisition/registration itself is not implemented."
+  },
+  "validation": {
+    "literal_sanitizer_suites": "passed",
+    "bus0_actual_arm_cases": 220,
+    "actual_arm_instructions": 997976,
+    "arm_rejection_probes": 3,
+    "external_arm_stubs": 0,
+    "private_compiling_semantic_mutants_rejected": 8
+  },
+  "sessions_exported_and_closed": true,
+  "limitations": [
+    "No native IRQ, PCI, mapping, MMIO or device backend",
+    "Bus1 switch/restore uses source and literal C tests; bus0 ARM comparison does not execute those branches",
+    "Count power-of-two2..65536, valid nonnegative index/cursors, bounded scan and checked bitmap accesses narrow unchecked stock behavior",
+    "Coherent immutable configuration and serialized software fields narrow live stock reloads; IRQ state is explicitly reported and unknown state survives restarted begins",
+    "BMAC parsing/status merge, status fill, ISR/deferred work and Linux delivery remain unfinished",
+    "No firmware payload, private paths, raw records, router or RF operations are published"
+  ]
+}

@@ -94,14 +94,22 @@ All original code here uses the repository's MIT license.
   binding and separate AC/common decoders. No actual board radio ID is assumed.
 - `radio_control.c`: actual target63178 OFF, radio register read/write/modify and
   recovered identity50e0 ON prefix. Every ON remains a reached dependency.
+- `radio_power.c`: real22-RMW logen and explicit50e0 PLL/RCAL/RCCAL switch-on,
+  per-core setup/calibration stores, with mandatory registered regtbl tail still open.
+- `phy_channel_init.c`: actual PHY51 radar-init/MHF0-band0 and HWOBSS bodies
+  with runtime thresholds and real packed/register/object children.
+- `dma_rx_fill.c`: actual normal allocate/account/pull/trim/translate/tracking/
+  descriptor path and closed idle failure child, ST/producer/out commitment.
+- `si_switch.c` / `offload_status.c`: actual HND SI switch/restore and identified
+  registered bitmap/cursor release, composed into status timeout pool returns.
 - `phy_scheduler.c`: capacity23 registry insertion, full16 ordered init vector
   and real closed software/PHY/radio/table/PSM/SI children. Full target stops at
-  required radio7; isolated shorter vectors do not establish target initialization.
+  required radio7 regtbl tail; isolated shorter vectors do not establish target initialization.
 - `dma_rx_list.c` / `dma_rx_status_list.c`: current closed bulk leaves, fresh
   discarded descriptor reads, distinct NEXT store widths and commit ordering.
 - `rx_packets.c` / `rx_status.c`: real bulk/status children, packet length/trim/
   continuation/drop and status timeout/pool-return bodies, typed actual OS
-  services and explicit unknown registered pool-callback dependency.
+  services, real known offload release, and unknown-registration dependency.
 - `effective_init.c`: context-dependent initialization semantics with explicit
   `0x130` addend, width truncation and a separate semantic object-copy operation.
   Whole-table preflight validates caller-supplied bounds before callbacks.
@@ -158,13 +166,15 @@ sh scripts/test_driver.sh /private/path/to/wl.ko
 
 The checks passed on 2026-10-15:
 
-- The shared suite includes43 ASan/UBSan runtime programs; all44 C objects and
-  all45 public headers compile with strict freestanding ARMv7 warnings.
+- The shared suite includes48 ASan/UBSan runtime programs; all49 C objects and
+  all50 public headers compile with strict freestanding ARMv7 warnings.
 - The added list ARM checker matches3672 cases; the composed RX checker matches
   304 cases through four actual functions, including48 real continuation refills
   and no external success stubs. Radio read/write/modify matches200 ARM cases.
-  Power sequences, status timeout/pool and imported OS operations retain their
-  separately documented literal C/source coverage and remaining dependencies.
+  Added actual mode/register composition matches146 radio cases, closed RX-idle
+  matches144 cases, and bus0 status release matches220 cases. Full power loops,
+  status timeout/pool, bus1 SI and imported OS operations retain separately
+  documented literal C/source coverage and remaining dependencies.
 
 - All public headers compile together before runtime tests. AI reset uses
   `axd_ai_reset_*` types and `AXD_AI_*` constants to avoid the PHY reset namespace.
@@ -296,9 +306,11 @@ firmware/table versions must not be silently mixed.
 Use the implemented reset/object/SMC/PHY-table jobs when following the actual
 [BMAC initialization groups](../docs/DRIVER_BMAC_INIT_AUDIT.md) and earlier reset
 caller. Finish remaining init-registry/radio/channel/calibration callbacks and
-radio power-on's actual logen/PLL/RCAL continuation. The full registry order and
-RX list/packet/status bodies now exist; finish the status-pool callback,
-RX fill, BMAC parsing/IRQ and Linux delivery described in the
+registered radio-on's actual register-table tail after the now implemented
+explicit50e0 logen/PLL/RCAL/RCCAL switch. The full registry order, radar/HWOBSS,
+RX list/packet/status, normal fill and identified status-release bodies now
+exist; finish remaining noise/channel/calibration, status fill, native OS/
+coherency/pool acquisition, BMAC parsing/IRQ and Linux delivery described in the
 [RX call path](../docs/DRIVER_RX_PATH_AUDIT.md). Acquire actual runtime
 catalog/queue/resources and implement OS mapping/PCI/IRQ/MMIO adapters. Policy/
 metadata acquisition, synchronization, MBSS/fatal recovery and optional higher

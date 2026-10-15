@@ -25,10 +25,10 @@ sites. Successful common-module attachment registers these16 init functions:
 | 4 | `phy_chanmgr_set_bw` | Different bandwidth reaches missing BMAC reset/bwinit; equal bandwidth runs real SI flags read/check. |
 | 5 | `_phy_init` | Actual type dispatcher slot5 is null in this AC registration; returns0. |
 | 6 | `phy_noise_reset` | Registered `phy_ac_noise_reset`: conditional shared interference-mode store. |
-| 7 | `phy_radio_on` | Registered AC radio-on child, including its real software/prefix operations; remaining radio continuation is explicit. |
+| 7 | `phy_radio_on` | Registered AC radio-on child, including its real explicit50e0 logen/PLL/RCAL/RCCAL switch; required registered regtbl tail remains explicit. |
 | 8 | `phy_tbl_init` | Real common/AC wrapper and complete implemented target51 table-init child. |
 | 9 | `phy_tpc_init` | Registered `phy_ac_tpc_init`: source-ordered per-core target51 byte pairs. |
-| 10 | `_phy_radar_init` | Non-5GHz guard returns0; reached AC radar initialization remains a dependency. |
+| 10 | `_phy_radar_init` | Non-5GHz guard returns0; 5GHz composes the real target51 radar/MHF child with explicit runtime enable/threshold facts. |
 | 11 | `phy_antdiv_init` | Real clock/MAC guard and PSM children around actual AC setter, whose body is `bx lr`. |
 | 12 | `phy_noise_init` | Real guards, mode selection/clamping and shared store; reached AC mode programming remains a dependency. |
 | 13 | `phy_chanmgr_init_chanspec` | Registered AC channel initialization remains a dependency. |
@@ -140,7 +140,7 @@ The independent suite checks literal sorted labels, equal-priority insertion,
 occupied down-tail movement, capacity, aliasing, the six-event real full-target
 prefix, the existing independent412-event real table oracle, a six-event nested
 antdiv/PSM trace and a21-event real radio prefix with pre-I/O bookkeeping.
-All1,335 selected callback failure/cancellation/coincident-error boundaries are
+All1,389 selected callback failure/cancellation/coincident-error boundaries are
 checked, plus software-only cancellation between allocation/state/pointer,
 per-core TPC, HIRSSI and slice-up/return stores. It tests distinct bandwidth
 inputs/ignored failure, missing/unused facts, null allocation, partial noise/
@@ -154,7 +154,10 @@ completed prefix callbacks, provided the actual allocations and matching
 bandwidth inputs permit that prefix. Real radio-on remains incomplete and
 prevents table and later stages from being claimed as completed initialization.
 An earlier differing-bandwidth branch is also explicitly unimplemented. Later
-radar, noise mode and channel/tuning/calibration children remain required.
+noise mode and channel/tuning/calibration children remain required. The real
+[radar child](PHY_CHANNEL_INIT_MODEL.md) executes at stage10 when reached; it
+does not permit bypassing radio7. A separate [radio-power suite](RADIO_POWER_MODEL.md)
+checks complete switch composition and its actual registered regtbl dependency.
 The scheduler does not acquire actual runtime registry/module pointers, OTP,
 NVRAM, radio ID/subrevision, private payloads or OS resource ownership. Those
 bindings, remaining children, physical timing/calibration, DMA/IRQ/data path and

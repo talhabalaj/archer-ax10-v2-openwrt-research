@@ -1,0 +1,106 @@
+{
+  "scope": "Actual identity50e0 radio switchON branch and real logen mode child, with mandatory registered post-switch regtbl boundary retained",
+  "input": {
+    "name": "wl.ko",
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "records": [
+    {
+      "procedure": "wlc_phy_radio20704_sel_logen_mode",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_3d6f3ea087a1cb4e447a4d789d11872a486c8305b66bf95f668f9d20d6e18a74"
+    },
+    {
+      "procedure": "wlc_phy_switch_radio_acphy.constprop.21",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_ac651c95d3284971cebc03fb9cbcc35e70e2b7201f8f64d173e2b84e9b1781f0"
+    },
+    {
+      "procedure": "phy_ac_radio_on",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_08edb4971c8380735a170023942e0cf017f678eb223faa0d193ab135d4c1998c"
+    },
+    {
+      "procedure": "phy_ac_chanmgr_get_data",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_634e7549518d9979571c2bd9b97d61cb8afc866f80e213fa32cdc9781f3a9a32"
+    },
+    {
+      "procedure": "phy_utils_read_radioreg",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_c0e5ae2fca2e49b03fe0522aa5d87c8035588d514c56a9b3102ff8ffb7a1922a"
+    },
+    {
+      "procedure": "phy_utils_write_radioreg",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_6c5a9fb3ea879331c3919387588b127b660ce9bf1ecc65b07fde5d229def83de"
+    },
+    {
+      "procedure": "phy_utils_mod_radioreg",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_5e7239bfa1ba2e63a88e989d948c086e9dcc5f868bedee56c6453d6e0faf121e"
+    }
+  ],
+  "private_span_metadata": [
+    {
+      "name": "logen-mode",
+      "section": ".rodata",
+      "section_offset": 1616940,
+      "file_offset": 4397212,
+      "size": 18,
+      "sha256": "f63725df206797c5ddabaa57c26813dc1ec3c749db0eae90bb6f5ee57bfa4c10"
+    },
+    {
+      "name": "rccal-setup",
+      "section": ".rodata",
+      "section_offset": 1616960,
+      "file_offset": 4397232,
+      "size": 8,
+      "sha256": "2b05d447dc95fce19a1e4529c56a42aaa609c46bb00787b0d79097894c2f0d83"
+    }
+  ],
+  "arm_selected_functions": [
+    {
+      "name": "phy_utils_mod_radioreg",
+      "size": 56,
+      "sha256": "285cb15d69ed5f8846f089e5d147d006cdec185ac3260f988de1fc7e5c7859a6"
+    },
+    {
+      "name": "phy_utils_read_radioreg",
+      "size": 160,
+      "sha256": "0199fb6803a84d03665cd2a6abd53e06b5a72c102804a04ae9a88de097921ed4"
+    },
+    {
+      "name": "phy_utils_write_radioreg",
+      "size": 280,
+      "sha256": "9823f988787ffd3656dd93e3df50b981f7be877806933e530c82d7a45b061ce6"
+    },
+    {
+      "name": "wlc_phy_radio20704_sel_logen_mode",
+      "size": 752,
+      "sha256": "6aa59a40c0a2a0d8dbd8eefd583d992d2c3fe467eaf04a3c8d2ac62f57b9c5d2"
+    }
+  ],
+  "validation": {
+    "literal_success_trace_events": 1157,
+    "literal_callback_error_cancel_both_boundaries": 3471,
+    "pll_exhaustion_samples": 101,
+    "rcal_exhaustion_samples": 101,
+    "rccal_exhaustion_samples_per_pass": 10000,
+    "rccal_passes": 2,
+    "semantic_mutants_rejected": 8,
+    "actual_arm_mode_cases": 146,
+    "mode_modifications_per_case": 22,
+    "full_switch_arm_execution": false,
+    "ASan_UBSan": "passed",
+    "actual_scheduler_radio_composition": "passed"
+  },
+  "limitations": [
+    "Explicit hardware identity and private spans are caller facts; no actual board radio model/subrevision is inferred.",
+    "RegisteredON remains incomplete at its mandatory actual regtbl-on-poweron child; nonzero channel-manager flag reaches additional real regtbl/channel work.",
+    "Reached zero division reports explicit unresolved ABI dependency rather than invented success.",
+    "Stock ARM comparison executes mode/read/write/modify leaves only, with reviewed relocations and actual private mode bytes; full power/calibration sequence is covered by literal C/source checks.",
+    "No raw payload/assembly, calibration, private identifiers or local paths included."
+  ],
+  "analysis_lifecycle": "Retained previously exported/closed native source records reused; no new native session or hardware operation opened for this package."
+}

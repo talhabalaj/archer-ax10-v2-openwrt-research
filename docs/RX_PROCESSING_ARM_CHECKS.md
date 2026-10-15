@@ -60,7 +60,10 @@ This comparison deliberately selects positive receive lengths and linear
 packets, avoiding OS delay/trim/free calls. It does not execute status timeout
 pool return or an unknown registered pool callback. Those processor branches,
 callback faults/cancellation, dependency states and strict policy failures are
-covered by the separate original literal C suites and source audits. Passing
+covered by the separate original literal C suites and source audits. The
+identified registered release child additionally has its own
+[bus0 ARM comparison](OFFLOAD_STATUS_MODEL.md); that does not extend this
+four-function checker to timeout/pool processing. Passing
 this checker proves agreement for the selected offline synthetic executions;
 it does not validate Linux packet ownership, DMA mapping, concurrency, IRQs,
 BMAC delivery, physical reception or any hardware/RF operation.

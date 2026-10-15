@@ -81,14 +81,19 @@ mutating bring-up must follow the dependencies actually recovered from stock.
    [sixteen-stage init registry](docs/PHY_SCHEDULER_MODEL.md) and real closed
    children are now implemented. Complete target execution stops at mandatory
    radio7 before table8. [Radio OFF/register paths](docs/RADIO_CONTROL_MODEL.md)
-   complete offline; ON's logen/PLL/RCAL continuation remains open.
+   and explicit50e0 [switch-on logen/PLL/RCAL/RCCAL](docs/RADIO_POWER_MODEL.md)
+   complete offline; the registered ON register-table tail remains. Actual
+   [radar/HWOBSS helpers](docs/PHY_CHANNEL_INIT_MODEL.md) now exist, while full
+   noise/channel/calibration remains required.
 5. **Build the data path:** DMA rings and interrupts, receive parsing, transmit,
    then the selected Linux WLAN integration. Current descriptor formatting,
    descriptor-only posting and RX slot take are implemented offline. Packet
-   ownership/cache/mapping adapters, fill and IRQ remain. Both current RX bulk
+   ownership/cache/mapping adapters and IRQ remain. Both current RX bulk
    leaves and [packet/status bodies](docs/RX_PROCESSING_MODEL.md) are now
-   implemented, including real children and an explicit registered-pool callback
-   boundary. BMAC parsing/status merge and Linux delivery remain separate.
+   implemented, now including the identified [registered status release and SI
+   children](docs/OFFLOAD_STATUS_MODEL.md), plus [normal RX fill](docs/DMA_RX_FILL_MODEL.md).
+   Native allocation/coherency, split/segmented/status fill, runtime pool
+   registration, BMAC parsing/status merge and Linux delivery remain separate.
    Validate each layer separately.
 6. **Establish board/recovery support:** exact-board console/recovery, modern
    OpenWrt RAM boot, Ethernet and exclusive radio resources. Offline work above

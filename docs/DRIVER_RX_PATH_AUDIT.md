@@ -52,7 +52,9 @@ The current bulk leaf was recovered and contains no allocation/cache/unmap call;
 those optional older-source paths must not be invented for this build. Both
 list leaves and the `dma_rx`/status trimming, continuation, timeout and error
 bodies are implemented within their explicit adapter/pool-callback boundaries.
-Recover that callback's actual registration/implementation, RX-fill resources and the MAC
+The identified [registered callback](OFFLOAD_STATUS_MODEL.md) and
+[normal RX fill](DMA_RX_FILL_MODEL.md) now compose their real children. Finish
+status fill, native allocation/coherency/runtime pool acquisition and the MAC
 ISR/deferred-work acknowledgement/masking contract. Keep descriptor completion,
 packet DMA ownership, decoded frame metadata and Linux delivery distinct.
 Device receive validation and any RF work remain outside this offline change.

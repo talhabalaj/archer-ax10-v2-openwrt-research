@@ -37,7 +37,8 @@ struct axd_rx_packets_operation {
     enum axd_rx_packet_field field;
     uint32_t packet, data, value, os_context;
 };
-typedef int (*axd_rx_packets_io_fn)(void *, const struct axd_rx_packets_operation *, uint32_t *);
+struct axd_rx_packets_reply { uint32_t value;struct axd_rx_status_reply status; };
+typedef int (*axd_rx_packets_io_fn)(void *, const struct axd_rx_packets_operation *, struct axd_rx_packets_reply *);
 enum axd_rx_packets_phase {
     AXD_RP_INVALID = 0, AXD_RP_RUNNING, AXD_RP_TRACE_COMPLETE,
     AXD_RP_DEPENDENCY, AXD_RP_FAILED, AXD_RP_CANCELLED
@@ -78,7 +79,9 @@ struct axd_rx_packets {
  * serialized packets, capacities, allocations and those actual OS operations.
  * Source buffers and metadata stay coherent/immutable outside callback effects.
  * The optional status path composes the actual rx_status/list children;
- * unknown bindings or registered pool callbacks remain explicit dependencies.
+ * unknown bindings or pool callbacks remain explicit dependencies; the known
+ * offload registration composes its actual release/SI children. Typed nested
+ * replies carry actual IRQ state, never an assumed unchanged context.
  * work_limit 1..65535 bounds hostile packet-link cycles; invalid negative or
  * over-buffer trims fail rather than reproduce unchecked stock corruption.
  * Output count is updated at each accepted packet; final head/tail stores wait

@@ -1,0 +1,334 @@
+{
+  "schema_version": 1,
+  "scope": "Original complete current PHY51 radar-init and HWOBSS bodies, actual scheduler stage10 composition, and remaining noise/channel dependency ledger; portable metadata only",
+  "subject": {
+    "name": "wl.ko",
+    "version": "17.10.121.37",
+    "bytes": 5803056,
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4"
+  },
+  "implemented": {
+    "target": {
+      "core": 130,
+      "minor": [
+        0,
+        1
+      ],
+      "phy_type": 11,
+      "phy_revision": 51
+    },
+    "commands": [
+      "actual AC radar init plus literal MHF0/band0 tail",
+      "actual AC HWOBSS enable/disable"
+    ],
+    "scheduler_priority": 10,
+    "runtime_threshold_pairs": 8,
+    "mhf_band_argument": 0,
+    "mhf_mask": 8192,
+    "primary_selector": 65536,
+    "extended_selector": 1114112,
+    "unknown_reached_bindings": "explicit dependency",
+    "callbacks_per_step_maximum": 1
+  },
+  "records": [
+    {
+      "record": "assembly-channel-init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_init_chanspec"
+      },
+      "evidence_id": "ev_a6614ce36d382b84f02b5996bf6c0e6fdda10473e9bb3c73d6c57191ae24d7bc"
+    },
+    {
+      "record": "assembly-noise-set-mode",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_noise_set_mode"
+      },
+      "evidence_id": "ev_fd08f48e4c77de8107fa06a105ce32962e52ce7cbec4eb94c3bd73cc3896b4ed"
+    },
+    {
+      "record": "assembly-phy_ac_chanmgr_hwobss",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_hwobss"
+      },
+      "evidence_id": "ev_bb98b450ca9ba3e16604cd33229d04ad502900c6b8927b261d80a7f19cf82df5"
+    },
+    {
+      "record": "assembly-phy_ac_radar_init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_radar_init"
+      },
+      "evidence_id": "ev_bd218828faa329c809d2917ec63e411280839f8d2870170faa72eccd363cf885"
+    },
+    {
+      "record": "assembly-phy_radar_get_st",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_radar_get_st"
+      },
+      "evidence_id": "ev_c23fd106d60108903e4c6c4101003595b609eda898dab8e87bfcf716cf74dccc"
+    },
+    {
+      "record": "assembly-wlapi_bmac_mhf",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlapi_bmac_mhf"
+      },
+      "evidence_id": "ev_56c87bf2bacbf676fc18a2638e449460218d128d9d2183012a1a22a5797e2d4c"
+    },
+    {
+      "record": "assembly-wlc_bmac_mhf",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_bmac_mhf"
+      },
+      "evidence_id": "ev_2225a46ab080205b07dc116e61b272fa365e6d630eb585f6c906a418e106f061"
+    },
+    {
+      "record": "assembly-wlc_phy_chanspec_set_acphy",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_phy_chanspec_set_acphy"
+      },
+      "evidence_id": "ev_af123019b59129d36b32f37ada91c57e66ab4d661ff834554aaeb23a37728823"
+    },
+    {
+      "record": "assembly-wlc_phy_hwaci_mitigation_enable_acphy",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_phy_hwaci_mitigation_enable_acphy"
+      },
+      "evidence_id": "ev_85b5de15c91e019cad6f727c8b0d79527de2adc8cb28e51460d543951d37c924"
+    },
+    {
+      "record": "assembly-wlc_phy_mclip_aci_mitigation",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_phy_mclip_aci_mitigation"
+      },
+      "evidence_id": "ev_1d165e12dbd196cbda8378d6d511f5f220ea3f0074f708c7072f05633d63cc0c"
+    },
+    {
+      "record": "bytes-mhf-band0-case",
+      "operation": "read_bytes",
+      "parameters": {
+        "address": "0x1a315c",
+        "length": 4
+      },
+      "evidence_id": "ev_0768eda28d7c8bf5128bf751a4e9c5590fba75fb39d69577d6888f5824e77232"
+    },
+    {
+      "record": "pseudo-phy_ac_chanmgr_hwobss",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_hwobss"
+      },
+      "evidence_id": "ev_72c464d03a3f760563c3d274ba5b47f59fb6eada54bda394ee8da766c464241c"
+    },
+    {
+      "record": "pseudo-phy_ac_noise_preempt",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_noise_preempt"
+      },
+      "evidence_id": "ev_2322951e6876f4eefdcae0e30421ed0108a072beb27383da2a052102735b6c06"
+    },
+    {
+      "record": "pseudo-phy_ac_noise_preempt_postfilter_reg_tbl",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_noise_preempt_postfilter_reg_tbl"
+      },
+      "evidence_id": "ev_82f27ad2d9b2291dec2203d0ea00be4a8a04998caddb54ca4cd067e1de37a4f4"
+    },
+    {
+      "record": "pseudo-phy_ac_radar_init",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_radar_init"
+      },
+      "evidence_id": "ev_26450c81691b19b658f2801ec384eb11f11f223caec99ebd3347379cdd8435dc"
+    },
+    {
+      "record": "pseudo-phy_ac_rxgcrs_cal",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_rxgcrs_cal"
+      },
+      "evidence_id": "ev_a153405e848206c1c9ae6326beefb382fc7cb0f12b33a036fab29f2ea3684cdc"
+    },
+    {
+      "record": "pseudo-phy_noise_sample_request_crsmincal",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_noise_sample_request_crsmincal"
+      },
+      "evidence_id": "ev_a78862b6b4de5ad307db2318f414fbc20e9138766736247cde18f99aefe868bf"
+    },
+    {
+      "record": "pseudo-phy_noise_sched_get",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_noise_sched_get"
+      },
+      "evidence_id": "ev_60cfc4cf499e5b720d0c23d21f1f554b16df2e66cf77d12e5d9030d338ff94b5"
+    },
+    {
+      "record": "pseudo-phy_noise_sched_set",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_noise_sched_set"
+      },
+      "evidence_id": "ev_27693e88eba4d2d1faca82200ddbe4c46e6b477d36afe58af06b92754c1edde3"
+    },
+    {
+      "record": "pseudo-phy_radar_get_st",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_radar_get_st"
+      },
+      "evidence_id": "ev_d096a8c7da6b1ce728b8ff2e428ba301d91392ae0cbdc62cad44a037d5f1fe20"
+    },
+    {
+      "record": "pseudo-wlc_bmac_mhf",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_bmac_mhf"
+      },
+      "evidence_id": "ev_f9bcef390be9ffa3711b72b5d82cd1c640e91db6ffbe31011534c8d1483f3a9f"
+    },
+    {
+      "record": "pseudo-wlc_phy_chanspec_set_acphy",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_phy_chanspec_set_acphy"
+      },
+      "evidence_id": "ev_21fa7e21b9f9d4a901ca082a95dfe409040e51ef81d2c089db89fb02e6550980"
+    },
+    {
+      "record": "pseudo-wlc_phy_desense_aci_reset_params_acphy",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_phy_desense_aci_reset_params_acphy"
+      },
+      "evidence_id": "ev_de580e2ee6f9b80f7085d1981ab90c1c90c119709028976273622b15f4e0112e"
+    },
+    {
+      "record": "pseudo-wlc_phy_desense_apply_acphy",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_phy_desense_apply_acphy"
+      },
+      "evidence_id": "ev_5762bdffa4e0e1541e390f546c072c5171e1d3e3e2088c82f17b6a0aa61eb12f"
+    },
+    {
+      "record": "pseudo-wlc_phy_elnabypass_on_w0_setup_acphy",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_phy_elnabypass_on_w0_setup_acphy"
+      },
+      "evidence_id": "ev_1f8a74e9d3401277f31c4520b6cf61058b256cbe3845787a24660676dc9a891c"
+    },
+    {
+      "record": "pseudo-wlc_phy_hwaci_mitigation_enable_acphy",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_phy_hwaci_mitigation_enable_acphy"
+      },
+      "evidence_id": "ev_8233032337f6ee09dd4dace9de2eb643c84841daa77e1f49f856b30ec76aef9b"
+    },
+    {
+      "record": "pseudo-wlc_phy_hwaci_write_table_acphy",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_phy_hwaci_write_table_acphy"
+      },
+      "evidence_id": "ev_8bda834cf483ecf3d0c80e1e7149905b811577b0d4abae576ecad4604a39d4a7"
+    },
+    {
+      "record": "pseudo-wlc_phy_mclip_aci_mitigation",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_phy_mclip_aci_mitigation"
+      },
+      "evidence_id": "ev_90ae163c88dfc78f6e1ecc4cc7e34d80485d7f078b162a51ddb500e14462d955"
+    },
+    {
+      "record": "pseudo-callback-phy_radar_init",
+      "reused": true,
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "_phy_radar_init"
+      },
+      "evidence_id": "ev_b2f1861b9cfd509c2d7182afba60d7478fa9b40069a02ad807c19ced078102f8"
+    },
+    {
+      "record": "pseudo-callback-phy_noise_init",
+      "reused": true,
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_noise_init"
+      },
+      "evidence_id": "ev_00b9e2e6ebbef38296744a691b6fbeb45060d024e5689075d14d2769d04eaf91"
+    },
+    {
+      "record": "pseudo-child-phy_ac_noise_set_mode",
+      "reused": true,
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_noise_set_mode"
+      },
+      "evidence_id": "ev_eb30972abf453b4528387d95be1a8fd21030a66bd34d46e779cfac1018fedd2e"
+    },
+    {
+      "record": "pseudo-child-phy_ac_chanmgr_init_chanspec",
+      "reused": true,
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_init_chanspec"
+      },
+      "evidence_id": "ev_b2b1c455ed68de2e3bc906495969442b3d06a90462868c9e61ab14a6aeb5137d"
+    },
+    {
+      "record": "assembly-chanspec-radio-set",
+      "reused": true,
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_phy_chanspec_radio_set"
+      },
+      "evidence_id": "ev_c04c9e8eaac31cc2fd134e6cc70625f2543f277ea6e6ae5e13ae6e62faa11734"
+    }
+  ],
+  "validation": {
+    "independent_literal_traces": {
+      "radar_enabled_callbacks": 56,
+      "radar_disabled_callbacks": 30,
+      "hwobss_enabled_callbacks": 30,
+      "hwobss_disabled_callbacks": 24,
+      "fault_cancel_both_boundaries": 420,
+      "scheduler_radar_callbacks": 18,
+      "scheduler_fault_cancel_both_boundaries": 54
+    },
+    "strict_c11_asan_ubsan": "passed",
+    "freestanding_armv7_compile": "passed",
+    "semantic_mutants_rejected": 8,
+    "stock_arm_instruction_comparison": false
+  },
+  "limitations": [
+    "No router, hardware, RF, module load or physical execution",
+    "No vendor arrays, raw decompilation, private board/calibration payloads or host paths published",
+    "Full noise mode, chanspec/tuning/calibration and board/runtime acquisition remain incomplete",
+    "Trace-complete means selected actual source contract only, not readiness, channel availability or working replacement driver"
+  ],
+  "session": {
+    "native_exported": true,
+    "native_closed": true
+  }
+}

@@ -5,7 +5,7 @@ enum stage {
     DELAY, DELAY_RETURN, ACCEPT_TAIL, ACCEPT_COUNT, READ_ACCEPT_NEXT, SET_CURRENT,
     DROP_READ_NEXT, DROP_LINK, DROP_WRITE_LINK, DROP_HEAD, DROP_CLEAR,
     POOL_BIND, POOL_NODE, POOL_CALLBACK, CALLBACK_GATE, POOL_INDEX,
-    INDEX_GATE, POOL_ARGUMENT, CALLBACK_DEPENDENCY, POOL_COUNT,
+    INDEX_GATE, POOL_ARGUMENT, CALLBACK_BIND, RUN_OFFLOAD, CLEAR_INDEX, POOL_COUNT,
     COUNT_INCREMENT, POOL_COUNT_WRITE, POOL_NEXT, POOL_NEXT_GATE,
     POOL_HIGHWATER, POOL_HEAD, HIGHWATER_SELECT, HIGHWATER_WRITE,
     RETURN_LINK, RETURN_HEAD, DROP_NEXT, DROP_COUNT, RESULT_HEAD, RESULT_TAIL, FINISH
@@ -15,7 +15,7 @@ static void fail(struct axd_rx_status *j,enum axd_rx_status_error error)
 { j->phase=AXD_RS_FAILED;j->error=error; }
 static void dependency(struct axd_rx_status *j,enum axd_rx_status_dependency reason)
 { j->phase=AXD_RS_DEPENDENCY;j->dependency=reason; }
-static int perform(struct relay *r,const struct axd_rx_status_operation *op,uint32_t *reply)
+static int perform(struct relay *r,const struct axd_rx_status_operation *op,struct axd_rx_status_reply *reply)
 {
     if(r->io==NULL){fail(r->job,AXD_RS_BAD_ARGUMENT);return -1;}
     r->job->attempted_ops++;
@@ -25,8 +25,20 @@ static int perform(struct relay *r,const struct axd_rx_status_operation *op,uint
 static int list_io(void *opaque,const struct axd_rx_status_list_operation *op,uint32_t *reply)
 {
     struct relay *r=opaque;struct axd_rx_status_operation converted={0};
+    struct axd_rx_status_reply out={0};
     r->job->context.list=r->job->list_job.context;
-    converted.kind=AXD_RS_LIST;converted.list=*op;return perform(r,&converted,reply);
+    converted.kind=AXD_RS_LIST;converted.list=*op;
+    if(perform(r,&converted,&out)!=0)return -1;
+    *reply=out.value;return 0;
+}
+static int offload_io(void *opaque,const struct axd_offload_status_operation *op,struct axd_offload_status_reply *reply)
+{
+    struct relay *r=opaque;struct axd_rx_status_operation converted={0};
+    struct axd_rx_status_reply out={0};
+    r->job->context.offload=r->job->offload_job.context;
+    converted.kind=AXD_RS_OFFLOAD;converted.offload=*op;
+    if(perform(r,&converted,&out)!=0)return -1;
+    *reply=out.offload;return 0;
 }
 static int node(struct axd_rx_status *j,struct axd_rx_status_operation *op,
                 enum axd_rx_status_kind kind,uint32_t label,uint32_t offset,uint32_t value)
@@ -57,7 +69,7 @@ int axd_rx_status_begin(struct axd_rx_status *j,const struct axd_rx_status_outpu
 enum axd_rx_status_phase axd_rx_status_step(struct axd_rx_status *j,axd_rx_status_io_fn io,void *opaque)
 {
     struct relay r={j,io,opaque};struct axd_rx_status_operation op={0};
-    unsigned emit=0,before;uint32_t reply=0;
+    unsigned emit=0,before;struct axd_rx_status_reply out={0};uint32_t reply;
     if(j==NULL)return AXD_RS_INVALID;
     if(j->phase!=AXD_RS_RUNNING)return j->phase;
     switch(j->stage){
@@ -116,7 +128,27 @@ enum axd_rx_status_phase axd_rx_status_step(struct axd_rx_status *j,axd_rx_statu
     case POOL_INDEX:emit=node(j,&op,AXD_RS_INDEX_READ16,j->pool_node,0x18,0);break;
     case INDEX_GATE:j->stage=j->pool_index!=UINT16_MAX?POOL_ARGUMENT:POOL_COUNT;break;
     case POOL_ARGUMENT:emit=pool(j,&op,0,0x10,0);break;
-    case CALLBACK_DEPENDENCY:dependency(j,AXD_RS_REGISTERED_POOL_CALLBACK);break;
+    case CALLBACK_BIND:
+        if(j->context.offload_callback.known==0 || j->context.offload_argument.known==0){dependency(j,AXD_RS_REGISTERED_POOL_CALLBACK);break;}
+        if(j->context.offload_callback.known!=1 || j->context.offload_argument.known!=1){fail(j,AXD_RS_BAD_ARGUMENT);break;}
+        if(j->callback!=j->context.offload_callback.value || j->callback_argument==0 ||
+           j->callback_argument!=j->context.offload_argument.value){dependency(j,AXD_RS_REGISTERED_POOL_CALLBACK);break;}
+        /* The caller sign-extends the original 16-bit index. */
+        if(axd_offload_status_begin(&j->offload_job,j->pool_index<0x8000?(int32_t)j->pool_index:(int32_t)j->pool_index-65536,
+                                      &j->context.offload)!=0)fail(j,AXD_RS_CHILD_ERROR);
+        else j->stage=RUN_OFFLOAD;
+        break;
+    case RUN_OFFLOAD:{
+        enum axd_offload_status_phase p=axd_offload_status_step(&j->offload_job,offload_io,&r);
+        j->context.offload=j->offload_job.context;
+        if(j->phase!=AXD_RS_RUNNING)break;
+        if(p==AXD_OS_TRACE_COMPLETE){j->byte_cursor=0;j->stage=CLEAR_INDEX;}
+        else if(p==AXD_OS_DEPENDENCY)dependency(j,AXD_RS_OFFLOAD_PATH);
+        else if(p==AXD_OS_CANCELLED)j->phase=AXD_RS_CANCELLED;
+        else if(p!=AXD_OS_RUNNING)fail(j,AXD_RS_CHILD_ERROR);
+        break;
+    }
+    case CLEAR_INDEX:emit=node(j,&op,AXD_RS_NODE_WRITE8,j->pool_node,0x18+j->byte_cursor,0xff);break;
     case POOL_COUNT:emit=pool(j,&op,0,4,0);break;
     case COUNT_INCREMENT:j->pool_count++;j->stage=POOL_COUNT_WRITE;break;
     case POOL_COUNT_WRITE:emit=pool(j,&op,1,4,j->pool_count);break;
@@ -141,7 +173,8 @@ enum axd_rx_status_phase axd_rx_status_step(struct axd_rx_status *j,axd_rx_statu
     }
     if(!emit)return j->phase;
     before=j->stage;
-    if(perform(&r,&op,&reply)!=0)return j->phase;
+    if(perform(&r,&op,&out)!=0)return j->phase;
+    reply=out.value;
     switch(before){
     case READ_DATA:case POOL_NEXT:j->data=reply;break;
     case READ_LENGTH:j->length_sample=(uint16_t)reply;j->length_reads++;break;
@@ -156,12 +189,17 @@ enum axd_rx_status_phase axd_rx_status_step(struct axd_rx_status *j,axd_rx_statu
     default:break;
     }
     if(before==DROP_CLEAR){if(++j->byte_cursor==4)j->stage=POOL_BIND;}
+    else if(before==CLEAR_INDEX){if(++j->byte_cursor==2)j->stage=POOL_COUNT;}
     else j->stage=before+1;
     return j->phase;
 }
 enum axd_rx_status_phase axd_rx_status_cancel(struct axd_rx_status *j)
 {
     if(j==NULL)return AXD_RS_INVALID;
-    if(j->phase==AXD_RS_RUNNING){j->phase=AXD_RS_CANCELLED;if(j->stage==RUN_LIST)axd_dma_rx_status_list_cancel(&j->list_job);}
+    if(j->phase==AXD_RS_RUNNING){
+        j->phase=AXD_RS_CANCELLED;
+        if(j->stage==RUN_LIST)axd_dma_rx_status_list_cancel(&j->list_job);
+        else if(j->stage==RUN_OFFLOAD)axd_offload_status_cancel(&j->offload_job);
+    }
     return j->phase;
 }

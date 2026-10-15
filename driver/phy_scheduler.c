@@ -2,7 +2,7 @@
 #include "phy_scheduler.h"
 #include <stddef.h>
 enum stage { ENTRY, DISPATCH, CALLBACK, RETURN_CALLBACK, NEXT,
-    RUN_PHY, RUN_TABLE, RUN_RADIO, RUN_MAC, RUN_SI, BW_RESULT,
+    RUN_PHY, RUN_TABLE, RUN_RADIO, RUN_MAC, RUN_SI, RUN_CHANNEL, BW_RESULT,
     ANT_READ, ANT_SY, ANT_CHOOSE, ANT_SETTER, ANT_ENABLE,
     CACHE_ALLOC_REUSE, CACHE_REUSE_FLAG, CACHE_REUSE_POINTER,
     CACHE_TABLE, CACHE_TABLE_BYTES, CACHE_ALLOC_TABLE, CACHE_USED, CACHE_POINTER,
@@ -85,7 +85,8 @@ static int d11_io(void *opaque,const struct axd_d11_operation *d,uint32_t *value
     struct axd_phy_scheduler_operation o={0};struct axd_phy_scheduler_reply reply={0};int result;
     if(j->stage==RUN_PHY)j->context.table.hardware.phy=j->phy_job.context;
     else if(j->stage==RUN_MAC)j->context.table.hardware.mac=j->mac_job.context;
-    else if(j->stage==RUN_RADIO){j->context.radio=j->radio_job.context;j->context.table.hardware=j->radio_job.context.hardware;}
+    else if(j->stage==RUN_RADIO){j->context.radio_power=j->radio_job.context;j->context.radio=j->radio_job.context.radio;j->context.table.hardware=j->radio_job.context.radio.hardware;}
+    else if(j->stage==RUN_CHANNEL){j->context.channel=j->channel_job.context;j->context.table.hardware=j->channel_job.context.hardware;}
     o.path=AXD_PS_D11;o.d11=*d;result=perform(r,&o,&reply);*value=reply.value;return result;
 }
 static int table_io(void *opaque,const struct axd_phy_init_operation *a,struct axd_phy_init_reply *value)
@@ -104,7 +105,7 @@ static void finish_child(struct axd_phy_scheduler *j,unsigned done,unsigned miss
 {
     if(j->phase!=AXD_PS_RUNNING)return;
     if(done)j->stage=j->after_child;
-    else if(missing)dependency(j,j->stage==RUN_RADIO?AXD_PS_RADIO_CHILD:
+    else if(missing)dependency(j,j->stage==RUN_CHANNEL?AXD_PS_RADAR_CHILD:j->stage==RUN_RADIO?AXD_PS_RADIO_CHILD:
         j->stage==RUN_TABLE?AXD_PS_TABLE_CHILD:j->stage==RUN_MAC?AXD_PS_MAC_CHILD:AXD_PS_SI_CHILD);
     else if(cancelled)j->phase=AXD_PS_CANCELLED;
     else fail(j,AXD_PS_CHILD_ERROR);
@@ -120,9 +121,13 @@ static void run_child(struct axd_phy_scheduler *j,struct relay *r)
         j->context.table=j->table_job.context;
         if(p!=AXD_PI_RUNNING)finish_child(j,p==AXD_PI_TRACE_COMPLETE,p==AXD_PI_DEPENDENCY,p==AXD_PI_CANCELLED);
     }else if(j->stage==RUN_RADIO){
-        enum axd_radio_control_phase p=axd_radio_control_step(&j->radio_job,d11_io,r);
-        j->context.radio=j->radio_job.context;j->context.table.hardware=j->radio_job.context.hardware;
-        if(p!=AXD_RADIO_CTL_RUNNING)finish_child(j,p==AXD_RADIO_CTL_TRACE_COMPLETE,p==AXD_RADIO_CTL_DEPENDENCY,p==AXD_RADIO_CTL_CANCELLED);
+        enum axd_radio_power_phase p=axd_radio_power_step(&j->radio_job,d11_io,r);
+        j->context.radio_power=j->radio_job.context;j->context.radio=j->radio_job.context.radio;j->context.table.hardware=j->radio_job.context.radio.hardware;
+        if(p!=AXD_RPOWER_RUNNING)finish_child(j,p==AXD_RPOWER_TRACE_COMPLETE,p==AXD_RPOWER_DEPENDENCY,p==AXD_RPOWER_CANCELLED);
+    }else if(j->stage==RUN_CHANNEL){
+        enum axd_phy_channel_phase p=axd_phy_channel_init_step(&j->channel_job,d11_io,r);
+        j->context.channel=j->channel_job.context;j->context.table.hardware=j->channel_job.context.hardware;
+        if(p!=AXD_CHANNEL_RUNNING)finish_child(j,p==AXD_CHANNEL_TRACE_COMPLETE,p==AXD_CHANNEL_DEPENDENCY,p==AXD_CHANNEL_CANCELLED);
     }else if(j->stage==RUN_MAC){
         enum axd_psm_phase p=axd_psm_control_step(&j->mac_job,d11_io,r);
         j->context.table.hardware.mac=j->mac_job.context;
@@ -183,7 +188,8 @@ static void callback(struct axd_phy_scheduler *j)
         }break;
     case AXD_INIT_RADIO:
         c->radio.hardware=c->table.hardware;
-        if(axd_radio_control_begin(&j->radio_job,AXD_RADIO_CTL_AC_ON_REGISTERED,&c->radio))fail(j,AXD_PS_CHILD_ERROR);
+        c->radio_power.radio=c->radio;
+        if(axd_radio_power_begin(&j->radio_job,AXD_RPOWER_ON_REGISTERED,0,&c->radio_power))fail(j,AXD_PS_CHILD_ERROR);
         else {j->stage=RUN_RADIO;j->after_child=RETURN_CALLBACK;}break;
     case AXD_INIT_TABLE:
         if(axd_phy_init_begin(&j->table_job,&c->table))fail(j,AXD_PS_CHILD_ERROR);
@@ -196,7 +202,13 @@ static void callback(struct axd_phy_scheduler *j)
         else {j->core_index=0;j->stage=TPC_MIN;}break;
     case AXD_INIT_RADAR:
         if(known(j,c->chanspec,65535,0)){
-            if(c->chanspec.value&0x4000u)dependency(j,AXD_PS_RADAR_CHILD);else complete(j);
+            if(!(c->chanspec.value&0x4000u))complete(j);
+            else if(!c->radar_enabled.known)dependency(j,AXD_PS_RADAR_CHILD);
+            else if(byte(j,c->radar_enabled)){
+                c->channel.hardware=c->table.hardware;c->channel.chanspec=c->chanspec;
+                if(axd_phy_channel_init_begin(&j->channel_job,AXD_CHANNEL_RADAR_INIT,c->radar_enabled.value,&c->channel))fail(j,AXD_PS_CHILD_ERROR);
+                else {j->stage=RUN_CHANNEL;j->after_child=RETURN_CALLBACK;}
+            }
         }break;
     case AXD_INIT_ANTDIV:
         if(byte(j,c->clocks)){
@@ -260,7 +272,7 @@ enum axd_phy_scheduler_phase axd_phy_scheduler_step(struct axd_phy_scheduler *j,
         if(j->callback_result){j->return_value=j->callback_result;j->return_valid=1;j->phase=AXD_PS_TRACE_COMPLETE;}
         else {j->callbacks_completed++;j->stage=NEXT;}break;
     case NEXT:j->index++;j->stage=j->index<j->registry.init_count?DISPATCH:SLICE;break;
-    case RUN_PHY:case RUN_TABLE:case RUN_RADIO:case RUN_MAC:case RUN_SI:run_child(j,&r);break;
+    case RUN_PHY:case RUN_TABLE:case RUN_RADIO:case RUN_MAC:case RUN_SI:case RUN_CHANNEL:run_child(j,&r);break;
     case BW_RESULT:
         if(known(j,c->hardware_chanspec,65535,0)){
             uint32_t flags=0;
@@ -320,7 +332,8 @@ enum axd_phy_scheduler_phase axd_phy_scheduler_cancel(struct axd_phy_scheduler *
     if(!j)return AXD_PS_INVALID;
     if(j->phase==AXD_PS_RUNNING){
         j->phase=AXD_PS_CANCELLED;axd_phy_init_cancel(&j->table_job);axd_phy_register_cancel(&j->phy_job);
-        axd_psm_control_cancel(&j->mac_job);axd_radio_control_cancel(&j->radio_job);axd_si_core_cancel(&j->si_job);
+        axd_psm_control_cancel(&j->mac_job);axd_radio_power_cancel(&j->radio_job);axd_si_core_cancel(&j->si_job);
+        axd_phy_channel_init_cancel(&j->channel_job);
     }
     return j->phase;
 }

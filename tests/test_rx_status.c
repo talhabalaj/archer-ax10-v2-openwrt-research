@@ -48,7 +48,15 @@ static void expected(struct fixture *f,struct axd_rx_status *j,unsigned timeout,
     for(i=0;i<4;i++)E(NODE_WRITE8,NODE,0x1c+i,0,0,5);
     E(POOL_READ32,POOL,0x14,0,callback_mode!=0?0x1234:0,5);
     if(callback_mode!=0)E(INDEX_READ16,NODE,0x18,0,callback_mode==1?0xffff:0,5);
-    if(callback_mode==2){E(POOL_READ32,POOL,0x10,0,0x9988,5);return;}
+    if(callback_mode>=2){E(POOL_READ32,POOL,0x10,0,0x9988,5);if(callback_mode==2)return;}
+    if(callback_mode==3){
+        add(f,AXD_RS_OFFLOAD,AXD_OS_BITMAP_READ8,0xa000,0,0,5,5);
+        add(f,AXD_RS_OFFLOAD,AXD_OS_BITMAP_WRITE8,0xa000,0,4,0,5);
+        for(i=0;i<3;i++)add(f,AXD_RS_OFFLOAD,AXD_OS_BITMAP_READ8,0xa000,0,0,4,5);
+        add(f,AXD_RS_OFFLOAD,AXD_OS_STORE_BARRIER,0,0,0,0,5);
+        add(f,AXD_RS_OFFLOAD,AXD_OS_WRITE32,0xb000,0x20,2,0,5);
+        E(NODE_WRITE8,NODE,0x18,0xff,0,5);E(NODE_WRITE8,NODE,0x19,0xff,0,5);
+    }
     E(POOL_READ32,POOL,4,0,old_count,5);E(POOL_WRITE32,POOL,4,new_count,0,5);
     E(NODE_READ32,NODE,0x1c,0,0,5);E(POOL_READ32,POOL,0xc,0,old_highwater,5);
     E(POOL_READ32,POOL,0,0,0x7777,5);
@@ -57,7 +65,7 @@ static void expected(struct fixture *f,struct axd_rx_status *j,unsigned timeout,
     E(POOL_WRITE32,POOL,0xc,new_count,0,5);
     E(NODE_WRITE32,NODE,0x1c,0x7777,0,5);E(POOL_WRITE32,POOL,0,NODE,0,5);
 }
-static int io(void *opaque,const struct axd_rx_status_operation *op,uint32_t *reply)
+static int io(void *opaque,const struct axd_rx_status_operation *op,struct axd_rx_status_reply *reply)
 {
     struct fixture *f=opaque;const struct event *e;
     if(f->seen>=f->count)fprintf(stderr,"unexpected status callback kind%u stage%u after%zu\n",op->kind,f->job->stage,f->seen);
@@ -66,13 +74,18 @@ static int io(void *opaque,const struct axd_rx_status_operation *op,uint32_t *re
     if(op->kind==AXD_RS_LIST){
         assert((unsigned)op->list.kind==e->child && op->list.identity==e->identity);
         assert(op->list.offset==e->offset && op->list.value==e->value);
+    }else if(op->kind==AXD_RS_OFFLOAD){
+        assert((unsigned)op->offload.kind==e->child && op->offload.identity==e->identity);
+        assert(op->offload.offset==e->offset && op->offload.value==e->value);
+        assert(f->job->context.offload.consumer==f->job->offload_job.context.consumer);
     }else assert(op->identity==e->identity && op->offset==e->offset && op->value==e->value);
     assert(f->job->output.count==e->count);
     assert(f->job->attempted_ops==f->seen && f->job->completed_ops==f->seen-1);
     if(op->kind==AXD_RS_NODE_WRITE8)assert(f->job->head==0 && f->job->context.error_count==UINT32_MAX);
     if(f->seen==f->fault && f->cancel)assert(axd_rx_status_cancel(f->job)==AXD_RS_CANCELLED);
     if(f->seen==f->fault && f->error)return -1;
-    *reply=e->reply;
+    if(op->kind==AXD_RS_OFFLOAD)reply->offload.value=e->reply;
+    else reply->value=e->reply;
     f->delays+=op->kind==AXD_RS_DELAY_US;f->reads+=op->kind==AXD_RS_DATA_READ16;return 0;
 }
 static void run(struct fixture *f)
@@ -98,6 +111,11 @@ static void cases_and_faults(unsigned timeout,unsigned callback_mode,uint32_t co
     struct axd_rx_status j;struct axd_rx_status_context c=context();
     const struct axd_rx_status_output out={0xaaaa,0xbbbb,5};struct fixture f;
     size_t n,p;unsigned mode;
+    if(callback_mode==3){
+        c.offload_callback=(struct axd_wake_u32){0x1234,1};c.offload_argument=(struct axd_wake_u32){0x9988,1};
+        c.offload.count=8;c.offload.consumer=0;c.offload.producer=2;c.offload.bitmap=0xa000;c.offload.bitmap_bytes=1;c.offload.registers=0xb000;
+        c.offload.bitmap_owned=c.offload.registers_owned=c.offload.os_owned=c.offload.si_known=1;
+    }
     expected(&f,&j,timeout,callback_mode,count,high);n=f.count;
     assert(axd_rx_status_begin(&j,&out,&c)==0);run(&f);assert(f.seen==n);
     if(callback_mode==2){
@@ -111,6 +129,7 @@ static void cases_and_faults(unsigned timeout,unsigned callback_mode,uint32_t co
     assert(j.output.count==(timeout?5u:6u) && j.context.error_count==(timeout?0u:UINT32_MAX));
     assert(j.context.list.ring.in==1 && j.context.list.available==7 && j.context.list.tail==0);
     assert(j.length_reads==(timeout?200u:1u) && j.delays==(timeout?200u:0u));
+    if(callback_mode==3)assert(j.context.offload.consumer==2 && j.offload_job.register_writes==1);
     for(p=1;p<=n;p++)for(mode=1;mode<=3;mode++){
         expected(&f,&j,timeout,callback_mode,count,high);f.fault=p;f.error=mode&1;f.cancel=mode>>1;
         assert(axd_rx_status_begin(&j,&out,&c)==0);run(&f);
@@ -147,6 +166,6 @@ static void unused_and_partial(void)
 int main(void)
 {
     cases_and_faults(0,0,0,0);cases_and_faults(1,0,UINT32_MAX,0x80000000);
-    cases_and_faults(1,1,0x7fffffff,0);cases_and_faults(1,2,0,0);unused_and_partial();
-    puts("RX status: real status-list/200-read timeout/byte clears/pool stores and callback prefixes passed");return 0;
+    cases_and_faults(1,1,0x7fffffff,0);cases_and_faults(1,2,0,0);cases_and_faults(1,3,0,0);unused_and_partial();
+    puts("RX status: real list/timeout/pool and registered offload callback composition passed");return 0;
 }

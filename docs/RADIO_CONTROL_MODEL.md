@@ -6,6 +6,12 @@ register read/write/modify leaves and the recovered identity50e0 power-on
 prefix. Power-on always stops at an explicit remaining child dependency; it
 does not report a completed radio-on operation or a ready radio.
 
+The higher [radio-power composition](RADIO_POWER_MODEL.md) now consumes this
+exact prefix boundary and implements the actual logen/PLL/RCAL/RCCAL continuation.
+It can complete the explicit50e0 target switch body; registered radio-on still
+requires its mandatory post-switch register-table child. The incomplete ON
+statements below describe this lower `radio_control` API itself.
+
 The source is the pinned stock `wl.ko`, SHA-256
 `8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c`.
 [Selected Evidence metadata](../findings/RADIO_CONTROL_EVIDENCE.json) records the
@@ -96,7 +102,13 @@ continues with per-core modifications, further PHY writes/delays, PLL/RCAL
 polling and private object/state operations. Those operations are not replaced
 with successful callbacks. Other identity branches, including2069, stop before
 their first required unimplemented child. Consequently every ON command in
-this package remains incomplete, including the priority7 scheduler path.
+this lower API remains incomplete.
+
+That remains the lower API's boundary. The scheduler now uses `radio_power`
+to execute the recovered continuation; its remaining priority7 dependency is
+the actual registered wrapper's post-switch register-table operation. See the
+linked addendum for exact polls, calibration stores, private-span provenance
+and the distinction between switch completion and callback completion.
 
 ## Actual radio register protocol
 

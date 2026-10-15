@@ -60,11 +60,12 @@ NEXT as **four separate byte writes**, not an invented single word write.
 
 The actual inlined pool return reads the registered callback. Only a nonnull
 callback requires the node's signed16 index. If that index is not-1, the actual
-callback argument is read and the job stops at
-`AXD_RS_REGISTERED_POOL_CALLBACK`. Its implementation remains unrecovered; no
-arbitrary success callback is accepted. Null callback or index-1 executes the
-real remaining pool operations. The index is not overwritten merely because
-an unexecuted callback would have done so after returning.
+callback argument is read. Matching known current registration labels compose
+the actual [offload release and SI children](OFFLOAD_STATUS_MODEL.md); unknown
+bindings stop at `AXD_RS_REGISTERED_POOL_CALLBACK`. No arbitrary success callback
+is accepted. Only a completed actual child reaches the two byte writes of0xff
+to index0x18/0x19. Null callback or index-1 skips those writes and executes the
+real remaining pool operations.
 
 The pool count is freshly loaded, incremented and stored. NEXT traversal is
 fresh and bounded. After its end, high-water and head are read in source order;
@@ -108,7 +109,8 @@ the exact200-delay timeout, fragment acquisition through another real bulk
 child, leading/middle drop splicing, error-count wrap, actual positive/empty
 status children, required/unused bindings and source-ordered output commitment.
 The status tests exercise byte detach, callback-null/index-1 versus unknown
-registered callback, fresh pool reads and signed high-water edge cases. Every
+registered callback, matching real release composition and two-byte index clear,
+fresh pool reads and signed high-water edge cases. Every
 callback in selected full/timeout paths covers error, cancel and both together.
 Strict ASan/UBSan runs pass; twelve meaningful compiling private mutants are
 rejected. The shared runner/build and actual ARM results are recorded in
@@ -118,7 +120,7 @@ the actual packet/status bodies and list children on positive-length linear
 fixtures; it rejects reached imported OS calls rather than emulating success.
 
 This closes the named packet/status bodies within these explicit dependencies.
-RX-fill allocation/mapping/coherency, status-pool callback registration, BMAC
+Native RX-fill allocation/mapping/coherency, runtime pool acquisition/registration, BMAC
 header/status merging, ISR/deferred-work handling, RSSI/security/frame decoding,
 Linux delivery and device proof remain required. A completed software job does
 not establish DMA ownership, a valid frame, physical reception or a working

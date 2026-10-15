@@ -212,7 +212,8 @@ static int list_io(struct bridge *b,unsigned status,const struct axd_rx_list_ope
  unsigned width=kind==5?0:kind==4?1:4;
  return b->io(b->opaque,status?3:1,kind,op->identity+op->offset,width,op->value,value);
 }
-static int status_io(void *opaque,const struct axd_rx_status_operation *op,uint32_t *value) {
+static int status_io(void *opaque,const struct axd_rx_status_operation *op,struct axd_rx_status_reply *reply) {
+ uint32_t *value=&reply->value;
  struct bridge *b=opaque;
  if(op->kind==AXD_RS_LIST){
   const struct axd_rx_list_operation list={(enum axd_rx_list_kind)op->list.kind,op->list.identity,op->list.offset,op->list.value};
@@ -224,10 +225,11 @@ static int status_io(void *opaque,const struct axd_rx_status_operation *op,uint3
  if(op->kind==AXD_RS_DATA_READ16 || op->kind==AXD_RS_INDEX_READ16)return b->io(b->opaque,4,2,op->identity+op->offset,2,0,value);
  return -1;
 }
-static int packet_io(void *opaque,const struct axd_rx_packets_operation *op,uint32_t *value) {
+static int packet_io(void *opaque,const struct axd_rx_packets_operation *op,struct axd_rx_packets_reply *reply) {
+ uint32_t *value=&reply->value;
  static const uint32_t offsets[]={0,0,4,0x28,0x2c,0xe8,0x15c};struct bridge *b=opaque;
  if(op->kind==AXD_RP_LIST)return list_io(b,0,&op->list,value);
- if(op->kind==AXD_RP_STATUS)return status_io(b,&op->status,value);
+ if(op->kind==AXD_RP_STATUS)return status_io(b,&op->status,&reply->status);
  if(op->kind==AXD_RP_PACKET_READ32 || op->kind==AXD_RP_PACKET_WRITE32){
   if(op->field<AXD_RP_FRAGMENT || op->field>AXD_RP_TAIL)return -1;
   return b->io(b->opaque,2,op->kind==AXD_RP_PACKET_READ32?1:3,op->packet+offsets[op->field],4,op->value,value);
@@ -308,7 +310,7 @@ def main():
     instructions=0;calls={};refills=0
     with tempfile.TemporaryDirectory(prefix='axd-rx-processing-arm-') as tmp:
         bridge=Path(tmp)/'bridge.c';library=Path(tmp)/'bridge.so';bridge.write_text(BRIDGE)
-        sources=['rx_packets.c','rx_status.c','dma_rx_list.c','dma_rx_status_list.c','dma_descriptor.c']
+        sources=['rx_packets.c','rx_status.c','dma_rx_list.c','dma_rx_status_list.c','dma_descriptor.c','offload_status.c','si_switch.c','si_select.c']
         subprocess.run(shlex.split(os.environ.get('CC','cc'))+['-std=c11','-Wall','-Wextra','-Werror','-pedantic','-shared','-fPIC','-I'+str(root/'driver'),str(bridge)]+[str(root/'driver'/name) for name in sources]+['-o',str(library)],check=True)
         lib=ct.CDLL(str(library));lib.compare_processing.argtypes=[ct.c_uint,ct.POINTER(ct.c_uint32),CALLBACK,ct.c_void_p,ct.POINTER(ct.c_uint64)];lib.compare_processing.restype=ct.c_int
         lib.snapshot_processing.argtypes=[ct.c_void_p,ct.POINTER(ct.c_uint32)]

@@ -27,7 +27,7 @@ static int known(struct axd_rx_packets *j, enum axd_rx_packets_metadata field,
     else fail(j, AXD_RP_BAD_ARGUMENT);
     return 0;
 }
-static int perform(struct relay *r, const struct axd_rx_packets_operation *op, uint32_t *reply)
+static int perform(struct relay *r, const struct axd_rx_packets_operation *op, struct axd_rx_packets_reply *reply)
 {
     if (r->io == NULL) { fail(r->job, AXD_RP_BAD_ARGUMENT); return -1; }
     r->job->attempted_ops++;
@@ -37,17 +37,21 @@ static int perform(struct relay *r, const struct axd_rx_packets_operation *op, u
 static int list_io(void *opaque, const struct axd_rx_list_operation *op, uint32_t *reply)
 {
     struct relay *r = opaque; struct axd_rx_packets_operation converted = {0};
+    struct axd_rx_packets_reply out={0};
     r->job->context.list = r->job->list_job.context;
     converted.kind = AXD_RP_LIST; converted.list = *op;
-    return perform(r, &converted, reply);
+    if(perform(r,&converted,&out)!=0)return -1;
+    *reply=out.value;return 0;
 }
-static int status_io(void *opaque, const struct axd_rx_status_operation *op, uint32_t *reply)
+static int status_io(void *opaque, const struct axd_rx_status_operation *op, struct axd_rx_status_reply *reply)
 {
     struct relay *r = opaque; struct axd_rx_packets_operation converted = {0};
+    struct axd_rx_packets_reply out={0};
     r->job->context.status = r->job->status_job.context;
     r->job->context.status_output = r->job->status_job.output;
     converted.kind = AXD_RP_STATUS; converted.status = *op;
-    return perform(r, &converted, reply);
+    if(perform(r,&converted,&out)!=0)return -1;
+    *reply=out.status;return 0;
 }
 static void list_begin(struct axd_rx_packets *j, uint32_t budget, unsigned resume)
 {
@@ -108,7 +112,7 @@ enum axd_rx_packets_phase axd_rx_packets_step(struct axd_rx_packets *j,
                                                axd_rx_packets_io_fn io, void *opaque)
 {
     struct relay r = {j, io, opaque}; struct axd_rx_packets_operation op = {0};
-    uint32_t reply = 0; unsigned emit = 0, before;
+    uint32_t reply;struct axd_rx_packets_reply out={0};unsigned emit = 0, before;
     if (j == NULL) return AXD_RP_INVALID;
     if (j->phase != AXD_RP_RUNNING) return j->phase;
     switch (j->stage) {
@@ -231,7 +235,8 @@ enum axd_rx_packets_phase axd_rx_packets_step(struct axd_rx_packets *j,
     }
     if (!emit) return j->phase;
     before = j->stage;
-    if (perform(&r, &op, &reply) != 0) return j->phase;
+    if (perform(&r, &op, &out) != 0) return j->phase;
+    reply=out.value;
     switch (before) {
     case READ_DATA: case TRIM_DATA: case HEADER_DATA: j->data = reply; break;
     case READ_LENGTH: j->length_sample = (uint16_t)reply; j->samples++; break;

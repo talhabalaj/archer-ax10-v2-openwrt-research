@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "scope": "Current normal DMA RX fill, its closed initial-failure idle child, and BMAC wrapper eligibility",
+  "artifact": {"name": "wl.ko", "version": "17.10.121.37", "size_bytes": 5803056, "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"},
+  "functions": [
+    {"name": "dma_rxfill", "size_bytes": 944, "sha256": "5a81a10f8ebb3aea0fd17dbdfc7050c5b2fa27b3aa9ea4e6df9c5cd873c0c9fb", "assembly_evidence_id": "ev_e5ffb4cfe29dca4bfb1f8b792e201984a1a510324df40c250d1a487a6d63dbf3", "pseudocode_evidence_id": "ev_761d0a4ed0ad57859b79f488e4ddff25db4f2e52f0a825424dc26bdaa19e2287", "callees_evidence_id": "ev_8059aed021f62ebea631900195c5885fc625b95414aaaf6a2a7e5f9b35e052c9"},
+    {"name": "dma_rxidle.part.0", "size_bytes": 84, "sha256": "7d506ff07c05267279dc4402613f1bafe64818a3f5c660bfbf03e49a28d10e56", "assembly_evidence_id": "ev_f10a4cf6dc6a4261e99a08a8b9a441d792c40a3a03c7f20f44fec89e5734aa23", "calls": 0, "relocations": 0},
+    {"name": "wlc_bmac_dma_rxfill", "size_bytes": 52, "sha256": "d009380b30974d1139ed559a5b8340cd30e8ad853f548b01d179ec140f66273f", "assembly_evidence_id": "ev_3dad58e96b9694a95101fa06fa3c324a78e108a8fc51c46e4efc87bb2f1844ad", "pseudocode_evidence_id": "ev_27bafb95e6dc968a2e8c2b96a4646d355cb420b0d2dbbc41bbf5ecc987e47484"}
+  ],
+  "actual_normal_boundaries": ["runtime gbpm_g+0x24 allocation entry", "osl_pkt_account", "skb_pull", "___pskb_trim", "osl_virt_to_phys", "actual dma64_dd_upd transform and ordered memory effects", "actual dma_rxidle.part.0 on first allocation failure"],
+  "validation": {"independent_literal_tests": true, "all_principal_callback_error_cancel_and_both_prefixes": true, "strict_c11": true, "address_and_undefined_sanitizers": true, "freestanding_armv7_compile": true, "independent_selected_file_review": "clean against retained actual assembly and pseudocode", "rejected_source_mutants": 12, "actual_idle_arm_cases": 144, "actual_idle_arm_instructions": 3024, "idle_rejection_probes": 4, "whole_fill_arm_execution": false, "external_arm_helper_stubs": 0, "hardware_operations": 0},
+  "limits": ["Split/header and segmented-buffer paths remain explicit dependencies", "Actual OS service implementations, pool/coherency/address policy and live resources belong to a real backend", "No imported cache or generic DMA-map call is present in this retained normal path", "Older 17.10.86.5 source is corroboration only", "Strict ring/capacity/overflow/null policies narrow unchecked stock behavior", "BMAC wrapper recovered; separate status fill is not implemented here", "No packet ownership transfer, concurrency, IRQ, Linux delivery, mapping safety or physical/RF validation"],
+  "private_analysis_session": {"exported": true, "closed": true},
+  "publication": "Original portable C/tests/checker/prose and selected provenance metadata only; no executable payload, raw assembly or local paths"
+}

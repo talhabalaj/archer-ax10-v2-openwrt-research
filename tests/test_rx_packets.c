@@ -85,7 +85,7 @@ static struct axd_rx_packets_request request(void)
 { const struct axd_rx_packets_request r={2,0,{0xaaaa,0xbbbb,7}};return r; }
 static struct fixture fixture(struct axd_rx_packets *j,const struct event *e,size_t n)
 { struct fixture f;memset(&f,0,sizeof(f));f.job=j;f.events=e;f.count=n;return f; }
-static int io(void *opaque,const struct axd_rx_packets_operation *op,uint32_t *reply)
+static int io(void *opaque,const struct axd_rx_packets_operation *op,struct axd_rx_packets_reply *reply)
 {
     struct fixture *f=opaque;const struct event *e;
     if(f->seen>=f->count)fprintf(stderr,"unexpected RX event kind%u stage%u after%zu\n",op->kind,f->job->stage,f->seen);
@@ -109,7 +109,8 @@ static int io(void *opaque,const struct axd_rx_packets_operation *op,uint32_t *r
     assert(f->job->attempted_ops==f->seen && f->job->completed_ops==f->seen-1);
     if(f->seen==f->fault && f->cancel)assert(axd_rx_packets_cancel(f->job)==AXD_RP_CANCELLED);
     if(f->seen==f->fault && f->error)return -1;
-    *reply=e->reply;
+    if(op->kind==AXD_RP_STATUS)reply->status.value=e->reply;
+    else reply->value=e->reply;
     f->frees+=op->kind==AXD_RP_FREE;f->trims+=op->kind==AXD_RP_TRIM;f->delays+=op->kind==AXD_RP_DELAY_US;
     return 0;
 }
