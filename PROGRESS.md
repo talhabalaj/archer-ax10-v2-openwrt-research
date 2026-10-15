@@ -3,12 +3,15 @@
 Updated 2026-10-15. Implementation baseline:
 [`00e6fdb`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/00e6fdbec3f96bd51768bc2907edfb258b51bd4f).
 This is the operational checkpoint; [ROADMAP.md](ROADMAP.md) contains the full
-plan and acceptance criteria. New work must update this checkpoint.
+plan and acceptance criteria. The baseline above is the last published driver
+implementation; the working-tree checkpoint below includes newer, uncommitted
+work. New work must update this checkpoint.
 
 ## Resume here
 
-**Next milestone: D1 — recover the actual PSM/PSMx reset, start and hardware
-acknowledgement path, then implement its offline lifecycle model.**
+**Next milestone: D1 — finish the recovered reset/start operation ledger and
+implement its offline lifecycle model. First preserve and review the pending D2
+initialization change described below.**
 
 Current priority is driver work first. Offline analysis/simulation remains
 unblocked by pending UART/recovery work. No device upload, radio initialization
@@ -21,8 +24,8 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | --- | --- | --- |
 | Target and reference inventory | Established for inspected inputs | [Hardware](findings/HARDWARE_INVENTORY.json), [binary](docs/DRIVER_BINARY_AUDIT.md), [GPL](docs/GPL_AUDIT.md). Reverify drift-prone device state before device work. |
 | D0 offline foundation | Implemented and host-tested within stated limits | Four C components, pinned object inspector, synthetic/fault tests and private-input comparisons. |
-| D1 reset/start/acknowledgement | NEXT; not implemented | Recover actual control/status operations and dependencies. Generic polling is infrastructure only. |
-| D2 complete register/SHM/context contracts | Partial facts; implementation pending | Two object ports, selected descriptor fields and raw table consumer known; complete map, effective init and SHM ABI remain open. |
+| D1 reset/start/acknowledgement | Analysis in progress; model not implemented | Main/extended startup, suspend/wake and wrapper reset paths recovered; finish assembly review and publish the operation ledger before implementation. |
+| D2 complete register/SHM/context contracts | Partial; effective-init code tested locally, uncommitted | Runtime adjustment/object-copy semantic model exists in the working tree; physical object-helper expansion, complete map and SHM ABI remain open. |
 | D3 PHY 51/radio/channel/calibration | Attach dispatch mapped; initialization pending | Radio-specific callbacks and required private board inputs remain to be recovered. |
 | D4 DMA/interrupt/RX | Not implemented | Requires descriptor/status/resource contracts and later exact-board validation. |
 | D5 TX/Linux WLAN integration | Not implemented | Integration architecture and baseline feature implementation remain open. |
@@ -64,43 +67,74 @@ Recorded passes at the implementation baseline:
 These are historical validation results for the named baseline. Re-run relevant
 checks when code or inputs change; do not imply a new hardware test occurred.
 
+## Working-tree checkpoint — preserve before resuming
+
+The following newer implementation is **local and uncommitted** at this
+checkpoint. Do not discard it or treat the published baseline as containing it:
+
+| Files | Current result | Remaining work |
+| --- | --- | --- |
+| `driver/effective_init.c`, `driver/effective_init.h` | Semantic core-130 initialization state machine: explicit runtime addend for register `0x130`, width truncation, object-copy arguments, bounds, terminal failure/cancellation. | Review and publish its evidence/README alongside the implementation. No physical object-port backend exists. |
+| `tests/test_effective_init.c` | Independent mixed trace and every-event failure/cancellation tests. | Preserve the independent oracle when extending the implementation. |
+| `tests/check_stock_firmware.py`, `scripts/test_driver.sh` | Integrate effective-init checks; compare 4,212 table records across three explicit synthetic runtime contexts. | Publish with the C component; retain private payloads outside Git. |
+
+Recorded local validation: the complete synthetic ASan/UBSan suite and optional
+pinned private-input comparisons passed; `effective_init.c` also compiled for
+freestanding ARMv7 with strict warnings. Existing raw-table, selection and upload
+comparisons continued to pass. These are host/build results, not device tests.
+The three runtime addends are synthetic test inputs, not recovered active board
+values. Object-copy events stop at the helper-call boundary.
+
+New D1 analysis has followed the real main/extended start, suspend, enable and
+wake paths and the imported reset into the exact current `hnd.ko`. Private raw
+records are retained in the sibling private workspace under
+`driver-private/rea-lifecycle` and `driver-private/rea-hnd-reset`; do not copy
+them into this public checkout. Preserve/export/close any remaining owned native
+analysis sessions and retain a sanitized report before further implementation.
+The exact current `hnd.ko` is 366,060 bytes, SHA-256
+`d05ff061b3a636630955a13fdd20a953f3dfb07ee92904a987dd4c77b648b45a`.
+
+Critical distinctions from that analysis to carry into the reviewed ledger:
+
+- Startup polls for **suspended acknowledgement**, not a generic radio-ready
+  state. Main and extended paths have different error propagation.
+- The recovered loops contain separate final confirmation reads. The generic
+  timestamp poller does not automatically reproduce their exact trace.
+- The stock caller does not propagate every helper failure; an offline fail-stop
+  policy must be labeled as a deliberate stricter model policy.
+- Reset has clock/control and potentially secondary-wrapper dependencies.
+  SMC/VASIP/PHY prerequisites must be resolved or explicit, never bypassed by
+  assuming that a completed microcode transfer is sufficient.
+
 ## Exact next work package
 
-1. Read [the upload audit](docs/DRIVER_UPLOAD_AUDIT.md),
-   [attach audit](docs/DRIVER_ATTACH_AUDIT.md) and
-   [driver component notes](driver/README.md). Reuse their retained evidence.
-2. Confirm the private input digest matches the pinned `wl.ko` below and inspect
-   current REA session state. Use a new private output directory for new work.
-   Do not redo tool installation or already completed queries without a reason.
-3. Start bounded analysis with these confirmed symbol names:
-
-   | Seed | Question; behavior still needs analysis |
-   | --- | --- |
-   | `wlc_bmac_enable_mac` | Which main-MAC control writes and completion dependencies are used? |
-   | `wlc_bmac_enable_macx` | How does the extended PSM path differ? |
-   | `wlc_bmac_suspend_mac_and_wait` | Which status/predicate/timeout establishes main suspension? |
-   | `wlc_bmac_suspend_macx_and_wait` | Which extended-bank status and ordering apply? |
-   | `wlc_bmac_wait_for_wake` | What is actually polled, and what constitutes wake/completion? |
-
-   These names were checked in the pinned symbol inventory; they are analysis
-   candidates, not evidence of their internals. Follow `wlc_bmac_corereset`,
-   `wlc_bmac_core_reset`, `wlc_bmac_mctrl`/`mctrlx` or other helpers only when the
-   actual call path requires them. Reuse the already analyzed `wlc_bmac_init`.
-4. Resolve every relevant core-130 descriptor field and inspect assembly where
-   pseudocode may omit barriers/readbacks. Identify actual start/ready code
-   through callers; do not equate suspend/wake status with firmware readiness.
-5. Write a short lifecycle operation ledger with prerequisites, bank, register,
-   width, mask/value, order, barrier, status predicate, timeout/delay and failure
-   behavior. Attach Evidence IDs and mark all unresolved fields explicitly.
-6. Implement only the proven lifecycle in original C around the upload model.
-   Add independent synthetic traces, failures, timeout boundaries and callback
-   cancellation regressions. Keep unknown hardware behavior parameterized or
-   unsupported rather than inventing defaults.
-7. Run the relevant tests, private input comparison where applicable and strict
-   ARMv7 compilation. Close any REA native session and verify input unchanged.
-8. Update this file and roadmap status, review public-safe evidence, scan the
-   selected publication files, commit/push the scoped change and verify the
-   remote commit. Report host, build and hardware evidence separately.
+1. Inspect Git status and preserve all five pending implementation/test files
+   listed above. Fetch/check remote main before publishing; do not overwrite
+   another change. Read the relevant evidence and driver README.
+2. Finish the bounded D1 assembly review. Export/close owned REA sessions and
+   write the public-safe lifecycle report plus Evidence summary. Resolve actual
+   descriptor fields, reset inputs, optional paths and caller error handling.
+   Reuse retained analysis instead of repeating installation/decompilation.
+3. Review the pending effective-init implementation against the existing
+   `wlc_write_inits` evidence. Document the runtime addend source, byte-address
+   formula, low-16-bit **value** and semantic object-helper boundary. Update the
+   driver README and publish the scoped D2 subset with its tests/evidence.
+4. Build the D1 operation ledger: prerequisites, bank, register, width, mask/value,
+   barriers/readbacks, exact loop counts, delay/final-read order and failures.
+   Keep startup/suspend/wake predicates separate. Distinguish observed behavior
+   from additional validation/fail-stop policy.
+5. Implement original bounded lifecycle C with no real MMIO backend. Add
+   independent traces, immediate/last-poll/timeout cases, injected operation
+   failures, main/extended differences and callback cancellation regressions.
+   Do not shoehorn exact stock polling into the generic deadline semantics.
+6. Run relevant ASan/UBSan tests and private-input comparisons; compile changed
+   C for ARMv7. Record exactly what passed and what remains untested.
+7. Update this checkpoint and roadmap in the same substantive change. Review
+   the exact publication allowlist, scan it, commit/push and verify the remote
+   commit/tree. Preserve unrelated dirty files and keep private raw inputs out.
+8. Continue remaining D2 register/object/SHM contracts, then D3 PHY 51/radio and
+   required calibration inputs. Follow the roadmap through DMA/RX, TX/Linux
+   integration, board bring-up and exact-board validation.
 
 **D1 is done only when** the implemented reset/start/acknowledgement contract has
 evidence and passing simulator regressions. It will still not mean real hardware

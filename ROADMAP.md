@@ -55,6 +55,31 @@ Offline work on later interfaces can proceed when its input contracts are known.
 Earlier read-only hardware discovery can be useful before PHY initialization;
 mutating bring-up must follow the dependencies actually recovered from stock.
 
+## Practical steps from the current checkpoint
+
+1. **Save/review current work:** retain the pending effective-init C/tests and
+   complete the bounded lifecycle-analysis report. Export/close analysis sessions.
+2. **Publish the initialization subset:** document the explicit runtime addend
+   and semantic object-copy boundary; publish code, tests and reviewed evidence.
+3. **Implement reset/start/suspend/wake:** use the recovered exact main/extended
+   traces, final confirmation reads and failure behavior; add host regressions.
+4. **Finish register/SHM and PHY 51 support:** resolve required radio/board inputs,
+   clocks, calibration and channel initialization with no invented defaults.
+5. **Build the data path:** DMA rings and interrupts, receive parsing, transmit,
+   then the selected Linux WLAN integration. Validate each layer separately.
+6. **Establish board/recovery support:** exact-board console/recovery, modern
+   OpenWrt RAM boot, Ethernet and exclusive radio resources. Offline work above
+   can continue while this hardware work is pending.
+7. **Test on the router:** identity probe, reset/upload/start acknowledgement,
+   PHY/calibration, receive, transmit/association/security, then feature/stability
+   tests. Dependencies may require moving a hardware check earlier.
+8. **Produce firmware:** only after board/radio validation, build and validate the
+   persistent image, preservation rules, upgrade and return-to-stock behavior.
+
+See the milestone acceptance criteria below. Step 5 can begin offline when its
+contracts are established; hardware completion requires step 6. The exact local
+files, validation and first action for the next session are in [PROGRESS.md](PROGRESS.md).
+
 ## Driver milestones
 
 ### D0 — Reproducible offline foundation: implemented within documented scope
@@ -74,10 +99,11 @@ Acceptance is met for an **offline subset**. No MMIO backend, hardware-ready
 predicate, PSM lifecycle, PHY programming, DMA, kernel binding or radio operation
 is provided. See [driver/README.md](driver/README.md) for exact restrictions.
 
-### D1 — Recover and model reset/start/acknowledgement: NEXT
+### D1 — Recover and model reset/start/acknowledgement: IN PROGRESS
 
 1. Reuse existing `wlc_bmac_init`, attach and upload evidence. Inspect the
-   unqueried enable/suspend/wake routines listed in [PROGRESS.md](PROGRESS.md).
+   recovered enable/suspend/wake and current HND reset routines tracked in
+   [PROGRESS.md](PROGRESS.md). Finish assembly checks and retain the report.
 2. Follow callers and reset/control helpers only as necessary to establish the
    core-130 main and extended PSM sequences. Resolve register descriptors rather
    than assuming older b43/brcmsmac offsets or masks.
@@ -106,7 +132,8 @@ unverified until device testing.
   device-relative register offsets separate.
 - Recover object-memory selectors, addressing units, access widths, ordering,
   limits and PSM/PSMx shared-memory layouts used by the chosen microcode.
-- Implement effective initialization operations with explicit runtime context,
+- Finish review/publication of the locally tested effective initialization
+  operations with explicit runtime context,
   including the adjustment at offset `0x130` and the separate object-memory path.
   Preserve the existing raw recorder as an independent comparison tool.
 - Model slice-specific boardflags, chunk state, ownership/download state and
