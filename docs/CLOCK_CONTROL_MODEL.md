@@ -26,8 +26,10 @@ Clock selection with capability bit `0x10000000` clear ends
 been [recovered](DRIVER_CLOCK_FALLBACK_AUDIT.md), and its [operation body is now implemented separately](CHIPCOMMON_CLOCK_MODEL.md). It
 uses ChipCommon, whose register `0x1e0` is a different resource from D11 `0x1e0`.
 Do not route this dependency through the D11 job or treat it as a successful
-stub. The caller's wake reasons remain unchanged by the implemented capability
-branch, as in the stock helper.
+stub. The [complete WL caller](WL_CLOCK_MODEL.md) now composes the real SI/HND
+wrapper for that branch. The low-level implemented direct-D11 capability branch
+leaves wake reasons unchanged. WL fallback separately updates reason0x10 inline;
+it does not call a PSM wake helper.
 
 ## Implemented operations
 

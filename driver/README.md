@@ -35,10 +35,11 @@ All original code here uses the repository's MIT license.
   bounded state polls and separate observed-disabled versus returned-success.
 - `clock_control.c`: core-130 D11 clock/PLL/secondary traces with separate
   samples, exact wait/final-read contracts and observation freshness. HND
-  fallback and actual SI ownership remain explicit dependencies.
+  fallback remains explicit in this low-level API; the separate WL caller
+  composes it with actual SI children.
 - `chipcommon_clock.c`: retained HND clock-operation body, typed ChipCommon/PCI
-  resources, crystal paths and exact mode/poll semantics. SI/IRQ lifetime and
-  WL cached-mode/wake updates remain external composition work.
+  resources, crystal paths and exact mode/poll semantics. The separate SI/WL jobs
+  now compose selection/IRQ and cached-mode/inline-reason updates.
 - `phy_register.c`: direct PHY read/modify, analog/reset pulse and one/two-core
   TSSI snapshot/restore with explicit partial validity and commit boundaries.
   High reads and three/four-core TSSI expose table dependency.
@@ -60,6 +61,12 @@ All original code here uses the repository's MIT license.
   preparation, pulse/delay100, late bandwidth store, analog, restore and real BF.
 - `bf_clean.c`: main/extended MAC and ordered metadata scans with actual core130
   no-SHM leaf paths; explicit reached bounds/availability and strict 256-slot cap.
+- `si_select.c`: actual bounded ID/unit/index search, cache/mapping stores,
+  typed OS-map/PCI requests and used zero returns; SB is still a dependency.
+- `si_clock.c`: fast/ordinary CC selection, real body and selectors, IRQ token
+  and explicit post-callback SI state, independent restore guard/index handling.
+- `wl_clock.c`: complete D11-versus-HND clock-select caller; fallback stores
+  cache byte before inline reason0x10 without adding PSM helpers.
 - `effective_init.c`: context-dependent initialization semantics with explicit
   `0x130` addend, width truncation and a separate semantic object-copy operation.
   Whole-table preflight validates caller-supplied bounds before callbacks.
@@ -167,7 +174,10 @@ The checks passed on 2026-10-15:
   timing and every selected event error/cancellation/coincident errors.
 - Target PHY reset/BF cleaner tests check literal composition, metadata/binding
   boundaries, partial contexts and callback fault/cancellation behavior.
-- All twenty C files cross-compile with Clang for `armv7-none-eabi` in freestanding
+- SI/WL composition tests check map/PCI/IRQ ordering, independent restore guards,
+  post-disable index changes, unknown SI freshness, separate software commits and
+  partial callback effects; no native kernel/backend behavior is implied.
+- All twenty-three C files cross-compile with Clang for `armv7-none-eabi` in freestanding
   mode with warnings treated as errors. This proves compilation, not linking
   into Linux, execution on ARM or hardware behavior.
 
@@ -222,11 +232,14 @@ firmware/table versions must not be silently mixed.
 
 ## Next implementation boundary
 
-Use the tested target PHY reset and BF cleaner with AI/DMA/PSM jobs to compose
-the enclosing device-reset lifecycle. Implement actual SI/clock ownership,
-mapping/index restoration, IRQ lifetime and WL cache/reason0x10 updates. Runtime
-predicate/metadata acquisition, synchronization, MBSS/fatal recovery and resource
-discovery remain unfinished; reached child dependencies stay explicit. See
+Use the complete WL clock caller, SI selection, target PHY reset and AI/DMA/PSM
+jobs to compose the enclosing device-reset lifecycle. Acquire actual runtime
+catalog/queue/resources and implement OS mapping/PCI/IRQ/MMIO adapters. Policy/
+metadata acquisition, synchronization, MBSS/fatal recovery and optional higher
+initialization remain unfinished; reached dependencies stay explicit. See
+[SI selection](../docs/SI_SELECT_MODEL.md),
+[HND wrapper](../docs/SI_CLOCK_MODEL.md),
+[WL caller](../docs/WL_CLOCK_MODEL.md),
 [target PHY reset](../docs/PHY_RESET_MODEL.md),
 [BF cleaner](../docs/BF_CLEAN_MODEL.md),
 [PHY nesting/outer wrapper](../docs/PHY_GUARD_IDLE_MODEL.md),

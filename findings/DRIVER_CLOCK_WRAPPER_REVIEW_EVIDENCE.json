@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "scope": "hnd_clock_resource_wrapper_and_wl_fallback_review",
+  "analysis_mode": "offline_static_retained_record_review",
+  "new_queries": false,
+  "artifacts": [
+    {
+      "name": "hnd.ko",
+      "size": 366060,
+      "sha256": "d05ff061b3a636630955a13fdd20a953f3dfb07ee92904a987dd4c77b648b45a"
+    },
+    {
+      "name": "wl.ko",
+      "size": 5803056,
+      "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+    }
+  ],
+  "source_digests_rechecked": true,
+  "retained_sessions_exported_and_closed": true,
+  "records": [
+    {
+      "record": "assembly-si-clock-control",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_21ec41d06a093aa45736a9cbc89ca95774687529dd2bb4d0a62323bff251dda6"
+    },
+    {
+      "record": "assembly-clock-fallback-body",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_11b7ca1bf8c23f4e76bba58369273728ef7d4ea7c8f2cc808c417ea016460f24"
+    },
+    {
+      "record": "assembly-si-select-core-index",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_ad6033be88ae0534f1991c2917150c4fc24a84e73e80ab25c70b7a06508714fa"
+    },
+    {
+      "record": "assembly-ai-select-core-body",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_02372daf06bcf7dece85fc6762be573c7162e34bd2e4df2702396a3fe2f6d82a"
+    },
+    {
+      "record": "assembly-clock-control",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_fcc33e70b1e7b43825b239589a5d0e106190027002658aae1f07a6061446202e"
+    }
+  ],
+  "limitations": [
+    "No target execution, router access, raw proprietary bytes or host paths.",
+    "Actual callback resource acquisition and SI backend remain integration work.",
+    "SB selector branch was not followed."
+  ]
+}

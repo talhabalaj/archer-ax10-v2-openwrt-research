@@ -62,8 +62,9 @@ mutating bring-up must follow the dependencies actually recovered from stock.
 2. **Finish recovered clock/PHY reset contracts:** D11/ChipCommon clock and
    table/TSSI, outer PHY-wake nesting, PHY-clock and direct reset jobs are tested.
    The target PHY-reset coordinator and real core130 beamforming cleaner are
-   implemented. Continue with surrounding SI composition, runtime mapping and
-   remaining optional/imported prerequisites. Compose with
+   implemented, with SI selection, HND IRQ/resource/clock composition and the WL
+   clock caller. Continue with actual runtime/OS adapters and remaining optional
+   prerequisites. Compose higher device reset with
    tested AI-wrapper/DMA reset and PSM stages using explicit state.
 3. **Finish policy acquisition and callouts:** the actual BSS/RRM/association
    predicate and wake-control action have tests, including actual ARM predicate
@@ -137,8 +138,10 @@ is provided. See [driver/README.md](driver/README.md) for exact restrictions.
    [ARM harness](docs/WAKE_POLICY_ARM_CHECKS.md) checks exact software load order.
    [Reset/beamforming ordering](docs/DRIVER_PHY_RESET_BF_AUDIT.md) is recovered;
    [target coordinator](docs/PHY_RESET_MODEL.md) and [core130 cleaner](docs/BF_CLEAN_MODEL.md)
-   now compose the real children with explicit bindings. Higher SI/device-reset
-   composition, policy/metadata acquisition and actual runtime resources remain.
+   now compose the real children with explicit bindings. [SI selector](docs/SI_SELECT_MODEL.md),
+   [HND clock wrapper](docs/SI_CLOCK_MODEL.md) and [WL caller](docs/WL_CLOCK_MODEL.md)
+   preserve actual mapping/index/IRQ and inline reason updates. Higher device-reset
+   composition, policy/metadata acquisition and actual OS/runtime resources remain.
 2. Follow callers and reset/control helpers only as necessary to establish the
    core-130 main and extended PSM sequences. Resolve register descriptors rather
    than assuming older b43/brcmsmac offsets or masks.

@@ -117,3 +117,8 @@ last delay/read/barrier. Strict ASan/UBSan execution and freestanding ARMv7
 compilation pass. These are host/build checks, not Linux linkage, measured
 timing, peripheral behavior, actual mapping ownership or router execution.
 The public runner includes these tests; the [checkpoint](../PROGRESS.md) records integration and remaining work.
+
+The [SI resource/IRQ wrapper](SI_CLOCK_MODEL.md) and [complete WL caller](WL_CLOCK_MODEL.md)
+now compose this body using real selector children, explicit post-IRQ state and
+ordered inline fallback cache/reason updates. They still require actual OS/runtime
+adapters and do not turn a mode predicate into clock readiness.
