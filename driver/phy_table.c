@@ -42,7 +42,8 @@ static void mac(struct axd_phy_table *job, enum axd_psm_command command, unsigne
         dependency(job, AXD_TABLE_MAC_CONTEXT);
         return;
     }
-    if (axd_psm_control_begin(&job->mac_job, command, &job->context.mac) != 0) {
+    if (axd_psm_control_begin_policy(&job->mac_job, command, &job->context.mac,
+                                     &job->context.policy) != 0) {
         fail(job, AXD_TABLE_MAC_ERROR);
         return;
     }
@@ -207,7 +208,8 @@ int axd_phy_table_begin(struct axd_phy_table *job, uint32_t index,
     }
     if (context->mac_context_valid &&
         (context->mac.core != context->phy.core || context->mac.minor != context->phy.minor ||
-         axd_psm_control_begin(&job->mac_job, AXD_PSM_WAIT_WAKE, &context->mac) != 0)) {
+         axd_psm_control_begin_policy(&job->mac_job, AXD_PSM_WAIT_WAKE,
+                                      &context->mac, &context->policy) != 0)) {
         fail(job, AXD_TABLE_MAC_ERROR);
         return -1;
     }

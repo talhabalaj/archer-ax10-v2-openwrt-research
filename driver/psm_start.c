@@ -33,7 +33,9 @@ static void main_control(struct axd_psm_start *job, uint32_t value)
         effective = (effective & ~0x40000u) | 0x20000u;
     write32(job, 0x120, effective);
     if (job->context.mirror_enabled && job->context.mirror_control != mirror) {
-        job->context.mirror_control = mirror;
+        job->mirror_pending = mirror;
+        job->mirror_commit_cursor = job->queued;
+        job->mirror_pending_valid = 1;
         write32(job, 0x324, mirror);
     }
 }
@@ -59,6 +61,7 @@ static void fail(struct axd_psm_start *job, enum axd_start_error error)
 static void prepare(struct axd_psm_start *job)
 {
     job->queued = job->cursor = 0;
+    job->mirror_pending_valid = 0;
     switch (job->stage) {
     case CLEAR_MAIN:
         write32(job, 0x128, 0xffffffffu);
@@ -169,6 +172,10 @@ enum axd_start_phase axd_psm_start_step(struct axd_psm_start *job,
         prepare(job);
         if (job->phase != AXD_START_RUNNING || job->queued == 0)
             return job->phase;
+    }
+    if (job->mirror_pending_valid && job->cursor == job->mirror_commit_cursor) {
+        job->context.mirror_control = job->mirror_pending;
+        job->mirror_pending_valid = 0;
     }
     if (io == NULL) {
         fail(job, AXD_START_BAD_ARGUMENT);

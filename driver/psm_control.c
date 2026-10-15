@@ -8,7 +8,8 @@ enum stage {
     FINAL_CONTROL, FINAL_CHECK, WAKE_DELAY, WAKE_READ, WAKE_EVALUATE,
     WAKE_CONFIRM, ENABLE_EXTRA_READ, SET_ENABLE, ENABLE_STATUS,
     ENABLE_CONTROL_READBACK, ENABLE_STATUS_READBACK, ENABLE_AFTER_READBACK,
-    ENABLE_SHM, ENABLE_SHM_CHECK, ENABLE_POST
+    ENABLE_SHM, ENABLE_SHM_CHECK, ENABLE_POST, ENABLE_AFTER_POLICY,
+    OVERRIDE_ENTRY, OVERRIDE_DONE, POLICY_ENTRY, POLICY_APPLY, POLICY_DONE
 };
 static void add(struct axd_psm_control *job, enum axd_d11_kind kind,
                 uint32_t offset, uint32_t value)
@@ -80,7 +81,9 @@ static void mctrl(struct axd_psm_control *job, uint32_t mask, uint32_t value)
         uint32_t mirror = (job->context.mirror_control & ~mirror_mask) |
                           (value & 0xcfc72706u);
         if (mirror != job->context.mirror_control) {
-            job->context.mirror_control = mirror;
+            job->mirror_pending = mirror;
+            job->mirror_commit_cursor = job->queued;
+            job->mirror_pending_valid = 1;
             write32(job, 0x324, mirror);
         }
     }
@@ -90,10 +93,51 @@ static void begin_wake(struct axd_psm_control *job, unsigned resume)
     job->after_wake = resume;
     job->stage = WAKE_DELAY;
 }
+static void begin_policy(struct axd_psm_control *job, unsigned resume)
+{
+    job->after_policy = resume;
+    job->stage = POLICY_ENTRY;
+}
+static void policy_dependency(struct axd_psm_control *job)
+{
+    job->pending_callouts |= AXD_PSM_WAKE_CONTROL;
+    job->phase = AXD_PSM_DEPENDENCY;
+}
+static int stay_awake(struct axd_psm_control *job, unsigned *stay)
+{
+    if (job->policy.inputs != NULL) {
+        struct axd_wake_result result;
+        const struct axd_wake_u32 override = {job->context.wake_reasons, 1};
+        enum axd_wake_decision decision = axd_wake_policy_evaluate(job->policy.inputs, override, &result);
+        job->policy_evaluated = 1;
+        job->policy_decision = decision;
+        job->policy_reason = result.reason;
+        job->policy_slot = result.slot;
+        job->policy_pass = result.pass;
+        job->policy_accesses = result.accesses;
+        if (decision == AXD_WAKE_DEPENDENCY) {
+            policy_dependency(job);
+            return 0;
+        }
+        if (decision == AXD_WAKE_INVALID) {
+            fail(job, AXD_PSM_POLICY_STATE);
+            return 0;
+        }
+        *stay = decision == AXD_WAKE_STAY;
+        return 1;
+    }
+    if (!job->policy.stay_awake_known) {
+        policy_dependency(job);
+        return 0;
+    }
+    *stay = job->policy.stay_awake;
+    return 1;
+}
 static void prepare(struct axd_psm_control *job)
 {
     uint32_t *nesting;
     job->queued = job->cursor = 0;
+    job->mirror_pending_valid = 0;
     switch (job->stage) {
     case INITIAL_READ:
         read32(job, control_offset(job));
@@ -307,14 +351,68 @@ static void prepare(struct axd_psm_control *job)
         break;
     case ENABLE_POST:
         job->context.wake_reasons &= ~4u;
-        if (job->context.wake_reasons == 0)
-            job->pending_callouts |= AXD_PSM_WAKE_CONTROL;
         if (job->context.mbss_enabled)
             job->pending_callouts |= AXD_PSM_MBSS_PRQ;
+        if (job->context.wake_reasons == 0)
+            begin_policy(job, ENABLE_AFTER_POLICY);
+        else
+            job->stage = ENABLE_AFTER_POLICY;
+        break;
+    case ENABLE_AFTER_POLICY:
         if (job->pending_callouts != 0)
             job->phase = AXD_PSM_DEPENDENCY;
         else
             done(job, AXD_PSM_ENABLED);
+        break;
+    case OVERRIDE_ENTRY:
+        if (job->command == AXD_PSM_OVERRIDE_SET) {
+            if (job->context.wake_reasons == 0 && (job->context.main_control & 0x04000000u) == 0) {
+                job->context.wake_reasons = job->override_reason;
+                mctrl(job, 0x04000000, 0x04000000);
+                begin_wake(job, OVERRIDE_DONE);
+            } else {
+                job->context.wake_reasons |= job->override_reason;
+                job->stage = OVERRIDE_DONE;
+            }
+        } else {
+            job->context.wake_reasons &= ~job->override_reason;
+            if (job->context.wake_reasons == 0)
+                begin_policy(job, OVERRIDE_DONE);
+            else
+                job->stage = OVERRIDE_DONE;
+        }
+        break;
+    case OVERRIDE_DONE:
+        done(job, AXD_PSM_OVERRIDE_UPDATED);
+        break;
+    case POLICY_ENTRY:
+        if (!job->policy.public_up_known) {
+            policy_dependency(job);
+        } else if (!job->policy.public_up) {
+            job->stage = job->after_policy;
+        } else {
+            read32(job, 0x120);
+            job->stage = POLICY_APPLY;
+        }
+        break;
+    case POLICY_APPLY: {
+        unsigned stay;
+        if (!stay_awake(job, &stay))
+            break;
+        if (stay) {
+            mctrl(job, 0x04000000, 0x04000000);
+            if ((job->wake_control_sample & 0x04000000u) == 0)
+                begin_wake(job, job->after_policy);
+            else
+                job->stage = job->after_policy;
+        } else {
+            mctrl(job, 0x04000000, 0);
+            job->stage = job->after_policy;
+        }
+        break;
+    }
+    case POLICY_DONE:
+        done(job, AXD_PSM_WAKE_UPDATED);
         break;
     default:
         fail(job, AXD_PSM_BAD_ARGUMENT);
@@ -352,6 +450,48 @@ int axd_psm_control_begin(struct axd_psm_control *job,
     job->phase = AXD_PSM_RUNNING;
     return 0;
 }
+int axd_psm_control_begin_policy(struct axd_psm_control *job,
+                                 enum axd_psm_command command,
+                                 const struct axd_psm_context *context,
+                                 const struct axd_psm_policy *policy)
+{
+    const struct axd_psm_policy unknown = {0};
+    struct axd_psm_policy snapshot = policy == NULL ? unknown : *policy;
+    if (axd_psm_control_begin(job, command, context) != 0)
+        return -1;
+    if (snapshot.public_up_known > 1 || snapshot.public_up > 1 ||
+        snapshot.stay_awake_known > 1 || snapshot.stay_awake > 1) {
+        fail(job, AXD_PSM_BAD_ARGUMENT);
+        return -1;
+    }
+    job->policy = snapshot;
+    return 0;
+}
+int axd_psm_override_begin(struct axd_psm_control *job, unsigned set,
+                           uint32_t reason, const struct axd_psm_context *context,
+                           const struct axd_psm_policy *policy)
+{
+    if (axd_psm_control_begin_policy(job, AXD_PSM_WAIT_WAKE, context, policy) != 0)
+        return -1;
+    if (set > 1) {
+        fail(job, AXD_PSM_BAD_ARGUMENT);
+        return -1;
+    }
+    job->command = set ? AXD_PSM_OVERRIDE_SET : AXD_PSM_OVERRIDE_CLEAR;
+    job->override_reason = reason;
+    job->stage = OVERRIDE_ENTRY;
+    return 0;
+}
+int axd_psm_wake_control_begin(struct axd_psm_control *job,
+                               const struct axd_psm_context *context,
+                               const struct axd_psm_policy *policy)
+{
+    if (axd_psm_control_begin_policy(job, AXD_PSM_WAIT_WAKE, context, policy) != 0)
+        return -1;
+    job->command = AXD_PSM_UPDATE_WAKE;
+    begin_policy(job, POLICY_DONE);
+    return 0;
+}
 enum axd_psm_phase axd_psm_control_step(struct axd_psm_control *job,
                                         axd_d11_io_fn io, void *context)
 {
@@ -366,6 +506,10 @@ enum axd_psm_phase axd_psm_control_step(struct axd_psm_control *job,
         if (job->phase != AXD_PSM_RUNNING || job->queued == 0)
             return job->phase;
     }
+    if (job->mirror_pending_valid && job->cursor == job->mirror_commit_cursor) {
+        job->context.mirror_control = job->mirror_pending;
+        job->mirror_pending_valid = 0;
+    }
     if (io == NULL) {
         fail(job, AXD_PSM_BAD_ARGUMENT);
         return job->phase;
@@ -377,9 +521,13 @@ enum axd_psm_phase axd_psm_control_step(struct axd_psm_control *job,
         return job->phase;
     }
     job->completed_ops++;
-    if (op->kind == AXD_D11_READ32)
+    if (op->kind == AXD_D11_READ32) {
         job->last_read = value;
-    else if (op->kind == AXD_D11_READ16)
+        if (job->stage == POLICY_APPLY && op->offset == 0x120) {
+            job->wake_control_sample = value;
+            job->wake_control_observed = 1;
+        }
+    } else if (op->kind == AXD_D11_READ16)
         job->last_read = value & 0xffffu;
     job->cursor++;
     return job->phase;

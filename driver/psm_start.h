@@ -34,8 +34,9 @@ struct axd_psm_start {
     enum axd_start_phase phase;
     enum axd_start_error error;
     struct axd_start_context context;
-    uint32_t last_read, repetitions;
+    uint32_t last_read, repetitions, mirror_pending;
     unsigned stage, queued, cursor, bank;
+    unsigned mirror_commit_cursor, mirror_pending_valid;
     struct axd_d11_operation operations[6];
     uint64_t attempted_ops, completed_ops;
 };

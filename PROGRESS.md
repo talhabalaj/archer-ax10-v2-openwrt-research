@@ -1,22 +1,27 @@
 # Current progress and continuation checkpoint
 
-Updated 2026-10-15. This checkpoint adds composed table-29 reads, the complete
-PHY-51 one-to-four-core TSSI callback and AI PHY-clock/reset preparation jobs.
+Updated 2026-10-15. This checkpoint adds PHY-register wake nesting, the complete
+outer idle-TSSI wrapper and the recovered pure stay-awake decision/action.
 Previous implementation:
-[`a50280e`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/a50280efd9e26edbd8a44e33e94339ce700281f8).
+[`69f946b`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/69f946b1496b3250ef2254c309325920a87defce).
 Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
 
 ## Resume here
 
-**Next: implement outer PHY-register/wake nesting and compose higher reset/clock
-lifecycle around the tested table/TSSI/PHY-clock jobs and explicit resources.**
-Table reads now use real PHY and PSM children; their pending wake-policy/MBSS
-callouts remain visible. The four-slot TSSI callback handles all actual PHY core
-counts, including repeatedffff reads and no-op restores. The outer idle-TSSI
-MAC/PHY-entry/wake wrapper is still required, not implied by callback completion.
-SI selection/restore and WL cached-mode/wake updates still surround the separate
-ChipCommon body. Reuse closed-session evidence and extend existing trace/ARM
-harnesses instead of repeating analysis.
+**Next: implement the full PHY reset coordinator and optional beamforming cleaner
+using the exact newly recovered ordering and the tested children.** The outer
+TSSI snapshot precedes RESET_PREPARE, then the independently gated pulse/delay,
+bandwidth recording, analog reset, outer restore and optional cleaner follow.
+The cleaner has real main/extended MAC operations and metadata scans even though
+its core-130 leaf helpers emit no SHM. Use the
+[reset/beamforming audit](docs/DRIVER_PHY_RESET_BF_AUDIT.md); do not omit it as a no-op.
+
+PHY nesting and outer idle-TSSI now use real PSM children. The pure stay-awake
+predicate and public-up/cached-control/wait action are implemented, with exact
+current post-clear reasons. Runtime input acquisition, synchronization, MBSS and
+fatal recovery remain dependencies. SI selection/restore and WL cached-mode/wake
+updates still surround the separate ChipCommon body. Reuse closed-session
+Evidence and existing independent trace/ARM harnesses instead of repeating analysis.
 
 Current priority is driver work first. Offline analysis/simulation remains
 unblocked by pending UART/recovery work. No device upload, radio initialization
@@ -29,7 +34,7 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | --- | --- | --- |
 | Target and reference inventory | Established for inspected inputs | [Hardware](findings/HARDWARE_INVENTORY.json), [binary](docs/DRIVER_BINARY_AUDIT.md), [GPL](docs/GPL_AUDIT.md). Reverify drift-prone device state before device work. |
 | D0 offline foundation | Implemented and host-tested within stated limits | Four C components, pinned object inspector, synthetic/fault tests and private-input comparisons. |
-| D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper/startup, PSM control, DMA reset, D11/ChipCommon clock, table/all-core TSSI, PHY-clock and direct reset subsets implemented. Higher reset/SI/wake composition, optional branches and runtime resources remain. |
+| D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper/startup, PSM control, DMA reset, D11/ChipCommon clock, table/all-core TSSI, PHY-clock and direct reset subsets implemented. Higher reset/SI composition, optional branches, runtime policy/resource acquisition and MBSS/fatal recovery remain. |
 | D2 complete register/SHM/context contracts | Partial implementation, host-tested | Effective-init semantics and startup SHM16 FIFO read implemented; addend acquisition, physical init-object writes, complete register map and SHM ABI remain. |
 | D3 PHY 51/radio/channel/calibration | Attach dispatch mapped; initialization pending | Table/TSSI/PHY-clock subsets host-tested; radio-specific initialization/calibration and board inputs remain. |
 | D4 DMA/interrupt/RX | Reset helpers only; data path not implemented | Current reset paths tested offline; common older source mapped. Current queue/resources, descriptors, IRQ and RX remain to establish. |
@@ -52,14 +57,17 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | `driver/effective_init.c` | Runtime `0x130` adjustment, width truncation and bounded semantic object-copy events. | Explicit synthetic/caller context; no object-helper port lowering. |
 | `driver/ai_reset.c` | AI primary/optional-secondary wrapper trace, bounded busy/release loops and readback-dependent control. | No SI mapping or higher reset; trace completion can include stuck reset. |
 | `driver/psm_start.c` | Cached main/extended controls, exact ACK loops/final reads, physical SHM16 FIFO verification. | Startup-suspended predicate only; explicit fail-stop policy, no hardware backend. |
-| `driver/psm_control.c` | Wake, main/extended suspend and enable, depth/cache state and bounded SHM polling. | Main enable can end with unimplemented wake-control/MBSS dependency; stricter failure policy, no real callouts. |
+| `driver/psm_control.c` | Wake, suspend/enable, generic override set/clear, actual wake-control action and current-mask policy integration. | Reached unknown policy/public state or MBSS/fatal recovery remains explicit; stricter fail-stop policy, no backend. |
 | `driver/dma_reset.c` | Current TX/RX reset, direct/indirect selector, status masks, bounds and cache semantics. | No queue mapping, buffers, reclaim or IRQ; returned success need not be an observed disabled state. |
 | `driver/clock_control.c` | D11 clock selection, PLL and owned secondary-core traces, exact polling/sample distinctions and observation freshness. | HND fallback/real SI ownership remain dependencies; completion does not establish lock/readiness. |
 | `driver/chipcommon_clock.c` | Signed-revision/capability/mode clock body, typed PCI crystal path and exact polling. | Requires actual selected resource ownership; no SI/IRQ lifecycle or WL cache/wake orchestration. |
 | `driver/phy_register.c` | Direct read/modify, analog/reset pulse and one/two-core low10 TSSI snapshot/restore. | No outer MAC/PHY-wake/core-flags lifecycle; high reads and three/four-core TSSI expose table dependency. |
-| `driver/phy_table.c` | Complete table29/count1/width32 wrapper, actual PHY/PSM children, packed writes and partial state. | Required MAC context/callouts propagate; no outer PHY-enter/exit or physical table/timing proof. |
-| `driver/phy_tssi.c` | PHY51 callback for all four core counts, repeated table reads and masked/no-op restores. | Four-slot buffer validity is explicit; outer idle-TSSI MAC/PHY-wake wrapper still required. |
+| `driver/phy_table.c` | Complete table29/count1/width32 wrapper, actual PHY/PSM children, packed writes and partial state. | Required MAC context/callouts propagate; outer nesting is a separate job, with no physical table/timing proof. |
+| `driver/phy_tssi.c` | PHY51 callback for all four core counts, repeated table reads and masked/no-op restores. | Four-slot buffer validity is explicit; outer idle-TSSI is a separate implemented job, not implied by callback completion. |
 | `driver/phy_clock.c` | AI core-flags, enable/disable, bandwidth/reset preparation and RSDB workaround. | Typed owned wrappers; no mapper/IRQ execution or clock-ready proof; bandwidth recording is separate post-pulse work. |
+| `driver/phy_guard.c` | Byte-depth PHY enter/exit and real reason-2 override child; partial depth retained. | Rejects nesting wrap; requires explicit MAC/policy/ownership. |
+| `driver/idle_tssi.c` | Main suspend → PHY enter → all-core callback → PHY exit → main enable, with absent-callback no-op. | Full higher reset still absent; no invented failure unwind. |
+| `driver/wake_policy.c` | Ordered globals, actual RRM/association/override and three 16-BSS passes; explicit availability/access provenance. | Pure immutable input bindings; no runtime acquisition or hardware action in this component. |
 | `driver/status_poll.c` | Caller-defined status predicate and monotonic timestamps; bounded steps, timeout and cancellation. | Synthetic configurable infrastructure; no recovered device-ready register/mask. |
 | `scripts/radio_firmware_inventory.py` | Exact hash, ELF object bounds/relocation checks, size companions and metadata inventory. | Payloads remain private; different/older modules rejected. |
 | `tests/check_phy_arm.py` | Exact selected stock ARM instructions versus C under 264 synthetic contexts; strict read queues and access bounds. | Requires private pinned input/Unicorn; three primitives only, no physical timing or device state. |
@@ -120,10 +128,38 @@ checks when code or inputs change; do not imply a new hardware test occurred.
   [PHY-clock/core-flags model](docs/PHY_CLOCK_MODEL.md) implement retained exact
   contracts with explicit parent/child state and failure boundaries.
 
+- [PHY nesting and outer idle-TSSI](docs/PHY_GUARD_IDLE_MODEL.md) compose the
+  actual MAC/PHY children. [Pure wake policy](docs/WAKE_POLICY_MODEL.md),
+  [assembly-backed policy audit](docs/DRIVER_WAKE_POLICY_AUDIT.md) and
+  [actual ARM comparison](docs/WAKE_POLICY_ARM_CHECKS.md) close the recovered
+  predicate, while its reached runtime input bindings remain explicit.
+- [Reset/beamforming audit](docs/DRIVER_PHY_RESET_BF_AUDIT.md) and
+  [12 new / eight reused records](findings/DRIVER_PHY_RESET_BF_EVIDENCE.json)
+  establish exact outer snapshot/reset/restore ordering and real cleaner scans.
+  The [wake-policy summary](findings/DRIVER_WAKE_POLICY_EVIDENCE.json) retains
+  seven new / four reused records. All selected IDs were checked against retained
+  raw records; the new session was exported/closed with unchanged input hash.
+
 Latest validation (host/build and isolated synthetic ARM execution only):
 
-- All fourteen synthetic test programs pass under ASan/UBSan; all fifteen portable C
+- All eighteen synthetic test programs pass under ASan/UBSan; all eighteen portable C
   components compile for freestanding ARMv7 with strict warnings.
+- Generic override and actual wake-control tests cover reason zero, already
+  absent clears, current post-clear masks, original physical sample versus cache,
+  public-down/no-I/O and known/unknown/invalid reached policy. Actual input
+  bindings take precedence over a separately supplied Boolean decision.
+- Guard/outer idle-TSSI tests cover every core count, active/inactive MAC,
+  optional callback absence, nested/overflow/underflow, partial saved state,
+  semantic child failures, alias-safe restart and every-event error/cancel/both.
+- Mirror-cache timing is corrected in startup/control: the mirror software
+  store follows a successful primary write. Primary error/cancel retains the old
+  mirror cache; mirror-barrier failure retains its already updated cache. Prefix
+  regressions and private premature-update mutants cover both components.
+- Actual ARM pure-policy comparisons match 373 decisions and complete ordered
+  context-load traces, plus 139 missing-field prefixes. The longest coherent case
+  performs 218 loads. Five actual functions run with four narrowly resolved
+  branches; three unapproved call/relocation and eight null-pointer probes reject.
+  These do not execute the MMIO action or runtime acquisition.
 - Table traces cover 40 bus/threshold/guard combinations, packed32 header words,
   index truncation, pre-I/O counters/flushes, full data halves and valid-zero
   words. Real PSM suspend/enable/dependency/failure paths preserve per-step MAC
@@ -182,8 +218,8 @@ raw records. Only reviewed descriptions/metadata are public.
 
 Two earlier exact-HND/WL dependency sessions were exported and closed. Their
 26 new Evidence IDs and eight reused records were checked against retained raw
-records. Runtime mapping/backend, complete wake policy and optional branches
-remain open; the published body models do not implement surrounding callouts.
+records. Runtime mapping/backend, policy input acquisition and optional branches
+remain open; body models do not imply surrounding callouts were implemented.
 
 The earlier exact-WL resource session was exported and closed with unchanged input
 SHA-256. Retained raw records live privately under `driver-private/rea-resources`;
@@ -196,7 +232,7 @@ The private kernel-boundary proposal remains under
 
 Critical distinctions to preserve:
 
-- Main enable ends `DEPENDENCY` if wake policy or MBSS work is needed. Required
+- Main enable ends `DEPENDENCY` for reached unavailable wake state or MBSS work. Required
   callouts are recorded, never silently executed as successful stubs. Failed
   wake/enable/suspend traces stop before some stock diagnostics/cleanup; exact
   policy differences are documented. Depth wrapping is rejected.
@@ -221,20 +257,24 @@ Critical distinctions to preserve:
    implementation notes and Git status. Preserve unrelated work; check remote
    main before publication. Reuse closed-session Evidence instead of repeating
    installation/analysis.
-2. Use tested table/TSSI/PHY-clock jobs. Implement outer PHY-register reason-2
-   wake nesting from retained exact evidence: set may force cached mctrl/wake
-   wait; clear may invoke full wake policy even when old reason was absent.
-   Preserve outer MAC suspend/enable ordering and actual inactive-run guards.
-3. Use tested D11/ChipCommon bodies to compose clock selection through actual
+2. Compose full PHY reset from tested idle-TSSI, PHY-clock, pulse and analog
+   children using the [exact reset/beamforming audit](docs/DRIVER_PHY_RESET_BF_AUDIT.md).
+   Snapshot comes BEFORE RESET_PREPARE. Preserve separate public/band PHY-revision
+   gates, post-pulse bandwidth store, analog/callback presence and restore gate.
+3. Implement the optional beamforming cleaner with explicit metadata/bitmap/cubby
+   inputs, inclusive primary bounds, exclusive secondary bounds and actual count
+   reload points. Bound the stock's potentially wrapping loop explicitly. Preserve
+   real main/extended suspend/enable even on core-130 no-SHM leaf paths.
+4. Use tested D11/ChipCommon bodies to compose clock selection through actual
    SI ordinary/fast mapping and IRQ lifetime/restoration. Apply returned mode
    byte and wake-reason0x10 in the WL caller; mode result never establishes ready.
-4. Implement remaining full wake-policy/MBSS/fatal callouts and actual input
-   acquisition; current child dependencies are unfinished work. Runtime RSDB,
-   ownership, clock state, bus/threshold and queue contexts require actual data.
-5. Compose higher reset around clock/AI/DMA/PHY jobs and proven caller state,
-   queue/resources, bandwidth flags, analog dispatch and TSSI save/restore.
-   Resolve optional beamforming/VASIP/SMC and complete wake policy/MBSS/fatal
-   callouts; no successful placeholders or invented failure cleanup.
+   Complete reached policy input acquisition and MBSS/fatal recovery. Runtime
+   RSDB, ownership, clocks, bus/threshold and queues require actual data.
+5. Compose higher reset around clock/AI/DMA/PHY jobs and proven caller state and
+   queue/resources. Resolve optional VASIP/SMC; no successful placeholders or
+   invented failure cleanup. Pure wake policy/action already exists, but does
+   not discover or synchronize its runtime input objects.
+
 6. Complete D2 physical init-object writes, addend acquisition and needed SHM
    ABI; continue D3 radio/channel/calibration, D4 descriptors/IRQ/RX, TX/Linux
    integration and full features. Separate recovery/RAM-boot/board work remains
@@ -242,8 +282,8 @@ Critical distinctions to preserve:
 7. Extend the original strict differential harness and common trace adapters:
    independent read queues, bank/core/space/width/barriers/delays, no implicit
    zero/write-echo, missing/exhausted/unconsumed read rejection and consumed-bit
-   checks. ARM execution covers primitives and selected composed table/TSSI
-   inactive-MAC paths; extend to actual PSM/wake/clock only with proven caller
+   checks. ARM execution covers the pure wake predicate, primitives and selected composed
+   table/TSSI inactive-MAC paths; extend to actual PSM/action/clock only with proven caller
    closure and strict contexts, not successful external stubs. Optional live ARM
    accessor coverage design does not replace implementation.
 8. Add independent traces/boundaries/failure/cancel regressions, run affected
@@ -252,8 +292,8 @@ Critical distinctions to preserve:
 9. Review/scan an exact public allowlist, commit/push and verify remote commit/
    tree. Keep proprietary bytes, calibration, credentials and local paths private.
 
-**D1 remains partial.** Higher reset/clock/wake composition, optional dependencies,
-wake policy and actual resource ownership remain unfinished. Maintain the full
+**D1 remains partial.** Higher reset/clock composition, optional dependencies,
+policy input acquisition/MBSS/fatal recovery and actual resource ownership remain unfinished. Maintain the full
 working-driver and modern-OpenWrt objective; host tests do not meet hardware gates.
 
 ## Input and tool identities
@@ -283,6 +323,10 @@ git status --short
 sh scripts/test_driver.sh
 # Optional, using a separately supplied private input:
 sh scripts/test_driver.sh /private/path/to/wl.ko
+# Optional isolated ARM comparisons, using tests/requirements-emulation.txt:
+python3 tests/check_phy_arm.py /private/path/to/wl.ko
+python3 tests/check_phy_composed_arm.py /private/path/to/wl.ko
+python3 tests/check_wake_policy_arm.py /private/path/to/wl.ko
 ```
 
 For a new bounded named-function pass, configure the child process as described
@@ -324,7 +368,10 @@ assembly, typed references and descriptor reads as required by the evidence.
 | `71610f8` | Original selector, initialization decoder/replayer and object inventory. |
 | `00e6fdb` | Exact upload trace simulator, generic status polling, fault/cancellation regressions and test runner. |
 | `2a80787` | Effective initialization, current-HND AI-wrapper reset, PSM startup/FIFO trace and independent tests/evidence. |
-| This checkpoint | PSM control, current DMA reset, context-alias fix and clock/PLL/PHY/TSSI/wake-policy evidence. |
+| `ef8dfb0` | PSM/DMA control and clock/PLL models with exact evidence and external research. |
+| `a50280e` | Direct PHY/ChipCommon models and actual ARM primitive comparisons. |
+| `69f946b` | Composed table/all-core TSSI and PHY-clock jobs with actual ARM comparisons. |
+| This checkpoint | PHY nesting, complete outer idle-TSSI, actual wake predicate/action and ARM load-trace comparisons; mirror-cache prefix fix and exact reset/beamforming evidence. |
 
 At each future checkpoint, add a concise milestone entry and replace the active
 next-work package with the actual next task. Keep unresolved defects visible.

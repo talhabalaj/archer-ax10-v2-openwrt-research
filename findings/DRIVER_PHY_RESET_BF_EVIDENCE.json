@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "scope": "phy_reset_bf",
+  "analysis_mode": "offline_static",
+  "artifact": {
+    "name": "wl.ko",
+    "size": 5803056,
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4"
+  },
+  "session_exported_and_closed": true,
+  "source_digest_rechecked": true,
+  "records": [
+    {
+      "record": "assembly-txbf-cache-clean",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_2c4c4fe4b917b7b821b4cad341a1b44fbefbcd8e8787e08b4f43cf9e8846cf6b"
+    },
+    {
+      "record": "assembly-txbf-invalidate-index",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_968c4e19b4659d81cf2194c77da4025fa3f4c4dde6c1b4ec08ec678d0cbd53b1"
+    },
+    {
+      "record": "assembly-txbf-set-enable-bit",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_190b2e7d09130b30d7c2a2ffed0e953ea8a2193a0cdb0bf0ad5af230fcfa8376"
+    },
+    {
+      "record": "assembly-txbf-tx-enabled",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_dac27938ad3661a3e62758b6cdcad0c7e603635cdc65aff6ef7845d51af17c0d"
+    },
+    {
+      "record": "assembly-wlc-enable-main-wrapper",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_873ea19854598a026c6ddd5b73a025be0439a827b754b89d90f772741ce5d2fc"
+    },
+    {
+      "record": "assembly-wlc-suspend-main-wrapper",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_a4d6decc6727e33f5ff2769d050b8124c4b06798463818a525085781ba59569a"
+    },
+    {
+      "record": "pseudo-txbf-cache-clean",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_9871c33437d5feb264f77d2978b0f15b2ffbcd5677aaef00a140a05fa96404a2"
+    },
+    {
+      "record": "pseudo-txbf-invalidate-index",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_23f5ef21006eedac9d8264e23da377a0b46f326e6a64a547fd5ab68300683edb"
+    },
+    {
+      "record": "pseudo-txbf-set-enable-bit",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_b5636acd09a158d240d618b2b74177e366ae29036ddf472075c665e880757a85"
+    },
+    {
+      "record": "pseudo-txbf-tx-enabled",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_8efeb31991e00b91eab2a7c5858d5450f636cd08226d9323dde2d2668788e315"
+    },
+    {
+      "record": "pseudo-wlc-enable-main-wrapper",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_0e7a23ced9244fbf1ad9719bad6dec5e59a58cbaae78206d528991729fa18dc9"
+    },
+    {
+      "record": "pseudo-wlc-suspend-main-wrapper",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_de08e75cb64f1e7f9a1e0c06c2b65e21548384f69ed96eb5f4ec2642afc5df19"
+    }
+  ],
+  "reused_records": [
+    {
+      "session": "rea-resources",
+      "record": "assembly-phy-reset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_88ab7f82543911a0b6e796994a952e2664124975ae6a818227a16cdc0611ab2b"
+    },
+    {
+      "session": "rea-resources",
+      "record": "assembly-phy-clock",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_67d73bead494391573358efaaa86dd9677343647b649efc36f9e229887c58413"
+    },
+    {
+      "session": "rea-resources",
+      "record": "assembly-idle-tssi-force",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_d2a071d2ba25e3342b40e5d79b5c27e0fd33459df3c9bdfa0eba0bb72f721b30"
+    },
+    {
+      "session": "rea-attach",
+      "record": "pseudo-wlc-bmac-attach",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_9c5169ec2aebea30cb32004f1cf079127c180b4a9f7438b0b14ce36ce1ff45c4"
+    },
+    {
+      "session": "rea-lifecycle",
+      "record": "assembly-suspend-main",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_b1c2b455d7f37262c5a0025866421730775b92e487259becdb426bfdf8b5bed8"
+    },
+    {
+      "session": "rea-lifecycle",
+      "record": "assembly-enable-main",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_a478143017397636dd848f1cd777f96655547decc0102b0439a3e59ddba15e09"
+    },
+    {
+      "session": "rea-lifecycle",
+      "record": "assembly-suspend-extended",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_737daa0c1c8fa47a7030205227c41653e1a0db7b5aa2bf4949049b5c7a17e756"
+    },
+    {
+      "session": "rea-lifecycle",
+      "record": "assembly-enable-extended",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_7b50ffdc0e4f4876a6731e8de9c63f4493c3c21ed4fce5356dc0e4633d76ef6b"
+    }
+  ],
+  "limitations": [
+    "No target execution, router access or physical MMIO.",
+    "No proprietary payloads, raw pseudocode/disassembly or host paths included.",
+    "Runtime context acquisition and ownership remain integration work."
+  ]
+}

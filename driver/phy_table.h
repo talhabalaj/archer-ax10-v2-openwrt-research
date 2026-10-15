@@ -10,6 +10,7 @@ struct axd_phy_table_context {
     uint32_t shared_bus_word;
     uint16_t write_threshold;
     uint8_t mac_context_valid;
+    struct axd_psm_policy policy;
 };
 enum axd_phy_table_phase {
     AXD_TABLE_INVALID = 0, AXD_TABLE_RUNNING, AXD_TABLE_TRACE_COMPLETE,

@@ -3,9 +3,9 @@
 `driver/phy_tssi.c` implements the recovered AC idle-TSSI **callback** for
 explicit runtime PHY core counts one through four. It composes direct PHY
 read/modify and the [complete table-29 wrapper](PHY_TABLE_MODEL.md). The outer
-idle-TSSI wrapper's MAC suspend, PHY-register enter/exit, wake policy and final
-MAC enable remain required higher lifecycle work; this API does not imply they
-ran. Caller ownership, power/clocks and serialization remain prerequisites.
+[idle-TSSI wrapper](PHY_GUARD_IDLE_MODEL.md) now implements MAC suspend,
+PHY-register enter/exit and final MAC enable through actual children. Calling
+this callback API alone does not imply those ran. Caller ownership, power/clocks and serialization remain prerequisites.
 Exact target behavior is documented in the
 [resource ledger](DRIVER_RESOURCE_AUDIT.md) and
 [table/TSSI addendum](DRIVER_AC_TABLE_READ_AUDIT.md).

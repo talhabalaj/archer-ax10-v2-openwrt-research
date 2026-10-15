@@ -359,7 +359,7 @@ def main():
     require(unicorn.__version__ == "2.1.4", "Use pinned Unicorn 2.1.4")
     functions = load(args.module, args.repo)
     sources = [args.repo / ("driver/" + source + ".c")
-               for source in ("phy_register", "phy_table", "phy_tssi", "psm_control")]
+               for source in ("phy_register", "phy_table", "phy_tssi", "psm_control", "wake_policy")]
     source_digests = [hashlib.sha256(source.read_bytes()).hexdigest() for source in sources]
     rng = random.Random(0x1305102)
     cases = [(cores, snapshot) for cores in (1, 2, 3, 4) for snapshot in (False, True) for _ in range(64)]
@@ -372,7 +372,7 @@ def main():
         subprocess.run(["cc", "-std=c11", "-Wall", "-Wextra", "-Werror", "-pedantic", "-fPIC",
                         "-dynamiclib" if sys.platform == "darwin" else "-shared", "-I", str(args.repo / "driver"),
                         *[str(args.repo / ("driver/" + source + ".c"))
-                          for source in ("phy_register", "phy_table", "phy_tssi", "psm_control")],
+                      for source in ("phy_register", "phy_table", "phy_tssi", "psm_control", "wake_policy")],
                         str(bridge), "-o", str(path)], check=True)
         lib = ct.CDLL(str(path))
         lib.compare_tssi.argtypes = [ct.c_uint, ct.c_uint8, ct.c_uint16, ct.POINTER(ct.c_uint16),

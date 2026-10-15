@@ -28,7 +28,7 @@ kernel, lock/mapping backend, actual PHY-ready predicate or radio operation.
 The proven PHY-51 HWACI helpers have no device/software effects in this path;
 no fake callback result replaces them. PHY-register enter/exit and host locking
 are not performed by the stock table wrapper, and are not added here. TSSI's
-outer caller has separate wake/nesting prerequisites.
+[outer caller](PHY_GUARD_IDLE_MODEL.md) implements separate wake/nesting prerequisites.
 
 MAC context can be absent while the sampled branch does not require it. Missing
 context on a reached suspend becomes `DEPENDENCY_MAC_CONTEXT`. Supplied MAC
@@ -104,3 +104,8 @@ invalid inputs, aliased context restart and terminal silence. The [composed ARM 
 actual selected stock instruction paths under inactive-MAC synthetic contexts.
 These checks prove modeled trace behavior under supplied inputs; no physical MMIO, bus timing,
 Linux linkage, peripheral table state, calibration or RF operation is validated.
+
+The shared context carries optional immutable actual wake-policy input bindings.
+PSM children evaluate them using the current reason word after reason-4 clear;
+reached unknown/invalid fields remain explicit. The table API itself does not
+acquire those inputs or invoke outer PHY enter/exit.

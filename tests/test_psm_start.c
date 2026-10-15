@@ -121,6 +121,19 @@ static void success(const struct axd_start_context *c, const struct event *event
     terminal(&job, &t, AXD_START_SUSPENDED);
 }
 
+/* Independent prefix boundary: commit mirror cache just before mirror ST,
+ * after primary ST/W have returned successfully without cancellation.
+ */
+static uint32_t mirror_prefix(const struct event *events, size_t count,
+                               size_t stopped_at, uint32_t initial)
+{
+    size_t j;
+    for (j = 0; j <= stopped_at && j + 1 < count; j++)
+        if (events[j].kind == AXD_D11_STORE_BARRIER &&
+            events[j + 1].kind == AXD_D11_WRITE32 && events[j + 1].offset == 0x324)
+            initial = events[j + 1].value;
+    return initial;
+}
 static void fault_matrix(const struct axd_start_context *context,
                          const struct event *events, size_t count)
 {
@@ -134,6 +147,7 @@ static void fault_matrix(const struct axd_start_context *context,
         run(&job, &t);
         assert(job.phase == AXD_START_FAILED && job.error == AXD_START_IO_ERROR);
         assert(t.cursor == i + 1 && job.attempted_ops == i + 1 && job.completed_ops == i);
+        assert(job.context.mirror_control == mirror_prefix(events, count, i, c.mirror_control));
         terminal(&job, &t, AXD_START_FAILED);
 
         t = trace_for(events, count);
@@ -143,6 +157,7 @@ static void fault_matrix(const struct axd_start_context *context,
         run(&job, &t);
         assert(job.phase == AXD_START_CANCELLED && job.error == AXD_START_NO_ERROR);
         assert(t.cursor == i + 1 && job.attempted_ops == i + 1 && job.completed_ops == i + 1);
+        assert(job.context.mirror_control == mirror_prefix(events, count, i, c.mirror_control));
         terminal(&job, &t, AXD_START_CANCELLED);
 
         t = trace_for(events, count);
@@ -152,6 +167,7 @@ static void fault_matrix(const struct axd_start_context *context,
         run(&job, &t);
         assert(job.phase == AXD_START_FAILED && job.error == AXD_START_IO_ERROR);
         assert(t.cursor == i + 1 && job.completed_ops == i && job.attempted_ops == i + 1);
+        assert(job.context.mirror_control == mirror_prefix(events, count, i, c.mirror_control));
         terminal(&job, &t, AXD_START_FAILED);
     }
 }

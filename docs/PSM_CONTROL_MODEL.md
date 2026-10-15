@@ -4,8 +4,10 @@ Original offline `driver/psm_control.c`, grounded in the retained
 [lifecycle ledger](DRIVER_LIFECYCLE_AUDIT.md#suspend-enable-and-wake-ledger) and
 [Evidence IDs](../findings/DRIVER_LIFECYCLE_EVIDENCE.json). This adds the normal
 wake/suspend/enable register paths around the existing startup subset. It does
-not supply hardware access, resource ownership, wake policy, fatal recovery or
-Linux integration.
+not supply hardware access, resource ownership, fatal recovery or Linux
+integration. The actual pure wake predicate and action wrapper are now
+implemented from the [closed policy audit](DRIVER_WAKE_POLICY_AUDIT.md), using
+explicit externally acquired inputs.
 
 ## Commands and explicit context
 
@@ -22,6 +24,9 @@ unknown optional feature or hardware state is absent.
 | Suspend extended | Independent depth/cache. Nested entry takes an extra control sample; first entry does the control/status checks without a main wake override, then clears extended enable and polls its own status. |
 | Enable main | Read control/`SY`, honor already-enabled/no-depth no-op, decrement depth and act on zero. Changed-cache control update, status write 1, control and status readbacks, then SHM state reads while state is 3. State 2 is required. Clear wake reason 4, then expose any remaining wake-control/MBSS dependency. |
 | Enable extended | Separate depth/cache, extra pre-write control read, changed-cache enable update, status write 1, control/status readbacks. No SHM state poll. |
+| Override SET | Arbitrary full32 reason, including zero. If old reasons zero and cached wake clear, store reason, update cached wake and run the exact wake wait. Otherwise only OR reason. |
+| Override CLEAR | Always store old reasons AND NOT reason. Nonzero result returns; zero invokes the actual wake-control wrapper, including when old mask was already zero. |
+| Wake control | Explicit known public-up zero is a no-I/O return. Up true reads physical control/SY, evaluates policy, applies cached wake set/clear, and waits only when policy true and the original sample lacked the wake bit. |
 
 The literal constants above are bit **masks**: run `0x2`, MAC enable `0x1`.
 Each SHM debug read is `ST,W32(0x160,0x10010),R32(0x160),SY,R16(0x164),SY`.
@@ -36,15 +41,31 @@ elapsed-clock deadlines. Every public step has at most one callback.
 
 ## Completion and deliberate policy differences
 
-`DONE` has a separate result: no-op, nested-depth change, woken, suspended or
-enabled register sequence. None proves RF, valid PHY calibration or RX/TX.
+`DONE` has a separate result: no-op, nested-depth change, woken, suspended,
+enabled, override-updated or wake-updated sequence. None proves RF, valid PHY
+calibration or RX/TX.
 
-Main enable returns `DEPENDENCY`, with no successful result, when it requires
-`wlc_set_wake_ctrl` or MBSS request-queue work. `pending_callouts` identifies the
-missing work; it is not an executed or successful callback. The actual wake
-policy is mapped in [the resource audit](DRIVER_RESOURCE_AUDIT.md#main-enable-wake-control-dependency).
-It includes BSS/scan/association state and cannot be inferred by clearing reason
-4. No placeholder reports that policy or MBSS initialization as complete.
+Main enable, override CLEAR and standalone wake-control now execute the actual
+wake action when reached public-up/policy state is supplied. Unknown public-up
+stops before hardware I/O; known up with unknown reached policy stops after the
+physical control/SY. MBSS request-queue work remains an unexecuted dependency.
+`pending_callouts` records missing work, not a successful callback. Legacy begin
+leaves policy unknown, preserving its previous dependency behavior.
+
+`axd_psm_policy` supports explicit known policy results or an optional immutable
+`inputs` pointer to the [actual pure predicate snapshot](WAKE_POLICY_MODEL.md).
+The latter takes precedence. Storage must remain valid and stable outside all
+jobs through terminal state; copied policy snapshots copy the pointer, not its
+objects. At the decision point the evaluator receives current `wake_reasons`,
+including preceding reason-2/4 clear. Initial override state must not be frozen
+with the other inputs. Compact decision/reason/pass/slot/access telemetry is
+retained. Missing reached facts become dependency; known-invalid reached
+bindings fail `POLICY_STATE`. Public-up false bypasses predicate evaluation.
+
+The physical wake sample is separate from later SHM/cache state. An unchanged
+cached control can suppress a write while the original physical sample still
+requires a wake wait. Conversely, a sample already carrying wake avoids that
+wait even when the cache update writes. No policy value is a readiness result.
 
 The original implementation deliberately:
 
@@ -78,20 +99,31 @@ using `&job.context`. Previously that alias was zeroed before copy. Independent
 regressions exercise a main suspend-to-enable chain and startup/reset restarts;
 private mutants removing the fixes fail specifically at these regressions.
 
+A mirror-cache timing bug was also fixed in startup and control: the primary
+cache changes before its primary write, but the mirror cache must not advance
+when merely queueing primary work. Its software store now happens immediately
+before the mirror store barrier, after primary barrier/write success. Cancel or
+error at either primary event retains old mirror cache, including successful
+cancellation at the primary write. Failure at the mirror barrier sees the new
+mirror cache, matching its preceding software-store position. Independent
+prefix regressions and private premature-update mutants verify both modules.
+
 Callbacks may request cancellation, never reenter begin/step or mutate job
 fields. Successful callback cancellation persists, including final reads or
 barriers; a simultaneous callback error wins. Terminal calls produce no I/O.
 
 ## Validation and outstanding work
 
-Independent literal traces and source-derived long scripts cover all five
-commands, optional/cache/mirror paths, no-band and hint behavior, maximum u16
+Independent literal traces and source-derived long scripts cover the five original
+commands and the new override/action APIs, optional/cache/mirror paths, no-band
+and hint behavior, maximum u16
 wake budget, exact suspend/enable limits, final-only/lost ACK, nested reads,
 invalid depths, all-ones checks, dependency combinations and every callback's
 failure/cancellation precedence. ASan/UBSan and freestanding ARMv7 checks pass.
 The optional pinned-table/selector/upload comparisons remain separate.
 
-Clock/PLL and higher reset composition, PHY-register/TSSI wake overrides,
-complete wake policy, MBSS, physical init-object writes and full SHM ABI remain
-required. The [roadmap](../ROADMAP.md) retains PHY/radio/channel/calibration,
+Higher reset/SI composition, runtime policy-input acquisition, MBSS/fatal
+recovery, physical init-object writes and full SHM ABI remain required.
+[PHY nesting and outer TSSI](PHY_GUARD_IDLE_MODEL.md) now use these real override
+and policy-action paths. The [roadmap](../ROADMAP.md) retains PHY/radio/channel/calibration,
 DMA data path, RX/TX, Linux and exact-board hardware milestones.

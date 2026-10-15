@@ -59,8 +59,9 @@ Preparation maps `chanspec & 0x3800`: `0x1000 -> 0x40`, `0x1800 -> 0x80`,
 `0x2000/0x3000 -> 0xc0`, `0x2800 -> 0x800`, other encodings -> zero.
 These are recovered selector rules, not a channel-validity or regulatory check.
 
-`RESET_PREPARE` ends before the existing PHY pulse/TSSI/analog operations. The
-full reset coordinator must run the pulse and its core-130 100-us delay before
+The [exact reset order](DRIVER_PHY_RESET_BF_AUDIT.md) places the outer TSSI
+snapshot **before** `RESET_PREPARE`; the restore follows pulse, bandwidth and
+analog reset. The full coordinator must run the pulse and its core-130 100-us delay before
 invoking `RECORD_BANDWIDTH` at the actual later software-state location. Keeping
 that command separate prevents publishing the new bandwidth-state word early.
 No pulse, TSSI snapshot/restore, table-29 sequence or beamforming callout is

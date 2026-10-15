@@ -40,6 +40,10 @@ prove that an unpublished or later port cannot exist.
 - [Initial REA native-driver findings](docs/REA_INITIAL_FINDINGS.md)
 - [First offline driver components and validation](driver/README.md)
 - [Core 130 attach, table and microcode-selection analysis](docs/DRIVER_ATTACH_AUDIT.md)
+- [PHY nesting and complete outer idle-TSSI wrapper](docs/PHY_GUARD_IDLE_MODEL.md)
+- [Pure wake policy and explicit runtime inputs](docs/WAKE_POLICY_MODEL.md)
+- [Actual ARM wake-policy/load-trace comparisons](docs/WAKE_POLICY_ARM_CHECKS.md)
+- [Exact PHY-reset and beamforming-cleaner ordering](docs/DRIVER_PHY_RESET_BF_AUDIT.md)
 - [Wake/suspend/enable model and policies](docs/PSM_CONTROL_MODEL.md)
 - [Current DMA reset model and limits](docs/DMA_RESET_MODEL.md)
 - [Composed stock-ARM comparisons and relocation limits](docs/PHY_COMPOSED_ARM_CHECKS.md)
@@ -75,12 +79,15 @@ prove that an unpublished or later port cannot exist.
 
 Driver-first offline development is the current priority. Selection, raw-table
 replay, effective initialization, upload simulation and reset/start subsets are
-implemented; the next task is composing the remaining lifecycle/resource
-contracts, including SI/clock composition, outer PHY-wake nesting and reset
-coordination. Composed table reads, all-core TSSI callback and PHY-clock jobs
-join the tested D11/ChipCommon, direct PHY/reset, PSM and DMA-reset subsets. Selected actual ARM primitives also match C under
-synthetic emulation; unfinished dependencies remain explicit. PHY, DMA, RX/TX and Linux WLAN
-integration follow their recovered dependencies.
+implemented; the next task is the full PHY-reset coordinator and beamforming
+cleaner, followed by remaining SI/clock and higher lifecycle/resource contracts.
+Outer PHY nesting and idle-TSSI now join the tested table/TSSI, PHY-clock,
+D11/ChipCommon, direct PHY/reset, PSM and DMA-reset subsets. The complete pure
+wake predicate and its control action are implemented with explicit runtime
+inputs. Actual selected ARM functions match C under synthetic emulation,
+including the predicate's complete software-state load order. Runtime input
+acquisition, MBSS/fatal recovery, radio initialization, DMA data path, RX/TX and
+Linux WLAN integration remain unfinished.
 
 The separate board workstream establishes console/recovery, minimal OpenWrt RAM
 boot, Ethernet and radio resources before hardware validation. Persistent image

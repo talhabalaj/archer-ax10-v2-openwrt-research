@@ -28,8 +28,9 @@ All original code here uses the repository's MIT license.
   Trace completion does not claim reset success.
 - `psm_start.c`: main/extended startup-suspended acknowledgement and SHM FIFO
   verification, with explicit control caches/flags and fail-stop policy.
-- `psm_control.c`: wake, main/extended suspend and enable traces with nesting,
-  exact SHM/poll budgets and explicit unimplemented callout dependencies.
+- `psm_control.c`: wake, main/extended suspend/enable, generic reason set/clear
+  and actual wake-control action with current-mask predicate integration; exact
+  budgets, cache/mirror commitment and explicit unavailable-state/callout dependencies.
 - `dma_reset.c`: actual current TX/RX reset paths, including indirect selection,
   bounded state polls and separate observed-disabled versus returned-success.
 - `clock_control.c`: core-130 D11 clock/PLL/secondary traces with separate
@@ -45,7 +46,14 @@ All original code here uses the repository's MIT license.
   packed32 header writes, counter-dependent flushes and explicit partial words.
 - `phy_tssi.c`: all-core-count callback with a four-slot buffer, real repeated
   table reads for extra slots and direct lower-slot masked restores. Outer
-  MAC/PHY-entry/wake nesting remains separate required work.
+  MAC/PHY-entry/wake nesting is a separate implemented job.
+- `phy_guard.c`: byte nesting with actual reason-2 PSM override children, bounded
+  transitions and retained partial state.
+- `idle_tssi.c`: optional callback wrapper with actual MAC suspend → PHY enter →
+  all-core callback → PHY exit → MAC enable; no invented failure unwind.
+- `wake_policy.c`: exact ordered pure stay-awake predicate, including RRM,
+  association, current override and three BSS passes. Explicit known inputs
+  distinguish reached missing state from an actual false predicate.
 - `phy_clock.c`: AI core-flags, PHY clock enable/disable, bandwidth preparation
   and optional secondary-core workaround, with typed owned wrapper resources.
 - `effective_init.c`: context-dependent initialization semantics with explicit
@@ -75,7 +83,7 @@ See [effective-init semantics and tests](../docs/EFFECTIVE_INIT_AUDIT.md) for
 exact termination, widths, address units, policies and cancellation behavior.
 
 Hardware microcode upload, the complete higher reset/clock/PHY/DMA lifecycle,
-complete wake-policy/fatal/MBSS handling, complete register/SHM typing, resource
+runtime wake-policy acquisition/fatal/MBSS handling, complete register/SHM typing, resource
 ownership, calibration, AC-PHY 51 initialization and Linux TX/RX integration
 remain absent. Offline wrapper reset and startup subsets are described in
 [their implementation boundaries](../docs/LIFECYCLE_MODEL.md). PHY type 11 and
@@ -147,7 +155,13 @@ The checks passed on 2026-10-15:
   high-selector C cases using ten actual selected functions; 16 standalone
   packed-write literal fixtures and seven call/dispatch rejection probes pass.
   MAC is inactive in those comparisons; active paths remain C trace tests.
-- All fifteen C files cross-compile with Clang for `armv7-none-eabi` in freestanding
+- Actual pure-policy ARM comparisons match 373 decisions/full ordered load traces
+  and 139 missing-field prefixes, including the 218-load longest case. Five actual
+  functions run; rejected calls/relocations and required-null probes fail closed.
+- Guard/outer idle-TSSI and override/action tests cover current cleared masks,
+  optional absence, all core counts, partial buffers/depth/cache, mirror prefix
+  timing and every selected event error/cancellation/coincident errors.
+- All eighteen C files cross-compile with Clang for `armv7-none-eabi` in freestanding
   mode with warnings treated as errors. This proves compilation, not linking
   into Linux, execution on ARM or hardware behavior.
 
@@ -202,11 +216,17 @@ firmware/table versions must not be silently mixed.
 
 ## Next implementation boundary
 
-Use the tested D11/ChipCommon, table/TSSI, PHY-clock and direct reset jobs.
-Implement outer PHY-register/wake nesting, actual SI/clock composition and
-remaining resource/optional dependencies, then compose the full higher reset
-with proven runtime resources. Complete wake policy and MBSS/fatal callouts;
-main-enable `DEPENDENCY` remains unfinished work. See
+Use tested idle-TSSI, PHY-clock, pulse and analog jobs to implement full PHY
+reset: outer snapshot BEFORE RESET_PREPARE, independently gated pulse, bandwidth
+record, analog, outer restore, then the optional real beamforming cleaner.
+Preserve its main/extended MAC operations and exact metadata scan boundaries.
+Compose actual SI/clock ownership/lifetime and higher device reset next. Runtime
+predicate input acquisition, MBSS/fatal recovery and resource discovery remain
+unfinished; reached child dependencies stay explicit. See
+[PHY nesting/outer wrapper](../docs/PHY_GUARD_IDLE_MODEL.md),
+[reset/beamforming audit](../docs/DRIVER_PHY_RESET_BF_AUDIT.md),
+[wake policy](../docs/WAKE_POLICY_MODEL.md),
+[actual ARM predicate checks](../docs/WAKE_POLICY_ARM_CHECKS.md),
 [resource evidence](../docs/DRIVER_RESOURCE_AUDIT.md),
 [clock model](../docs/CLOCK_CONTROL_MODEL.md),
 [ChipCommon model](../docs/CHIPCOMMON_CLOCK_MODEL.md),

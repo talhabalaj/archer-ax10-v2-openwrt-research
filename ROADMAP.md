@@ -60,13 +60,15 @@ mutating bring-up must follow the dependencies actually recovered from stock.
 1. **Use the saved implementation:** effective initialization, wrapper reset and
    startup subsets have tests/evidence; preserve their exact operation contracts.
 2. **Finish recovered clock/PHY reset contracts:** D11/ChipCommon clock and
-   table/TSSI, PHY-clock and direct reset jobs are tested. Implement surrounding
-   SI/wake nesting and higher reset composition, resolve runtime mapping and remaining
-   optional/imported prerequisites, then compose with
+   table/TSSI, outer PHY-wake nesting, PHY-clock and direct reset jobs are tested.
+   Implement the exact PHY-reset coordinator and real beamforming cleaner, then
+   surrounding SI composition, runtime mapping and remaining optional/imported
+   prerequisites. Compose with
    tested AI-wrapper/DMA reset and PSM stages using explicit state.
-3. **Finish wake policy and callouts:** wake/suspend/enable register paths now
-   have tests; actual BSS/scan/association policy, MBSS and fatal recovery remain
-   separate dependencies rather than successful placeholders.
+3. **Finish policy acquisition and callouts:** the actual BSS/RRM/association
+   predicate and wake-control action have tests, including actual ARM predicate
+   comparisons. Runtime state acquisition/synchronization, MBSS and fatal recovery
+   remain separate dependencies rather than successful placeholders.
 4. **Finish register/SHM and PHY 51 support:** resolve required radio/board inputs,
    clocks, calibration and channel initialization with no invented defaults.
 5. **Build the data path:** DMA rings and interrupts, receive parsing, transmit,
@@ -130,8 +132,12 @@ is provided. See [driver/README.md](driver/README.md) for exact restrictions.
    [Table-read/packed-write dependencies](docs/DRIVER_AC_TABLE_READ_AUDIT.md) are
    recovered and implemented in the [table model](docs/PHY_TABLE_MODEL.md),
    [all-core TSSI callback](docs/PHY_TSSI_MODEL.md) and
-   [PHY-clock jobs](docs/PHY_CLOCK_MODEL.md). Higher composition, outer wake
-   nesting and actual runtime resources remain.
+   [PHY-clock jobs](docs/PHY_CLOCK_MODEL.md), [outer PHY nesting/idle-TSSI](docs/PHY_GUARD_IDLE_MODEL.md)
+   and [actual wake predicate/action](docs/WAKE_POLICY_MODEL.md). Its
+   [ARM harness](docs/WAKE_POLICY_ARM_CHECKS.md) checks exact software load order.
+   [Reset/beamforming ordering](docs/DRIVER_PHY_RESET_BF_AUDIT.md) is recovered;
+   its coordinator, higher SI/reset composition, policy acquisition and actual
+   runtime resources remain.
 2. Follow callers and reset/control helpers only as necessary to establish the
    core-130 main and extended PSM sequences. Resolve register descriptors rather
    than assuming older b43/brcmsmac offsets or masks.
