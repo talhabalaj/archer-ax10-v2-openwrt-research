@@ -8,8 +8,8 @@
    changes. Read [PUBLICATION_POLICY.md](docs/PUBLICATION_POLICY.md) before staging.
 
 The active priority is offline BCM63178 driver development. The immediate next
-milestone is D1 reset/start/hardware acknowledgement unless PROGRESS.md has
-advanced it. Pending UART/recovery does not block offline analysis/simulation.
+milestone is the remaining D1 higher lifecycle/resource contracts and
+suspend/enable/wake, unless PROGRESS.md has advanced it. Pending UART/recovery does not block offline analysis/simulation.
 
 ## Preserve scope and evidence
 

@@ -40,6 +40,10 @@ prove that an unpublished or later port cannot exist.
 - [Initial REA native-driver findings](docs/REA_INITIAL_FINDINGS.md)
 - [First offline driver components and validation](driver/README.md)
 - [Core 130 attach, table and microcode-selection analysis](docs/DRIVER_ATTACH_AUDIT.md)
+- [Offline reset/start model boundaries](docs/LIFECYCLE_MODEL.md)
+- [Reset, startup, suspend and wake evidence](docs/DRIVER_LIFECYCLE_AUDIT.md)
+- [Effective initialization semantics and tests](docs/EFFECTIVE_INIT_AUDIT.md)
+- [Runtime context, object-memory and SI/calibration source notes](docs/D2_CONTEXT_SOURCE_NOTES.md)
 - [Exact microcode upload trace and its limits](docs/DRIVER_UPLOAD_AUDIT.md)
 - [Upload register/source corroboration](docs/UPLOAD_SOURCE_NOTES.md)
 - [Vendor driver source map](docs/DRIVER_SOURCE_MAP.md)
@@ -55,8 +59,9 @@ prove that an unpublished or later port cannot exist.
 ## Intended implementation sequence
 
 Driver-first offline development is the current priority. Selection, raw-table
-replay and upload simulation are implemented; the next task is recovering the
-actual reset/start/hardware-acknowledgement path. PHY, DMA, RX/TX and Linux WLAN
+replay, effective initialization, upload simulation and reset/start subsets are
+implemented; the next task is composing the remaining lifecycle/resource
+contracts and implementing suspend/enable/wake. PHY, DMA, RX/TX and Linux WLAN
 integration follow their recovered dependencies.
 
 The separate board workstream establishes console/recovery, minimal OpenWrt RAM

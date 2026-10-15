@@ -57,12 +57,13 @@ mutating bring-up must follow the dependencies actually recovered from stock.
 
 ## Practical steps from the current checkpoint
 
-1. **Save/review current work:** retain the pending effective-init C/tests and
-   complete the bounded lifecycle-analysis report. Export/close analysis sessions.
-2. **Publish the initialization subset:** document the explicit runtime addend
-   and semantic object-copy boundary; publish code, tests and reviewed evidence.
-3. **Implement reset/start/suspend/wake:** use the recovered exact main/extended
-   traces, final confirmation reads and failure behavior; add host regressions.
+1. **Use the saved implementation:** effective initialization, wrapper reset and
+   startup subsets have tests/evidence; preserve their exact operation contracts.
+2. **Complete the higher lifecycle/resource contracts:** resolve runtime mapping,
+   clocks/PLL, DMA/PHY reset and optional VASIP/SMC prerequisites, then compose
+   the tested stages with explicit state.
+3. **Implement suspend/enable/wake:** use the recovered main/extended nesting,
+   SHM state, final-read and failure behavior; add independent host regressions.
 4. **Finish register/SHM and PHY 51 support:** resolve required radio/board inputs,
    clocks, calibration and channel initialization with no invented defaults.
 5. **Build the data path:** DMA rings and interrupts, receive parsing, transmit,
@@ -99,11 +100,12 @@ Acceptance is met for an **offline subset**. No MMIO backend, hardware-ready
 predicate, PSM lifecycle, PHY programming, DMA, kernel binding or radio operation
 is provided. See [driver/README.md](driver/README.md) for exact restrictions.
 
-### D1 — Recover and model reset/start/acknowledgement: IN PROGRESS
+### D1 — Recover and model reset/start/acknowledgement: PARTIAL IMPLEMENTATION
 
 1. Reuse existing `wlc_bmac_init`, attach and upload evidence. Inspect the
    recovered enable/suspend/wake and current HND reset routines tracked in
-   [PROGRESS.md](PROGRESS.md). Finish assembly checks and retain the report.
+   [PROGRESS.md](PROGRESS.md). Their bounded report and wrapper/startup models
+   are retained. Higher resource/clock/PHY/DMA dependencies remain unresolved.
 2. Follow callers and reset/control helpers only as necessary to establish the
    core-130 main and extended PSM sequences. Resolve register descriptors rather
    than assuming older b43/brcmsmac offsets or masks.
@@ -132,7 +134,7 @@ unverified until device testing.
   device-relative register offsets separate.
 - Recover object-memory selectors, addressing units, access widths, ordering,
   limits and PSM/PSMx shared-memory layouts used by the chosen microcode.
-- Finish review/publication of the locally tested effective initialization
+- Preserve the implemented/tested effective initialization
   operations with explicit runtime context,
   including the adjustment at offset `0x130` and the separate object-memory path.
   Preserve the existing raw recorder as an independent comparison tool.

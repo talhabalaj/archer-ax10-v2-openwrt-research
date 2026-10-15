@@ -1,17 +1,15 @@
 # Current progress and continuation checkpoint
 
-Updated 2026-10-15. Implementation baseline:
+Updated 2026-10-15. This checkpoint includes the effective-init, AI-wrapper
+reset and PSM startup implementation. Previous driver baseline:
 [`00e6fdb`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/00e6fdbec3f96bd51768bc2907edfb258b51bd4f).
-This is the operational checkpoint; [ROADMAP.md](ROADMAP.md) contains the full
-plan and acceptance criteria. The baseline above is the last published driver
-implementation; the working-tree checkpoint below includes newer, uncommitted
-work. New work must update this checkpoint.
+Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
 
 ## Resume here
 
-**Next milestone: D1 — finish the recovered reset/start operation ledger and
-implement its offline lifecycle model. First preserve and review the pending D2
-initialization change described below.**
+**Next milestone: finish D1's higher lifecycle/resource contracts and implement
+suspend/enable/wake around the tested reset/start subsets.** Reuse the completed
+lifecycle evidence; do not restart the same decompilation queries.
 
 Current priority is driver work first. Offline analysis/simulation remains
 unblocked by pending UART/recovery work. No device upload, radio initialization
@@ -24,8 +22,8 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | --- | --- | --- |
 | Target and reference inventory | Established for inspected inputs | [Hardware](findings/HARDWARE_INVENTORY.json), [binary](docs/DRIVER_BINARY_AUDIT.md), [GPL](docs/GPL_AUDIT.md). Reverify drift-prone device state before device work. |
 | D0 offline foundation | Implemented and host-tested within stated limits | Four C components, pinned object inspector, synthetic/fault tests and private-input comparisons. |
-| D1 reset/start/acknowledgement | Analysis in progress; model not implemented | Main/extended startup, suspend/wake and wrapper reset paths recovered; finish assembly review and publish the operation ledger before implementation. |
-| D2 complete register/SHM/context contracts | Partial; effective-init code tested locally, uncommitted | Runtime adjustment/object-copy semantic model exists in the working tree; physical object-helper expansion, complete map and SHM ABI remain open. |
+| D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper reset and main/extended startup subsets implemented; higher clock/PHY/DMA reset, resource context and suspend/enable/wake remain. |
+| D2 complete register/SHM/context contracts | Partial implementation, host-tested | Effective-init semantics and startup SHM16 FIFO read implemented; addend acquisition, physical init-object writes, complete register map and SHM ABI remain. |
 | D3 PHY 51/radio/channel/calibration | Attach dispatch mapped; initialization pending | Radio-specific callbacks and required private board inputs remain to be recovered. |
 | D4 DMA/interrupt/RX | Not implemented | Requires descriptor/status/resource contracts and later exact-board validation. |
 | D5 TX/Linux WLAN integration | Not implemented | Integration architecture and baseline feature implementation remain open. |
@@ -44,6 +42,9 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | `driver/ucode_select.c` | Core 130 minor 0/1 plus slice boardflags bit 0 selects primary/extended names and pinned sizes. | No input authentication, upload permission or readiness. |
 | `driver/init_table.c` | Strict 8-byte LE record validation and raw ordered replay, offsets below `0x1000`. | Omits runtime adjustment at `0x130` and object-memory translation. Not a hardware-write emulator. |
 | `driver/ucode_upload.c` | Explicit fresh chunk zero; main then extended; selector/readback/barrier and LE word-write trace; one event per step. | No MMIO, reset/start, SHM publication or hardware acknowledgement. Nonzero chunk state rejected. |
+| `driver/effective_init.c` | Runtime `0x130` adjustment, width truncation and bounded semantic object-copy events. | Explicit synthetic/caller context; no object-helper port lowering. |
+| `driver/ai_reset.c` | AI primary/optional-secondary wrapper trace, bounded busy/release loops and readback-dependent control. | No SI mapping or higher reset; trace completion can include stuck reset. |
+| `driver/psm_start.c` | Cached main/extended controls, exact ACK loops/final reads, physical SHM16 FIFO verification. | Startup-suspended predicate only; explicit fail-stop policy, no hardware backend. |
 | `driver/status_poll.c` | Caller-defined status predicate and monotonic timestamps; bounded steps, timeout and cancellation. | Synthetic configurable infrastructure; no recovered device-ready register/mask. |
 | `scripts/radio_firmware_inventory.py` | Exact hash, ELF object bounds/relocation checks, size companions and metadata inventory. | Payloads remain private; different/older modules rejected. |
 | `scripts/test_driver.sh` | Public ASan/UBSan suite; optional private stock comparison. | Host validation only. |
@@ -67,79 +68,95 @@ Recorded passes at the implementation baseline:
 These are historical validation results for the named baseline. Re-run relevant
 checks when code or inputs change; do not imply a new hardware test occurred.
 
-## Working-tree checkpoint — preserve before resuming
+## Latest implementation and retained evidence
 
-The following newer implementation is **local and uncommitted** at this
-checkpoint. Do not discard it or treat the published baseline as containing it:
+- [Effective-init implementation/evidence](docs/EFFECTIVE_INIT_AUDIT.md) and
+  [published source corroboration](docs/D2_CONTEXT_SOURCE_NOTES.md).
+- [Lifecycle ledger](docs/DRIVER_LIFECYCLE_AUDIT.md),
+  [selected Evidence IDs](findings/DRIVER_LIFECYCLE_EVIDENCE.json), and
+  [implemented boundaries/policies](docs/LIFECYCLE_MODEL.md).
+- `tests/test_effective_init.c`, `tests/test_psm_start.c` and
+  `tests/test_ai_reset.c` supply independent literal/synthetic expected traces.
+- `scripts/test_driver.sh` runs all six synthetic test programs and optional
+  pinned private-input comparisons. All seven portable C components compile
+  for freestanding ARMv7 with strict warnings.
 
-| Files | Current result | Remaining work |
-| --- | --- | --- |
-| `driver/effective_init.c`, `driver/effective_init.h` | Semantic core-130 initialization state machine: explicit runtime addend for register `0x130`, width truncation, object-copy arguments, bounds, terminal failure/cancellation. | Review and publish its evidence/README alongside the implementation. No physical object-port backend exists. |
-| `tests/test_effective_init.c` | Independent mixed trace and every-event failure/cancellation tests. | Preserve the independent oracle when extending the implementation. |
-| `tests/check_stock_firmware.py`, `scripts/test_driver.sh` | Integrate effective-init checks; compare 4,212 table records across three explicit synthetic runtime contexts. | Publish with the C component; retain private payloads outside Git. |
+Latest recorded validation (host/build only):
 
-Recorded local validation: the complete synthetic ASan/UBSan suite and optional
-pinned private-input comparisons passed; `effective_init.c` also compiled for
-freestanding ARMv7 with strict warnings. Existing raw-table, selection and upload
-comparisons continued to pass. These are host/build results, not device tests.
-The three runtime addends are synthetic test inputs, not recovered active board
-values. Object-copy events stop at the helper-call boundary.
+- Effective-init: 4,212 private-table record comparisons under three explicit
+  synthetic addends; every callback in a 13-event mixed trace tested for
+  failure/cancellation/simultaneous error. Raw/selection/upload checks still pass.
+- PSM startup: literal main/extended and cached/mirrored traces, preservation of
+  outside-mask mirror bits, delayed/last-loop/final-only ACK and lost ACK,
+  separate 100,000-delay budgets, FIFO predicates and every-event error/cancel.
+- AI reset: independent wrapper traces, non-echo control readbacks, optional
+  secondary-first ordering, 30-delay busy boundaries, nine release writes and
+  stuck-reset diagnostics; every-event error/cancel and terminal silence.
+- Synthetic tests pass under ASan/UBSan. No MMIO, firmware execution, calibration
+  access, radio operation, Linux module linking or router test occurred.
 
-New D1 analysis has followed the real main/extended start, suspend, enable and
-wake paths and the imported reset into the exact current `hnd.ko`. Private raw
-records are retained in the sibling private workspace under
-`driver-private/rea-lifecycle` and `driver-private/rea-hnd-reset`; do not copy
-them into this public checkout. Preserve/export/close any remaining owned native
-analysis sessions and retain a sanitized report before further implementation.
-The exact current `hnd.ko` is 366,060 bytes, SHA-256
+The lifecycle's WL/HND/FIFO-wrapper analysis sessions were exported and closed;
+exact inputs remained unchanged. Raw records are retained outside this checkout
+under sibling private-workspace directories `driver-private/rea-lifecycle`,
+`driver-private/rea-hnd-reset` and `driver-private/rea-fifo-shm`. Retain those
+private bundles for follow-up; publish only reviewed summaries. The current
+`hnd.ko` is 366,060 bytes, SHA-256
 `d05ff061b3a636630955a13fdd20a953f3dfb07ee92904a987dd4c77b648b45a`.
+The earlier kernel-boundary proposal is retained privately under
+`board-audit/KERNEL_BOUNDARY_AND_INIT_TEST_NOTES.md`; it is a design input,
+not implemented kernel support.
 
-Critical distinctions from that analysis to carry into the reviewed ledger:
+Critical distinctions to preserve:
 
-- Startup polls for **suspended acknowledgement**, not a generic radio-ready
-  state. Main and extended paths have different error propagation.
-- The recovered loops contain separate final confirmation reads. The generic
-  timestamp poller does not automatically reproduce their exact trace.
-- The stock caller does not propagate every helper failure; an offline fail-stop
-  policy must be labeled as a deliberate stricter model policy.
-- Reset has clock/control and potentially secondary-wrapper dependencies.
-  SMC/VASIP/PHY prerequisites must be resolved or explicit, never bypassed by
-  assuming that a completed microcode transfer is sufficient.
+- Startup waits for **suspended acknowledgement**, then verifies FIFO layout.
+  It does not prove radio readiness. A separate final read is mandatory even
+  after immediate ACK; exact stock loops are not generic deadline polling.
+- The stock extended-timeout path continues after a diagnostic; the new startup
+  model deliberately fail-stops. The outer stock BMAC init ignores the helper
+  return. Do not claim identical stock failure traces or invent fatal cleanup.
+- AI reset continues through busy exhaustion/stuck reset; inspect its diagnostics.
+  `TRACE_COMPLETE` does not attest successful reset or clock/PHY readiness.
+- FIFO SHM16's wrapper is now resolved to selector `0x10000`; its high-halfword
+  access is implemented. The complete SHM ABI and init-object write helper are
+  still unresolved.
+- The runtime addend comes from **host `hw + 0x260`** and targets hardware
+  register `0x130`; there is no established host field at `+0x130`. The object
+  address remains u32; only the copied value is narrowed to 16 bits.
 
 ## Exact next work package
 
-1. Inspect Git status and preserve all five pending implementation/test files
-   listed above. Fetch/check remote main before publishing; do not overwrite
-   another change. Read the relevant evidence and driver README.
-2. Finish the bounded D1 assembly review. Export/close owned REA sessions and
-   write the public-safe lifecycle report plus Evidence summary. Resolve actual
-   descriptor fields, reset inputs, optional paths and caller error handling.
-   Reuse retained analysis instead of repeating installation/decompilation.
-3. Review the pending effective-init implementation against the existing
-   `wlc_write_inits` evidence. Document the runtime addend source, byte-address
-   formula, low-16-bit **value** and semantic object-helper boundary. Update the
-   driver README and publish the scoped D2 subset with its tests/evidence.
-4. Build the D1 operation ledger: prerequisites, bank, register, width, mask/value,
-   barriers/readbacks, exact loop counts, delay/final-read order and failures.
-   Keep startup/suspend/wake predicates separate. Distinguish observed behavior
-   from additional validation/fail-stop policy.
-5. Implement original bounded lifecycle C with no real MMIO backend. Add
-   independent traces, immediate/last-poll/timeout cases, injected operation
-   failures, main/extended differences and callback cancellation regressions.
-   Do not shoehorn exact stock polling into the generic deadline semantics.
-6. Run relevant ASan/UBSan tests and private-input comparisons; compile changed
-   C for ARMv7. Record exactly what passed and what remains untested.
-7. Update this checkpoint and roadmap in the same substantive change. Review
-   the exact publication allowlist, scan it, commit/push and verify the remote
-   commit/tree. Preserve unrelated dirty files and keep private raw inputs out.
-8. Continue remaining D2 register/object/SHM contracts, then D3 PHY 51/radio and
-   required calibration inputs. Follow the roadmap through DMA/RX, TX/Linux
-   integration, board bring-up and exact-board validation.
+1. Read Git status, this checkpoint, the lifecycle ledger and implementation
+   boundaries. Preserve unrelated changes; fetch/check remote main before
+   publication. Reuse exported evidence instead of reinstalling/repeating queries.
+2. Recover the current higher `wlc_bmac_corereset` dependencies using retained
+   evidence: runtime interconnect/wrapper mapping, core unit, mode-dependent
+   normal/reset bits, clock/PLL, DMA/PHY and auxiliary-core operations. Expand
+   only missing actual callees. VASIP/SMC prerequisites must be resolved too.
+3. Design explicit resource/context contracts and a lifecycle coordinator that
+   composes the proven wrapper reset, initialization/upload and startup stages.
+   Do not introduce successful stubs or infer clock/reset state from transfer
+   completion. Bind runtime inputs to observations before hardware use.
+4. Implement the already-recovered suspend/enable/wake paths with separate
+   main/extended nesting depths, wake override state, SHM debug-state access,
+   exact iteration/final-read behavior and explicit fatal/down callout policy.
+   Reject unsupported or invalid nesting/state rather than inventing recovery.
+5. Extend D2 object/SHM contracts where those paths require them. Resolve
+   `hw + 0x260` stores/acquisition and physical init-object writes. Keep unknown
+   board/runtime values explicit; preserve the independent raw-table recorder.
+6. Add independent trace/error/cancel and boundary tests for each new behavior.
+   Run relevant ASan/UBSan/private comparisons and strict ARMv7 compilation.
+   Host validation cannot satisfy Linux integration or exact-board gates.
+7. Export/close owned analysis sessions, verify input identity, update this file
+   and roadmap, review/scan an exact publication allowlist, commit/push and
+   verify remote commit/tree. Keep private bytes and local host paths out.
+8. Continue D3 PHY51/radio/channel/calibration, then DMA/interrupt/RX, TX/Linux
+   integration and full features. In the board workstream establish recovery,
+   RAM boot and resources before exact-board hardware validation and firmware.
 
-**D1 is done only when** the implemented reset/start/acknowledgement contract has
-evidence and passing simulator regressions. It will still not mean real hardware
-startup has been tested. If its required path reaches PHY/SHM/clock dependencies,
-record them and adjust D2/D3 ordering rather than bypassing them.
+**D1 remains partial.** Its higher reset/resource/optional dependencies and
+suspend/enable/wake implementation are still missing. Simulator completion does
+not mean hardware startup. Follow recovered dependencies into D2/D3 rather than
+bypassing them; keep the complete-driver objective unchanged.
 
 ## Input and tool identities
 
@@ -208,6 +225,7 @@ assembly, typed references and descriptor reads as required by the evidence.
 | `aecc211` | Boot chain, official image layout and RAM-boot constraints. |
 | `71610f8` | Original selector, initialization decoder/replayer and object inventory. |
 | `00e6fdb` | Exact upload trace simulator, generic status polling, fault/cancellation regressions and test runner. |
+| This checkpoint | Effective initialization, current-HND AI-wrapper reset, PSM startup/FIFO trace, independent tests and lifecycle evidence. |
 
 At each future checkpoint, add a concise milestone entry and replace the active
 next-work package with the actual next task. Keep unresolved defects visible.

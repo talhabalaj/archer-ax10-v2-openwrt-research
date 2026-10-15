@@ -1,0 +1,823 @@
+{
+  "schema_version": 1,
+  "scope": "Original D1 static lifecycle analysis checkpoint for the complete-driver goal; no payload bytes, pseudocode, local host paths, or hardware validation.",
+  "status": {
+    "analysis": "bounded WL and exact HND dependency passes complete",
+    "lifecycle_implementation": "not established by this analysis",
+    "complete_driver": "not complete"
+  },
+  "artifacts": {
+    "wl.ko": {
+      "bytes": 5803056,
+      "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+    },
+    "hnd.ko": {
+      "bytes": 366060,
+      "sha256": "d05ff061b3a636630955a13fdd20a953f3dfb07ee92904a987dd4c77b648b45a"
+    }
+  },
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4"
+  },
+  "reused_evidence": [
+    {
+      "artifact": "wl.ko",
+      "name": "wlc_bmac_init",
+      "evidence_id": "ev_bff33b73bdefa3d52a4daf134ad0ccd9f13c5fd6037bde943a4880fe9242f6e4"
+    },
+    {
+      "artifact": "wl.ko",
+      "name": "wlc_bmac_attach",
+      "evidence_id": "ev_9c5169ec2aebea30cb32004f1cf079127c180b4a9f7438b0b14ce36ce1ff45c4"
+    }
+  ],
+  "core130": {
+    "mmio_offsets": {
+      "main_control": "0x120",
+      "main_status": "0x128",
+      "object_address": "0x160",
+      "object_data": "0x164",
+      "extended_control": "0x1b4",
+      "extended_status": "0x1c0",
+      "optional_control_mirror": "0x324",
+      "conditional_extra_reset16": [
+        "0xa08",
+        "0xa06"
+      ],
+      "wake_diagnostics": [
+        "0x154",
+        "0x6ca",
+        "0x7e8"
+      ]
+    },
+    "shm_byte_offsets": {
+      "debug_state": "0x40",
+      "fifo_layout": "0x422"
+    },
+    "main_and_extended_feature": "attach sets extended-feature byte for core_revision>127",
+    "main_control_cache": {
+      "expression": "(old&~mask)|value",
+      "no_change": "no write",
+      "wake_override": "OR0x04000000",
+      "mute_override": "clear0x00040000,set0x00020000",
+      "write_events": [
+        "DSB ST",
+        "write32(main_control,effective_value)"
+      ],
+      "optional_mirror_mask": "0xcfc72706"
+    },
+    "startup": {
+      "main_status_initial_write": "0xffffffff",
+      "main_control_values": [
+        "0x04020406",
+        "0x04020402"
+      ],
+      "control_update_mask": "0xffffffff",
+      "extended_status_initial_write": "0xffffffff",
+      "extended_control_value": "0x402",
+      "changed_value_cache_rules_apply": true,
+      "status_predicate": "(status&1)!=0",
+      "loop": {
+        "initial_read": true,
+        "read_barrier": "DSB SY after read",
+        "delay_us": 10,
+        "max_delay_iterations_per_bank": 100000,
+        "max_requested_delay_us_per_bank": 1000000,
+        "separate_final_confirmation_read": true,
+        "clock_semantics": "counter budget, not elapsed deadline"
+      },
+      "main_timeout": "fatal callback then return-1, skip extended and FIFO check",
+      "extended_timeout": "extended fatal callback then continue FIFO check",
+      "fifo_layout_predicate": "((SHM16[0x422]>>13)&7)==2",
+      "bmac_init_checks_start_return": false,
+      "ack_scope": "startup-suspended MI_MACSSPNDD; not complete firmware or RX/TX readiness"
+    },
+    "suspend": {
+      "run_precondition": "control&0x2",
+      "separate_nesting_depths": true,
+      "first_level_clears_enable_mask": "0x1",
+      "main_wake_override_reason": "0x4",
+      "extended_calls_main_wake_override": false,
+      "status_predicate": "status&1",
+      "delay_us": 10,
+      "max_delay_iterations": 8300,
+      "max_requested_delay_us": 83000,
+      "separate_final_confirmation_read": true,
+      "all_ones_control_or_status": "wl_down path",
+      "timeout_software_flag": "0x2000 at hardware object+0x580",
+      "main_timeout": "conditional fatal then flag and return",
+      "extended_timeout": "fatal, flag, then final control/all-ones check"
+    },
+    "enable_main": {
+      "run_precondition": "control&0x2",
+      "nesting_action": "decrement main depth; hardware action on reaching0",
+      "set_control_mask_and_value": "0x1",
+      "status_write": "0x1",
+      "post_write_readbacks": [
+        "read32(main_control),DSB SY",
+        "read32(main_status),DSB SY"
+      ],
+      "shm_loop": "while state==3; require final state2",
+      "max_shm_reads": 1001,
+      "max_delay_iterations": 1000,
+      "delay_us": 10,
+      "failure_reason_if_unset": "0x34",
+      "timeout_flag_suppresses_fatal": "0x2000",
+      "after_poll": "clear wake override reason0x4, conditional wake-control and MBSS callouts"
+    },
+    "enable_extended": {
+      "run_precondition": "control&0x2",
+      "nesting_action": "decrement extended depth; hardware action on reaching0",
+      "pre_write_extra_readback": "read32(extended_control),DSB SY",
+      "set_control_bit": "0x1",
+      "status_write": "0x1",
+      "post_write_readbacks": [
+        "read32(extended_control),DSB SY",
+        "read32(extended_status),DSB SY"
+      ],
+      "shm_poll": false
+    },
+    "wait_wake": {
+      "band_null": "no-op",
+      "initial_delay_us": 40,
+      "shm_success_state": 2,
+      "budget_source": "u16 hardware object+0x212, derived earlier from power-up and synthesizer delays",
+      "additional_delay_iterations": "ceil(budget_us/10)",
+      "delay_us": 10,
+      "separate_final_state_read": true,
+      "failure_reason_if_unset": 3,
+      "failure": "diagnostic reads and wlc_fatal_error"
+    },
+    "shm_read16_events": [
+      "DSB ST",
+      "write32(objaddr,selector|(offset>>2))",
+      "read32(objaddr)",
+      "DSB SY",
+      "read16(objdata+(offset&2))",
+      "DSB SY"
+    ],
+    "reset_inputs": {
+      "core130_reset_bits": "reset_bits|0x20",
+      "core130_normal_bits": "bits|0x20 in mode2; otherwise bits&~0x20",
+      "higher_correset_normal_bits": "caller-selected flags|0x4",
+      "higher_correset_initial_reset_bits": 0
+    },
+    "fifo_read": {
+      "wrapper": "wlc_bmac_read_shm sets selector0x10000 and tail-branches to wlc_bmac_read_objmem16",
+      "byte_offset": "0x422",
+      "events": [
+        "DSB ST",
+        "write32(0x160,0x10108)",
+        "read32(0x160),discard",
+        "DSB SY",
+        "read16(0x166)",
+        "DSB SY"
+      ],
+      "gap_resolved": true
+    }
+  },
+  "hnd_ai_reset": {
+    "interconnect_types": [
+      1,
+      3,
+      4
+    ],
+    "wrapper_offsets": {
+      "io_control": "0x408",
+      "status_flags": "0x500",
+      "reset_control": "0x800",
+      "reset_status": "0x804"
+    },
+    "special_sequence_condition": "D11core0x812 and revision61 or128..132, including130",
+    "busy_wait": {
+      "predicate": "reset_status==0",
+      "initial_read": true,
+      "read_barrier": "DSB SY after each read",
+      "delay_us": 10,
+      "max_delay_iterations": 30,
+      "max_requested_delay_us": 300,
+      "timeout": "continue; no reported error"
+    },
+    "sequence": [
+      "busy_wait",
+      "DSB ST,write32(reset_control,1),delay10us",
+      "busy_wait",
+      "DSB ST,write32(io_control,bits|reset_bits|3),read32(io_control),DSB SY",
+      "special:delay1us,DSB ST,write32(io_control,readback&~2)",
+      "busy_wait",
+      "up to9 release writes, each preceded/followed by busy_wait; each write DSB ST,write32(reset_control,0); reset_control read+DSB SY controls retry",
+      "DSB ST,write32(io_control,bits|3 for special else bits|1),read32(io_control),DSB SY",
+      "special:delay1us,DSB ST,write32(io_control,readback&~2)",
+      "delay1us"
+    ],
+    "release_limits": {
+      "max_reset_control_reads": 10,
+      "max_reset_control_zero_writes": 9,
+      "failure_reported": false
+    },
+    "wrapper_order": "secondary if per-core secondary entry exists, then primary; runtime mapping required",
+    "iscoreup_predicate": "(read32(io_control)&3)==1 and(read32(reset_control)&1)==0, each read followed by DSB SY",
+    "flags_update_events": [
+      "read32(field),DSB SY",
+      "value=(old&~mask)|bits",
+      "DSB ST,write32(field,value)",
+      "read32(field),DSB SY"
+    ],
+    "return_type": "void",
+    "reset_success_attested": false
+  },
+  "remaining_dependencies": [
+    "Runtime SI interconnect and wrapper/bus mapping, mode and reset flags",
+    "Clock/power/PLL, DMA resets, PHY reset and calibration dependencies",
+    "Remaining complete SHM/FIFO ABI and effective initialization context",
+    "Fatal/down callback effects and deliberate fail-stop policy",
+    "Lifecycle original C implementation, independent trace/boundary/failure/cancellation tests",
+    "Full PHY51, DMA/RX/TX, kernel integration, features and hardware validation"
+  ],
+  "evidence": [
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-core-reset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_9c93f83d75db3bb4f7f3d67e5958c9956d7bb94ebfd33885338ca2c774e84f83",
+      "query": {
+        "procedure": "wlc_bmac_core_reset"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-core130-shm-selector",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_640a2bf2ab2e7c83dfd140aa840e655efbc4582ec75a4acd944755115bbc49e1",
+      "query": {
+        "procedure": "d11shm_select_ucode_std"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-corereset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_3d6f855a87fe26c03023390d6ff2a4e493ee0df874ff7f6de2e5820bb60bf5c9",
+      "query": {
+        "procedure": "wlc_bmac_corereset"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-enable-extended",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_7b50ffdc0e4f4876a6731e8de9c63f4493c3c21ed4fce5356dc0e4633d76ef6b",
+      "query": {
+        "procedure": "wlc_bmac_enable_macx"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-enable-main",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_a478143017397636dd848f1cd777f96655547decc0102b0439a3e59ddba15e09",
+      "query": {
+        "procedure": "wlc_bmac_enable_mac"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-extended-control",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_f5fdff8e6c30e15c41de046e5e16cfbe8204161c46c4e17bd12da4a411952e0e",
+      "query": {
+        "procedure": "wlc_bmac_mctrlx"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-fifo-layout-verification",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_9269e012ea5df490b224981deace1591ea3b23eba0f5de629adaf5684172b32d",
+      "query": {
+        "procedure": "wlc_hw_verify_fifo_layout"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-main-control",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_00eaeb8439237d4720e1b8f092424dceecb355b626647fcf242902c0e8c3ab6f",
+      "query": {
+        "procedure": "wlc_bmac_mctrl"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-shm-read16",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_51e8ccb58073e52828e9a58711c189cf51052b09baeed65949c6842b315b1163",
+      "query": {
+        "procedure": "wlc_bmac_read_objmem16"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-suspend-extended",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_737daa0c1c8fa47a7030205227c41653e1a0db7b5aa2bf4949049b5c7a17e756",
+      "query": {
+        "procedure": "wlc_bmac_suspend_macx_and_wait"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-suspend-main",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_b1c2b455d7f37262c5a0025866421730775b92e487259becdb426bfdf8b5bed8",
+      "query": {
+        "procedure": "wlc_bmac_suspend_mac_and_wait"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-ucode-start",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_641ff9778ab574aea77d98b4a856ee9dd22cda73cab125694b4a9b9b1ead4d10",
+      "query": {
+        "procedure": "wlc_bmac_wowlucode_start"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-wait-wake",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_4db811be868b35dfb432463aab1aa687539791767f67d19d29814d4f6680cda5",
+      "query": {
+        "procedure": "wlc_bmac_wait_for_wake"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-wake-override",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_922f23b519d420cf89d7bdaaf0f1b7fbc231aac45ac9523039e395b0a5d5727c",
+      "query": {
+        "procedure": "wlc_ucode_wake_override_set"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "bytes-core-control-status-field",
+      "operation": "read_bytes",
+      "evidence_id": "ev_d888d741beb263bd42d365bc349069a2173f304b43c8f4fbddfb8cf494751727",
+      "query": {
+        "address": "0x3a49b6",
+        "length": 2
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "bytes-core-reset-extra-fields",
+      "operation": "read_bytes",
+      "evidence_id": "ev_74ca65a5cf19e57e9db7ddeb3248043ec5ef0aa26da7e357f939bd1992871940",
+      "query": {
+        "address": "0x3a4668",
+        "length": 4
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "bytes-core130-fifo-layout-shm-offset",
+      "operation": "read_bytes",
+      "evidence_id": "ev_5b923b7d8e7b47bba445f5486be53e4aeda270cdab8768027c2bfb89ba06b808",
+      "query": {
+        "address": "0x3a51d2",
+        "length": 2
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "bytes-core130-register-root",
+      "operation": "read_bytes",
+      "evidence_id": "ev_94c2a99cc27d5f864cb6d570a1341cf1033d19c4c3eb789f4b04eeec580b655a",
+      "query": {
+        "address": "0x3a3f88",
+        "length": 24
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "bytes-core130-shm-common-root",
+      "operation": "read_bytes",
+      "evidence_id": "ev_e29545d957cc66d083ef2987a9a6947dd9802929a188cb85f98d223d4c34f402",
+      "query": {
+        "address": "0x3a4bcc",
+        "length": 4
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "bytes-core130-shm-debug-state-offset",
+      "operation": "read_bytes",
+      "evidence_id": "ev_905a7329f39fcc47825ee66a26631f9b739d06d58d8dbd81f3ff4bd1b525c1b2",
+      "query": {
+        "address": "0x3a5f3c",
+        "length": 2
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "bytes-core130-shm-state-root",
+      "operation": "read_bytes",
+      "evidence_id": "ev_9f9b0cb29c42499f6079f047d292c47f5d37e60db44d9cd0d7d1c8958b167f53",
+      "query": {
+        "address": "0x3a4be8",
+        "length": 4
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "bytes-debug-register-field",
+      "operation": "read_bytes",
+      "evidence_id": "ev_16d2e91a39709a38d2676c0e38de59e21303375fb087367f9183b5d3be160121",
+      "query": {
+        "address": "0x3a48aa",
+        "length": 2
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "bytes-extended-control-status-fields",
+      "operation": "read_bytes",
+      "evidence_id": "ev_a89cecd6511dbdf9544a542196e7be72c82f41469e534088fe23439662644c62",
+      "query": {
+        "address": "0x3a45c8",
+        "length": 8
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "bytes-main-control-status-fields",
+      "operation": "read_bytes",
+      "evidence_id": "ev_e394e8cb659c5a117ba857b9d804d4ac44cf05403918b72149f7a49fa874591b",
+      "query": {
+        "address": "0x3a4896",
+        "length": 6
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "bytes-mirror-control-field",
+      "operation": "read_bytes",
+      "evidence_id": "ev_f43eb859fff288de445d18b9762b46491fa633e5ec4b340a711991604f8c9ef3",
+      "query": {
+        "address": "0x3a40d6",
+        "length": 2
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "bytes-slow-control-field",
+      "operation": "read_bytes",
+      "evidence_id": "ev_5c4a4693b73bc646198a9537f16b085d782533e3d0d12cab69eecbec2a346dd9",
+      "query": {
+        "address": "0x3a4a4a",
+        "length": 2
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-control-reset",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_b7d7c972bab6b1b72597931157ebc5c9297bf7dacc5c27ea2ff8ffd694a245d0",
+      "query": {
+        "procedure": "wlc_mctrl_reset"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-core-reset",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_0f02e64be150ecd0f3ddf43ff6773e2d718d6eee648edb6daaa8ac6330d382ea",
+      "query": {
+        "procedure": "wlc_bmac_core_reset"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-corereset",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_7abce8de8087f64486ca9d197db5c71c726a795ee0a4bc33898da737f811d674",
+      "query": {
+        "procedure": "wlc_bmac_corereset"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-enable-extended",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_ffa8e4aed4eb15a1abdcaec3bf6f2e71e535991e6efb3cc94825ab5183011fea",
+      "query": {
+        "procedure": "wlc_bmac_enable_macx"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-enable-main",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_65e67a2fbbe4544de9bc6b10e83f610e1045eb38a9b943d2559f6ff36700b01f",
+      "query": {
+        "procedure": "wlc_bmac_enable_mac"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-extended-control",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_cc4e81bb8fd2d46f228b51d7c4f77d9d965808aa88ee69cb7eaf5e7c02399659",
+      "query": {
+        "procedure": "wlc_bmac_mctrlx"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-fifo-layout-verification",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_393ca6f8133249ee4d4b0b0d5100ac6b5d787c656314b6bf1b4f07278b929e80",
+      "query": {
+        "procedure": "wlc_hw_verify_fifo_layout"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-main-control",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_ddd97278a9bb411333c22fafd28fe4cd544e7c9d8f391d6e3bde9a2267186c3c",
+      "query": {
+        "procedure": "wlc_bmac_mctrl"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-shm-read-wrapper",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_abbc26bb9e1536929f49a612cda2e877bf62b732e6afa7c29a20e18a41500fe4",
+      "query": {
+        "procedure": "wlc_read_shm"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-shm-read16",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_45904ff125d0abc59ebd344eca65c0a1f2cfd7cda98e5103fb225a989546b373",
+      "query": {
+        "procedure": "wlc_bmac_read_objmem16"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-suspend-extended",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_36d1b7af13b4a22baa5ba3d5caf319c90197c9cf9ad0b7bdbced7069a702745f",
+      "query": {
+        "procedure": "wlc_bmac_suspend_macx_and_wait"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-suspend-main",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_f399a2b3fb122102b96f0ee080935578973837c5368992d338392850e5716d7a",
+      "query": {
+        "procedure": "wlc_bmac_suspend_mac_and_wait"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-ucode-start",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_5816a23e5e2416ff6ae73cd93a73e668b0d3f3688f6b3e52f3e5a5c01516e949",
+      "query": {
+        "procedure": "wlc_bmac_wowlucode_start"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-wait-wake",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_5cb7d4800103e547722a238efdc5e244a94b940779729d65f977790c43fdeca6",
+      "query": {
+        "procedure": "wlc_bmac_wait_for_wake"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-wake-override",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_b27c1bed27ce7a0243dd6a10f30ae6f3e4ed0319516bfa88e58a867fa4a8808c",
+      "query": {
+        "procedure": "wlc_ucode_wake_override_set"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "assembly-ai-core-cflags",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_5413942715ff279c774a941023fa41ca39b7ea9fb3b340ace6ab3fb1c35dfa4f",
+      "query": {
+        "procedure": "ai_core_cflags"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "assembly-ai-core-disable",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_d22b78b83da71e0c8acc3ae978ac392957bd08ded587cf75147498c22b3eefb9",
+      "query": {
+        "procedure": "ai_core_disable"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "assembly-ai-core-reset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_deb39f7810cc3c42b3ba2cc027be7535bbed7e147e35a91fbede040b2b2c034f",
+      "query": {
+        "procedure": "ai_core_reset"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "assembly-ai-core-sflags",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_c623c3c1a48d68aaa05101e2bd61e36c6480a589e0651870e0d8c32da113ef6d",
+      "query": {
+        "procedure": "ai_core_sflags"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "assembly-ai-iscoreup",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_5dbbc8460994fd90d1e8c1a6f1bfde304fd55959d52e2ea27f4ceeb8ef82b321",
+      "query": {
+        "procedure": "ai_iscoreup"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "assembly-ai-reset-current-wrapper",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_08d03c209e4089c58adf8c6080598e38221affb7b2e3ba0a9d5347974556c3db",
+      "query": {
+        "procedure": "0x10370"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "assembly-ai-wrapper-selection",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_02372daf06bcf7dece85fc6762be573c7162e34bd2e4df2702396a3fe2f6d82a",
+      "query": {
+        "procedure": "0x10024"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "assembly-si-core-reset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_a1b850dcf7dcd8814e20adf7f5f3a83dbad6bc2494b9082826dce085889c3078",
+      "query": {
+        "procedure": "si_core_reset"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "pseudo-ai-core-cflags",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_9110b79775a2ae77f33ee6397bbaef475cb5479dbb52cdeec1c18f39bd1ac4c8",
+      "query": {
+        "procedure": "ai_core_cflags"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "pseudo-ai-core-disable",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_0091a817616d6ed26c839cd65344f28b37e05488265119731a906116018190f8",
+      "query": {
+        "procedure": "ai_core_disable"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "pseudo-ai-core-reset",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_41f375187b8fc7fbc059751fa36c661d17564c6eeb76dc1bbee1e902b53bfdb9",
+      "query": {
+        "procedure": "ai_core_reset"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "pseudo-ai-core-sflags",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_a3885c628f334d648081b75f22ffc0ee00ac864607f45912268d6c6d10b85032",
+      "query": {
+        "procedure": "ai_core_sflags"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "pseudo-ai-iscoreup",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_4a64ecc02872c755b1c193c31c5aa5611531e79d974cd3f67aae0f01723d8488",
+      "query": {
+        "procedure": "ai_iscoreup"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "pseudo-ai-reset-current-wrapper",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_071be3e1b9af37506c0ebfb9b790fc8f90e1d98bd73f5c5fde24b45bc4b007b9",
+      "query": {
+        "procedure": "0x10370"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "pseudo-ai-wrapper-selection",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_c49a82c334a2f5912fc822c9746691ed5afa0187928de4b33dfd088004091833",
+      "query": {
+        "procedure": "0x10024"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "pseudo-si-core-cflags",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_2b688b868e42b0f715a90816246643aef960b0895b59b432261024eb0cccd118",
+      "query": {
+        "procedure": "si_core_cflags"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "pseudo-si-core-reset",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_de0b0f75344c9a01bb88157728a18cc491237e3ebe63cf157f14d84383a6d86b",
+      "query": {
+        "procedure": "si_core_reset"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "pseudo-si-core-sflags",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_19a138c6283a653fbe800f5032084f87017f4d85b0606f4b8bb4889e4e8ef8bd",
+      "query": {
+        "procedure": "si_core_sflags"
+      }
+    },
+    {
+      "artifact": "hnd.ko",
+      "selection": "pseudo-si-iscoreup",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_4f8fe8816166fae5b910830e4a70f9d75c2d28a6215939770bcb164377483a51",
+      "query": {
+        "procedure": "si_iscoreup"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "pseudo-bmac-read-shm",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_4603a291297636bae8411d9e743020332aaba86cf447d7d4dd634d9683bcd64c",
+      "query": {
+        "procedure": "wlc_bmac_read_shm"
+      }
+    },
+    {
+      "artifact": "wl.ko",
+      "selection": "assembly-bmac-read-shm",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_265d43451a8c0ff884306cfd400bfb8be89b4b3b729788bff7f61463f1f74b50",
+      "query": {
+        "procedure": "wlc_bmac_read_shm"
+      }
+    }
+  ],
+  "sessions": {
+    "wl_exported_and_closed": true,
+    "hnd_exported_and_closed": true,
+    "source_digests_unchanged": true,
+    "fifo_wrapper_exported_and_closed": true,
+    "initial_checkpoint_closed_before_separately_requested_fifo_followup": true
+  },
+  "ai_reset_model_review": {
+    "method": "Read-only original-C comparison against retained current-HND assembly; no new binary queries or tests",
+    "assembly_evidence_id": "ev_08d03c209e4089c58adf8c6080598e38221affb7b2e3ba0a9d5347974556c3db",
+    "material_normal_trace_discrepancy_found": false,
+    "qualification": "Initial queued-release accounting was refined after review: release_writes now counts successful zero-write callbacks on the current wrapper; independent per-callback tests cover errors/cancellation. Callback success does not prove hardware commitment."
+  }
+}

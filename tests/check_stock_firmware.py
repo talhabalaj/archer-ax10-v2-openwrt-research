@@ -38,6 +38,57 @@ class UploadIO(c.Structure):
                 ("read32", Read32), ("barrier", Barrier)]
 
 
+class InitOperation(c.Structure):
+    _fields_ = [("kind", c.c_int), ("offset", c.c_uint32),
+                ("value", c.c_uint32), ("selector", c.c_uint32)]
+
+
+class EffectiveInit(c.Structure):
+    _fields_ = [("phase", c.c_int), ("error", c.c_int), ("data", c.c_void_p),
+                ("record_count", c.c_size_t), ("record_index", c.c_size_t),
+                ("completed_records", c.c_size_t), ("skipped_records", c.c_size_t),
+                ("addend", c.c_uint32), ("operation", InitOperation),
+                ("attempted_ops", c.c_uint64), ("completed_ops", c.c_uint64)]
+
+
+InitEmit = c.CFUNCTYPE(c.c_int, c.c_void_p, c.POINTER(InitOperation))
+
+
+def check_effective_init(lib, raw, adjustment):
+    expected, count, skipped = [], 0, 0
+    for offset, width, value in struct.iter_unpack("<HHI", raw):
+        if offset == 0xffff:
+            break
+        count += 1
+        value = (value + (adjustment if offset == 0x130 else 0)) & 0xffffffff
+        if offset >= 0x1000:
+            expected.append((4, ((offset - 0x400) >> 1) << 2, value & 0xffff, 0x30000))
+        elif width in (2, 4):
+            expected.append((1, 0, 0, 0))
+            expected.append((2 if width == 2 else 3, offset,
+                             value & 0xffff if width == 2 else value, 0))
+        else:
+            skipped += 1
+    observed = []
+
+    @InitEmit
+    def record(context, pointer):
+        op = pointer.contents
+        observed.append((op.kind, op.offset, op.value, op.selector))
+        return 0
+
+    job, buffer, addend = EffectiveInit(), c.create_string_buffer(raw), c.c_uint32(adjustment)
+    assert lib.axd_effective_init_begin(c.byref(job), 130, 1, buffer, len(raw),
+                                       c.byref(addend), 0x1000, 0x20000) == 0
+    for _ in range(len(expected) + count + 1):
+        if lib.axd_effective_init_step(c.byref(job), record, None) in (4, 5, 6):
+            break
+    assert job.phase == 4 and observed == expected
+    assert job.completed_records == count and job.skipped_records == skipped
+    assert job.attempted_ops == job.completed_ops == len(expected)
+    return count
+
+
 def check_upload(lib, primary, extended, minor, boardflags):
     # Expected trace is specified independently from recovered writer assembly.
     expected = []
@@ -105,7 +156,13 @@ def main():
     lib.axd_upload_begin.restype = c.c_int
     lib.axd_upload_step.argtypes = [c.POINTER(Upload), c.POINTER(UploadIO)]
     lib.axd_upload_step.restype = c.c_int
+    lib.axd_effective_init_begin.argtypes = [c.POINTER(EffectiveInit), c.c_uint16,
+        c.c_uint16, c.c_void_p, c.c_size_t, c.POINTER(c.c_uint32), c.c_uint32, c.c_uint32]
+    lib.axd_effective_init_begin.restype = c.c_int
+    lib.axd_effective_init_step.argtypes = [c.POINTER(EffectiveInit), InitEmit, c.c_void_p]
+    lib.axd_effective_init_step.restype = c.c_int
     total = 0
+    effective_records = 0
     for item in report["objects"]:
         if item["kind"] != "init-table":
             continue
@@ -124,6 +181,8 @@ def main():
         assert lib.axd_table_replay(buffer, len(raw), 0x1000, record, None, c.byref(written)) == 0
         assert observed == expected and written.value == len(expected) == stats.writes
         total += written.value
+        for adjustment in (0, 0x12345678, 0xffffffff):
+            effective_records += check_effective_init(lib, raw, adjustment)
     for minor in (0, 1):
         for boardflags in (0, 1, 0xfffffffe, 0xffffffff):
             chosen = Selection()
@@ -148,6 +207,7 @@ def main():
             uploaded_words += check_upload(lib, blobs[chosen.primary.decode()]["data"],
                 blobs[chosen.extended.decode()]["data"], minor, boardflags)
     print(f"Four stock tables: {total} raw records validated and replayed exactly.")
+    print(f"Effective init: {effective_records} records matched under three explicit synthetic runtime contexts.")
     print("Eight selector cases match stock object sizes; five unsupported identities rejected.")
     print(f"Four stock pairs: {uploaded_words} little-endian words matched independent simulated upload traces.")
     print("No MMIO, device firmware upload, calibration access or radio operation occurred.")

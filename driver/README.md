@@ -23,6 +23,14 @@ All original code here uses the repository's MIT license.
   simulated I/O event per step. Both input lengths and the core/minor are
   validated before callbacks. Input chunk state must be supplied explicitly
   as zero. Failure/cancellation is terminal; no automatic retry or reset occurs.
+- `ai_reset.c`: bounded core-130 AI-wrapper reset trace, including optional
+  secondary-first ordering, readback-derived values and stuck-reset diagnostics.
+  Trace completion does not claim reset success.
+- `psm_start.c`: main/extended startup-suspended acknowledgement and SHM FIFO
+  verification, with explicit control caches/flags and fail-stop policy.
+- `effective_init.c`: context-dependent initialization semantics with explicit
+  `0x130` addend, width truncation and a separate semantic object-copy operation.
+  Whole-table preflight validates caller-supplied bounds before callbacks.
 - `status_poll.c`: independent caller-configured status polling with an injected
   monotonic timestamp. Each step performs at most one read. This is a generic
   test facility, with no claimed BCM63178 ready register, mask or start sequence.
@@ -33,17 +41,25 @@ are stricter than the observed stock consumer, which stops on offset `0xffff`
 and truncates 16-bit writes. All four inspected stock tables satisfy the stricter
 subset. This is not a general emulation of every vendor table.
 
-## Important missing semantics
+## Effective initialization and remaining gaps
 
-The real `wlc_write_inits` is context dependent. For core 130, a write request at
-offset `0x130` receives an adjustment from runtime hardware context. Offsets at
-or above `0x1000` take an object-memory path rather than ordinary MMIO. Our
-replayer emits **raw, unadjusted records** to a recorder and rejects the latter
-range. Do not connect its callback directly to a register-write function.
+The raw `init_table.c` recorder remains intentionally limited. Use the separate
+`effective_init.c` model for the recovered runtime adjustment at register
+`0x130` and offsets at or above `0x1000` routed to object memory. These APIs have
+different validation policies; neither callback should be wired directly to
+register writes. The effective model emits helper arguments for object copies,
+not their physical port operations. The caller must explicitly provide the
+runtime addend when used; no active board value is assumed.
 
-Device microcode upload, PSM/PSMx reset/start/readiness, complete register
-descriptor typing, clock/resource ownership, calibration, AC-PHY 51 initialization and Linux TX/RX
-integration remain absent. PHY type 11 and the name `ax51` do not establish an
+See [effective-init semantics and tests](../docs/EFFECTIVE_INIT_AUDIT.md) for
+exact termination, widths, address units, policies and cancellation behavior.
+
+Hardware microcode upload, the complete higher reset/clock/PHY/DMA lifecycle,
+suspend/enable/wake implementation, complete register/SHM typing, resource
+ownership, calibration, AC-PHY 51 initialization and Linux TX/RX integration
+remain absent. Offline wrapper reset and startup subsets are described in
+[their implementation boundaries](../docs/LIFECYCLE_MODEL.md). PHY type 11 and
+the name `ax51` do not establish an
 upstream driver implementation. These components execute no device microcode.
 
 See [REA attach/selection evidence](../docs/DRIVER_ATTACH_AUDIT.md),
@@ -69,6 +85,9 @@ The checks passed on 2026-10-15:
   duplicate-order, sentinel-only and callback-failure cases under ASan/UBSan.
 - Exact C-versus-Python raw replay equality for 1,404 records across four stock
   tables, including a sentinel-only extended band table.
+- Effective-init full operation tuples match 4,212 records across the four
+  stock tables under three explicit synthetic addends. Thirteen mixed callback
+  positions each cover failure, cancellation and simultaneous error/cancellation.
 - Eight selection cases match the stock primary/extended array names and sizes;
   five unsupported core/minor identities return empty output.
 - The transfer trace matches 104,440 little-endian words across four stock pairs
@@ -84,7 +103,10 @@ The checks passed on 2026-10-15:
   backward-clock rejection, read failure, cancellation and invalid predicates.
   Cancellation from a successful matching read remains cancelled; a read error
   takes precedence when the callback also requests cancellation.
-- All four C files cross-compile with Clang for `armv7-none-eabi` in freestanding
+- Startup/reset literal traces, cache/mirror behavior, independent poll/retry
+  boundaries, non-echo readbacks, FIFO predicates, stuck-reset diagnostics and
+  every-event error/cancellation checks pass under ASan/UBSan.
+- All seven C files cross-compile with Clang for `armv7-none-eabi` in freestanding
   mode with warnings treated as errors. This proves compilation, not linking
   into Linux, execution on ARM or hardware behavior.
 
@@ -139,9 +161,9 @@ firmware/table versions must not be silently mixed.
 
 ## Next implementation boundary
 
-Recover the actual PSM/PSMx halt, reset, start and hardware-acknowledgement path,
-including timeout/recovery behavior. Then add that evidence-derived lifecycle
-around the existing transfer trace. The stock slice-specific boardflags, chunk
-state, resource ownership and runtime adjustments must be supplied explicitly
-before a hardware-equivalent plan can be claimed. PHY 51 initialization and
-calibration remain separate work. Hardware execution remains untested.
+Compose the recovered wrapper reset/start subsets with actual higher-level
+clock/resource/PHY/DMA prerequisites, then implement suspend/enable/wake paths
+and required SHM access contracts. See [the lifecycle model](../docs/LIFECYCLE_MODEL.md)
+and [current checkpoint](../PROGRESS.md) for exact remaining work. The models
+have no hardware backend, resource ownership or kernel integration. PHY 51
+initialization and calibration remain required; hardware execution is untested.
