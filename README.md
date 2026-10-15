@@ -17,7 +17,7 @@ AX10 v1, v2, and v3 are not interchangeable.
 | 2.4 GHz | BCM43217, PCI `14e4:a8db`, core 30, NPHY revision 17. Existing BCMA/b43 support is a candidate, with documented feature limitations and no board validation yet. |
 | OpenWrt target | No AX10/BCM63178/BCM963178 profile found in the complete checked OpenWrt source snapshot. Upstream Linux and U-Boot provide useful BCM63178 platform/reference-board code. |
 | Official vendor GPL | Exact AX10 v2 archive contains board/kernel/PCIe/Ethernet support and a build skeleton, but the wireless core is a prebuilt object. Its WL 17.10.86.5 is older than current stock. |
-| Flash/recovery | Only one rootfs MTD region was exposed by the running firmware. Complete flash geometry, boot/calibration layout, image authentication and a working recovery/RAM-boot path remain unverified. |
+| Flash/recovery | Live rootfs is a NOR MTD view. The official image declares 21 flash regions and contains a CFE stage; both Broadcom OS CRCs verify. Full chip geometry, active loader policy, calibration coverage and a working recovery/RAM-boot path remain unverified. |
 
 Source links, checked commits, exact filenames, artifact digests, and search
 boundaries are in the reports. A missing match in a source snapshot does not
@@ -27,6 +27,10 @@ prove that an unpublished or later port cannot exist.
 
 - [Board and upstream support audit](docs/BOARD_SUPPORT_AUDIT.md)
 - [Exact vendor GPL source audit](docs/GPL_AUDIT.md)
+- [Boot-chain findings and evidence checklist](docs/BOOT_CHAIN_AUDIT.md)
+- [Vendor boot/image-construction source](docs/BOOT_SOURCE_AUDIT.md)
+- [REA analysis of the shipped CFE stage](docs/BOOT_REA_AUDIT.md)
+- [RAM-boot requirements and recovery boundary](docs/RAM_BOOT_AUDIT.md)
 - [Current stock driver metadata and ABI boundary](docs/DRIVER_BINARY_AUDIT.md)
 - [REA/Ghidra setup and scope](docs/REA_SETUP.md)
 - [Initial REA native-driver findings](docs/REA_INITIAL_FINDINGS.md)
@@ -63,6 +67,7 @@ These scripts read caller-supplied files and execute no firmware or driver:
 ```sh
 python3 scripts/inventory_gpl.py /path/to/ax10v2_GPL_20240317.tar.gz > gpl-inventory.json
 python3 scripts/module_inventory.py --summary /path/to/wl.ko > module-metadata.json
+python3 scripts/boot_image_inventory.py /path/to/official-firmware.bin > boot-inventory.json
 ```
 
 The archive URL and SHA-256 are documented in the GPL report. Native analysis

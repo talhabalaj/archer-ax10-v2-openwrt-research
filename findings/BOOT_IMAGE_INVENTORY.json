@@ -1,0 +1,245 @@
+{
+  "scope": "Official image metadata; no installed flash or fuse-state claim",
+  "image_size": 15171889,
+  "image_sha256": "e3c78e25a23d661219b1934d3b94ba7d0844cd357fede8a830b90e60fd0a910c",
+  "format": "TP-Link Cloud/safeloader with Broadcom FILE_TAG v7 os-image",
+  "payload_offset": 4116,
+  "image_partitions": [
+    {
+      "name": "fs-uboot",
+      "offset": 4096,
+      "size": 82330,
+      "file_offset": 8212
+    },
+    {
+      "name": "os-image",
+      "offset": 86426,
+      "size": 15037429,
+      "file_offset": 90542
+    },
+    {
+      "name": "soft-version",
+      "offset": 15123855,
+      "size": 91,
+      "file_offset": 15127971
+    },
+    {
+      "name": "extra-para",
+      "offset": 15123946,
+      "size": 11,
+      "file_offset": 15128062
+    },
+    {
+      "name": "support-list",
+      "offset": 15123957,
+      "size": 2052,
+      "file_offset": 15128073
+    },
+    {
+      "name": "profile",
+      "offset": 15126009,
+      "size": 3497,
+      "file_offset": 15130125
+    },
+    {
+      "name": "partition-table",
+      "offset": 2048,
+      "size": 2048,
+      "file_offset": 6164
+    },
+    {
+      "name": "default-config",
+      "offset": 15129506,
+      "size": 13721,
+      "file_offset": 15133622
+    },
+    {
+      "name": "ap-def-config",
+      "offset": 15143227,
+      "size": 12073,
+      "file_offset": 15147343
+    },
+    {
+      "name": "re-def-config",
+      "offset": 15155300,
+      "size": 12473,
+      "file_offset": 15159416
+    }
+  ],
+  "declared_flash_partitions": [
+    {
+      "name": "factory-boot",
+      "offset": 0,
+      "size": 163840
+    },
+    {
+      "name": "fs-uboot",
+      "offset": 163840,
+      "size": 98304
+    },
+    {
+      "name": "os-image",
+      "offset": 262144,
+      "size": 15466496
+    },
+    {
+      "name": "default-mac",
+      "offset": 15728640,
+      "size": 512
+    },
+    {
+      "name": "pin",
+      "offset": 15729152,
+      "size": 256
+    },
+    {
+      "name": "device-id",
+      "offset": 15729408,
+      "size": 512
+    },
+    {
+      "name": "product-info",
+      "offset": 15729920,
+      "size": 64256
+    },
+    {
+      "name": "soft-version",
+      "offset": 15794176,
+      "size": 4096
+    },
+    {
+      "name": "extra-para",
+      "offset": 15798272,
+      "size": 4096
+    },
+    {
+      "name": "support-list",
+      "offset": 15802368,
+      "size": 16384
+    },
+    {
+      "name": "profile",
+      "offset": 15818752,
+      "size": 40960
+    },
+    {
+      "name": "partition-table",
+      "offset": 15859712,
+      "size": 65536
+    },
+    {
+      "name": "default-config",
+      "offset": 15925248,
+      "size": 65536
+    },
+    {
+      "name": "ap-def-config",
+      "offset": 15990784,
+      "size": 45056
+    },
+    {
+      "name": "re-def-config",
+      "offset": 16035840,
+      "size": 20480
+    },
+    {
+      "name": "user-config",
+      "offset": 16056320,
+      "size": 131072
+    },
+    {
+      "name": "icons",
+      "offset": 16187392,
+      "size": 131072
+    },
+    {
+      "name": "router-config",
+      "offset": 16318464,
+      "size": 131072
+    },
+    {
+      "name": "certificate",
+      "offset": 16449536,
+      "size": 65536
+    },
+    {
+      "name": "radio_bk",
+      "offset": 16515072,
+      "size": 65536
+    },
+    {
+      "name": "ag-config",
+      "offset": 16580608,
+      "size": 131072
+    }
+  ],
+  "declared_flash_end": 16711680,
+  "broadcom_tag": {
+    "tag_version": "7",
+    "company": "Broadcom Corporatio",
+    "format_version": "ver. 2.0",
+    "chip_id": "63178",
+    "board_id": "TP6750_AX1500V1",
+    "big_endian": "0",
+    "total_size": "15037172",
+    "cfe_address": "0x0",
+    "cfe_size": "0",
+    "rootfs_address": "0xbfc40100",
+    "rootfs_size": "13123584",
+    "kernel_address": "0xc08c4100",
+    "kernel_size": "1908452",
+    "sequence": "",
+    "image_version": "5027p1TP67502400704",
+    "dtb_address": "0xc0a95fe4",
+    "dtb_size": "5136"
+  },
+  "checks": {
+    "tag_crc32": true,
+    "image_crc32": true
+  },
+  "components": {
+    "rootfs": {
+      "os_image_offset": 256,
+      "size": 13123584,
+      "sha256": "283b9bf713e091bd7130200b29921e767fac3d5be41a02b835f839a018939a37",
+      "squashfs": {
+        "major": 4,
+        "minor": 0,
+        "compression_id": 4,
+        "block_size": 1048576,
+        "inodes": 2585,
+        "bytes_used": 13121074
+      }
+    },
+    "kernel": {
+      "os_image_offset": 13123840,
+      "size": 1908452,
+      "sha256": "3e2d71a182b6bc4d966cabb1fa611fac9cb9b4aa03bd82da70b046bed503c1e7",
+      "brcm_lzma": {
+        "load_address": "0xc0018000",
+        "entry_address": "0xc0018000",
+        "compressed_size": 1908432,
+        "decompressed_size": 5001120,
+        "decompressed_sha256": "96cd35b30afc4209a544b38d7ba8d76ac6565e2670a6d21fdf3732bc77f74673"
+      }
+    },
+    "dtb": {
+      "os_image_offset": 15032292,
+      "size": 5136,
+      "sha256": "33f859b963f11b72fc8d24a144ffc947e282dcc1b654c90f5b8826eddd062fdf"
+    }
+  },
+  "fs_uboot": {
+    "load_address": "0xf00000",
+    "entry_address": "0xf00000",
+    "compressed_size": 82309,
+    "decompressed_size": 341024,
+    "decompressed_sha256": "1a9ca1a9e8f52e6e5a6ef655fb255c63c08584b3972c3e33b33d9c12a4311487"
+  },
+  "limitations": [
+    "Outer Cloud header authentication is not validated",
+    "Declared flash map does not establish physical chip capacity",
+    "No firmware or bootloader bytes were executed",
+    "No installed recovery or RAM boot was tested"
+  ]
+}

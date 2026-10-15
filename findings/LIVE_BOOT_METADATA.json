@@ -1,0 +1,40 @@
+{
+  "scope": "Allowlisted live DTB boot metadata; raw DTB remains private",
+  "ram": {
+    "base": "0x0",
+    "bytes": 268435456
+  },
+  "console": "ttyAMA0",
+  "fdt_reservations": [
+    {
+      "address": "0x0",
+      "size": 32768
+    },
+    {
+      "address": "0x4000000",
+      "size": 1048576
+    }
+  ],
+  "selected_properties_hex": {
+    "/brcm_cfever": "6366652d76010026a3f3",
+    "/reserved-memory/#address-cells": "00000001",
+    "/reserved-memory/#size-cells": "00000001",
+    "/reserved-memory/ranges": "",
+    "/cpus/cpu@1/enable-method": "6272636d2c6263612d736d7000",
+    "/cpus/cpu@2/enable-method": "6272636d2c6263612d736d7000"
+  },
+  "limits": [
+    "Device-tree declarations do not independently verify physical flash or active secure-boot fuses",
+    "Reservations and stock boot addresses are not a validated modern-kernel placement plan",
+    "Reported MTD write size does not establish the physical NOR chip page-program size"
+  ],
+  "mtd_rootfs": {
+    "type": "nor",
+    "size": 13123584,
+    "erase_size": 65536,
+    "write_size_reported": 65536,
+    "subpage_size_reported": 65536
+  },
+  "spi_modalias": "spi:bcm_HSSpiDev0",
+  "cfe_version_record_matches_official_image": true
+}
