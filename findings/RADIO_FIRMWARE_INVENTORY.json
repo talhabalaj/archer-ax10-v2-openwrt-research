@@ -1,0 +1,147 @@
+{
+  "module_sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c",
+  "objects": [
+    {
+      "symbol": "d11ax51initvals130",
+      "section": ".rodata",
+      "file_offset": 4086148,
+      "section_offset": 1305876,
+      "size": 8720,
+      "sha256": "56f808f67c01e182356ec8496c18288dd2ce577fa21d27a2da8b82be6376b01b",
+      "kind": "init-table",
+      "records": 1090,
+      "writes16": 385,
+      "writes32": 704
+    },
+    {
+      "symbol": "d11ax51initvalsx130",
+      "section": ".rodata",
+      "file_offset": 4084292,
+      "section_offset": 1304020,
+      "size": 1848,
+      "sha256": "fae67ee1608b5ddb32713c5ac4b11d13fcefc63df1755bb45e5ade01dc857704",
+      "kind": "init-table",
+      "records": 231,
+      "writes16": 0,
+      "writes32": 230
+    },
+    {
+      "symbol": "d11ax51bsinitvals130",
+      "section": ".rodata",
+      "file_offset": 4032260,
+      "section_offset": 1251988,
+      "size": 688,
+      "sha256": "1d76647b95f81eb7882614e36a7bec2e12e96aa3d1ac4ae12c4ae71e11388387",
+      "kind": "init-table",
+      "records": 86,
+      "writes16": 47,
+      "writes32": 38
+    },
+    {
+      "symbol": "d11ax51bsinitvalsx130",
+      "section": ".rodata",
+      "file_offset": 4086140,
+      "section_offset": 1305868,
+      "size": 8,
+      "sha256": "3d73c71ad63f39a8a47bee131c1705f2b8c446a26c36ce5a9b6e6e4162fc9f86",
+      "kind": "init-table",
+      "records": 1,
+      "writes16": 0,
+      "writes32": 0
+    },
+    {
+      "symbol": "d11ucode_mu130",
+      "section": ".rodata",
+      "file_offset": 4202300,
+      "section_offset": 1422028,
+      "size": 65272,
+      "sha256": "2c266bde52d2c8ca3db12ef3b1667867fab11feb1a71c74ad19a07a9d45c1943",
+      "kind": "microcode",
+      "words32": 16318,
+      "size_symbol_matches": true
+    },
+    {
+      "symbol": "d11ucode_mu130_1",
+      "section": ".rodata",
+      "file_offset": 4137364,
+      "section_offset": 1357092,
+      "size": 64928,
+      "sha256": "e7c7b36f09808a4c704e0749666fbfbc48adafde55d20c6f4c7c91dfa9b2b271",
+      "kind": "microcode",
+      "words32": 16232,
+      "size_symbol_matches": true
+    },
+    {
+      "symbol": "d11ucode_btcxmu130",
+      "section": ".rodata",
+      "file_offset": 3849068,
+      "section_offset": 1068796,
+      "size": 68968,
+      "sha256": "9eabc443b2377315ca027aebef2a2f0fb0a16796320fba6935ba6485a458d61a",
+      "kind": "microcode",
+      "words32": 17242,
+      "size_symbol_matches": true
+    },
+    {
+      "symbol": "d11ucode_btcxmu130_1",
+      "section": ".rodata",
+      "file_offset": 3918036,
+      "section_offset": 1137764,
+      "size": 68624,
+      "sha256": "126faffb9aedbd21695a50ded09a4fb65b995a599fc597c5faf311b4d8b76fd8",
+      "kind": "microcode",
+      "words32": 17156,
+      "size_symbol_matches": true
+    },
+    {
+      "symbol": "d11ucodex_mu130",
+      "section": ".rodata",
+      "file_offset": 4099772,
+      "section_offset": 1319500,
+      "size": 37584,
+      "sha256": "0efa67dce97cc45c127de4259bc571d16bdbf435d873fce6b5c5bccb413c84a8",
+      "kind": "microcode",
+      "words32": 9396,
+      "size_symbol_matches": true
+    },
+    {
+      "symbol": "d11ucodex_mu130_1",
+      "section": ".rodata",
+      "file_offset": 4267572,
+      "section_offset": 1487300,
+      "size": 37584,
+      "sha256": "0efa67dce97cc45c127de4259bc571d16bdbf435d873fce6b5c5bccb413c84a8",
+      "kind": "microcode",
+      "words32": 9396,
+      "size_symbol_matches": true
+    },
+    {
+      "symbol": "d11ucodex_btcxmu130",
+      "section": ".rodata",
+      "file_offset": 3774260,
+      "section_offset": 993988,
+      "size": 37400,
+      "sha256": "6b4ae366e0ef766dfec2d88f8d861a63bdfb2376dcecf68a94568731af8fab25",
+      "kind": "microcode",
+      "words32": 9350,
+      "size_symbol_matches": true
+    },
+    {
+      "symbol": "d11ucodex_btcxmu130_1",
+      "section": ".rodata",
+      "file_offset": 3811664,
+      "section_offset": 1031392,
+      "size": 37400,
+      "sha256": "6b4ae366e0ef766dfec2d88f8d861a63bdfb2376dcecf68a94568731af8fab25",
+      "kind": "microcode",
+      "words32": 9350,
+      "size_symbol_matches": true
+    }
+  ],
+  "scope": "Selected file-backed objects; no raw data, execution or RF operation",
+  "limitations": [
+    "Array names are not proof of runtime selection",
+    "Init records remain unadjusted; stock consumer has runtime-dependent fixups",
+    "Microcode decoding, upload, register maps, PHY programming and calibration are not implemented"
+  ]
+}

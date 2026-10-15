@@ -7,6 +7,11 @@ logs/
 rea/
 __pycache__/
 *.pyc
+*.o
+*.so
+*.dylib
+*.a
+build/
 .env
 .env.*
 *.pem

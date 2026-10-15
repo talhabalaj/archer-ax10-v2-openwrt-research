@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "scope": "Selected original static-analysis observations; no pseudocode, payload bytes, host paths, or runtime proof.",
+  "artifact": {
+    "name": "wl.ko",
+    "bytes": 5803056,
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c",
+    "format": "ELF32 ARM little-endian ET_REL"
+  },
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4"
+  },
+  "reused_evidence": {
+    "name": "wlc_attach",
+    "evidence_id": "ev_d30632c25057d25aa2675b4054046652815edaaf6a4a605e3c532265732674aa"
+  },
+  "observations": {
+    "core_selector": {
+      "supported_core_revisions": [
+        30,
+        42,
+        130
+      ],
+      "core130_register_descriptor_analysis_address": "0x3a3f88",
+      "descriptor_first_pointer_analysis_address": "0x3a487c",
+      "phy_version_register_offset": "0x3e0"
+    },
+    "phy_version_decode": {
+      "type": "bits8..11",
+      "revision": "bits0..7",
+      "analog_revision": "bits12..15",
+      "normalized_type_mapping": {
+        "0xd": "0xb"
+      },
+      "type0xb_attach_callback": "phy_ac_attach",
+      "revision51_branch_observed": true,
+      "hardware_values_reread": false
+    },
+    "initialization_tables": {
+      "condition": "D11 core revision ==130; no additional explicit PHY revision condition in these branches",
+      "main": [
+        "d11ax51initvals130",
+        "d11ax51initvalsx130"
+      ],
+      "band": [
+        "d11ax51bsinitvals130",
+        "d11ax51bsinitvalsx130"
+      ]
+    },
+    "microcode_selector": {
+      "condition": "core revision130; download not already marked complete; BMAC initialization call is on coreunit0",
+      "minor1_flag0": {
+        "main": "d11ucode_mu130_1",
+        "main_bytes": 64928,
+        "extended": "d11ucodex_mu130_1",
+        "extended_bytes": 37584
+      },
+      "minor1_flag1": {
+        "main": "d11ucode_btcxmu130_1",
+        "main_bytes": 68624,
+        "extended": "d11ucodex_btcxmu130_1",
+        "extended_bytes": 37400
+      },
+      "other_minor_flag0": {
+        "main": "d11ucode_mu130",
+        "main_bytes": 65272,
+        "extended": "d11ucodex_mu130",
+        "extended_bytes": 37584
+      },
+      "other_minor_flag1": {
+        "main": "d11ucode_btcxmu130",
+        "main_bytes": 68968,
+        "extended": "d11ucodex_btcxmu130",
+        "extended_bytes": 37400
+      },
+      "flag_source": "slicespecific boardflags bit0",
+      "selected_boardflags_value_established": false
+    },
+    "initialization_record_consumer": {
+      "endianness": "little",
+      "stride_bytes": 8,
+      "fields": [
+        "u16 offset",
+        "u16 width",
+        "u32 value"
+      ],
+      "terminator_offset": "0xffff",
+      "register_widths_bytes": [
+        2,
+        4
+      ],
+      "register_offset_range": "<0x1000",
+      "runtime_value_fixup_offset_for_core130": "0x130",
+      "runtime_fixup_value_source": "recovered hardware object word+0x260",
+      "object_memory_condition": "offset>=0x1000",
+      "object_memory_transformed_offset": "((offset-0x400)>>1)<<2",
+      "object_memory_value": "low16(adjusted value)",
+      "object_memory_length_bytes": 2,
+      "object_memory_selector": "0x30000",
+      "unsupported_register_width_behavior": "observed consumer skips; stricter offline validation may reject"
+    },
+    "next_initialization_callbacks": [
+      "phy_ac_tbl_init",
+      "_phy_init"
+    ]
+  },
+  "evidence": [
+    {
+      "name": "wlc_bmac_attach",
+      "evidence_id": "ev_9c5169ec2aebea30cb32004f1cf079127c180b4a9f7438b0b14ce36ce1ff45c4",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "wlc_phy_shared_attach",
+      "evidence_id": "ev_c3a33d97fe694f2e340fd37f2225ac09cacd1a2bdc1fd442d321a98b9a7ecccd",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "phy_module_attach",
+      "evidence_id": "ev_11b3698b4de85d747fef84a5e1debc11a54fdebe0aa87da70bdc13059efcb2d8",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "phy_type_attach",
+      "evidence_id": "ev_1ed4455f8abf12783669d6f5c86a95276cc9d95712e51290ff0e3f3021b015b5",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "phy_type_disp_attach",
+      "evidence_id": "ev_f3c35421cce13d16eceecbdc0ad4d2126fcf8f23b9f73a38ae1be0e7f93eaef8",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "PHY type dispatch descriptors",
+      "evidence_id": "ev_308ae58b9fa159eb7ad285b89eb26c0f637c477e9eadbec91041fb8e6e52c3d5",
+      "operation": "read_bytes"
+    },
+    {
+      "name": "phy_ac_attach",
+      "evidence_id": "ev_b460e6004aecc02d4d2cd39c829cc96c79f2654e7cc1d36afb99741b94f48505",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "phy_ac_register_impl",
+      "evidence_id": "ev_630970e9e6170b3c1d25d0667553fbb1e945e82a9f875b3b33a0d1e87313ccd4",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "phy_ac_tbl_register_impl",
+      "evidence_id": "ev_e3e2d2b9774fab02aa1d061e8d3df29f85d225105437d8dc265773480ec7bf5e",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "phy_ac_reset_impl",
+      "evidence_id": "ev_66edc688cc039a898f6882983e74db1eb87024ce3b29a9d0b2cc2e56d76b96c5",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "d11regs_select_offsets_tbl",
+      "evidence_id": "ev_eb39047223e4c5c6c3885948ef64887d11a5b53da88c25a43298c285f37d23c6",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "d11regs_select_offsets_tbl assembly",
+      "evidence_id": "ev_9dbe57e9a416183dae3bc38ee22556593edd481aab909f720000b0c0246db4bb",
+      "operation": "procedure_assembly"
+    },
+    {
+      "name": "core130 register descriptor pointer",
+      "evidence_id": "ev_1586c82b5f5725d0c4a6f51d3761fdbc2e1bb4a03454b82de0dfef1c8b2110af",
+      "operation": "read_bytes"
+    },
+    {
+      "name": "core130 PHY-version register offset",
+      "evidence_id": "ev_51f5b2477147507e801f1530fc48d5c6af77aed91924f01b127edd4ddd96480d",
+      "operation": "read_bytes"
+    },
+    {
+      "name": "core130 initialization fixup offset",
+      "evidence_id": "ev_cb33e86ef10716e3f43721f11e81b303b339505151b5ba940887f4376ed7e179",
+      "operation": "read_bytes"
+    },
+    {
+      "name": "d11shm_select_ucode_std",
+      "evidence_id": "ev_2ba9d250ed23c9d28a36a5e935e2819400c00ea28e24fdeef05fe3c3a4b0036f",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "wlc_bmac_init",
+      "evidence_id": "ev_bff33b73bdefa3d52a4daf134ad0ccd9f13c5fd6037bde943a4880fe9242f6e4",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "wlc_bmac_bsinit",
+      "evidence_id": "ev_db9d64e0b5dd05b68dea42bc357541570d91aef926c5f25de55e03bd9a5154a2",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "wlc_ucode_download",
+      "evidence_id": "ev_7f48cfafb1f084d3640a7f70a42b4f8be443dd4bc791c1e10fe551ed62a828ab",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "wlc_write_inits",
+      "evidence_id": "ev_5b7779d029093445701be0f68e1de8b4ac9e5bfeaf2f8bca9d47015237fb1b67",
+      "operation": "procedure_pseudo_code"
+    },
+    {
+      "name": "wlc_write_inits assembly",
+      "evidence_id": "ev_1238784e268a149f826b7819cf3f3ee1cc094d848c1075722c28c506f0388386",
+      "operation": "procedure_assembly"
+    },
+    {
+      "name": "literal wlc_phy_attach procedure search",
+      "evidence_id": "ev_8e2929434bb4785015dc07ce672a193a219a515e463f549e64673af490657a2f",
+      "operation": "search_procedures"
+    }
+  ],
+  "limits": [
+    "No runtime/router actions",
+    "No active radio, boardflags, or PHY-register values observed in this run",
+    "Chip63178 alone does not select PHY revision51",
+    "No complete modern driver implementation",
+    "No microcode or initialization payload bytes included",
+    "AC table initialization internals, calibration/channel sequences, and microcode upload writer internals were not inspected",
+    "Raw replay without object-memory operations and offset0x130 runtime fixup is not a hardware write emulator"
+  ],
+  "session": {
+    "closed_successfully": true,
+    "source_digest_unchanged": true,
+    "private_evidence_bundle_retained": true
+  }
+}

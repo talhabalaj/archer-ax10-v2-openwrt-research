@@ -1,7 +1,7 @@
 # Publication boundary
 
 Public artifacts are explicitly selected research Markdown, original inspection
-scripts, a license, ignore rules, and selected metadata JSON. The private working
+scripts, original offline C components/tests, a license, ignore rules, and selected metadata JSON. The private working
 directory is not added to Git or copied recursively.
 
 Excluded inputs include:
@@ -18,6 +18,12 @@ Excluded inputs include:
 The hardware inventory retains model/revision, chip/PCI/core identities,
 kernel/driver version and the exposed MTD geometry. These identify a hardware
 family, not a person or an individual router.
+
+The radio-object inspector pins the stock module digest and emits selected
+object metadata without raw microcode or table values. Optional extraction is
+restricted to a new directory outside this checkout and remains private. Tests
+use synthetic fixtures or caller-supplied private inputs; proprietary fixtures
+are not committed.
 
 The public source archive inspector emits only an allowlist of vendor filenames,
 sizes and hashes. The public module summary emits only portable metadata and

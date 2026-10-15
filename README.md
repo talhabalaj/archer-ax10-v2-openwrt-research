@@ -3,8 +3,8 @@
 Evidence and reproducible research for the **Archer AX10 hardware v2.0**,
 Broadcom BCM63178/BCM963178. Findings checked on 2026-10-15.
 
-**Research in progress. There is no flashable OpenWrt image or implemented
-AX radio driver in this repository.** This is a device-specific investigation;
+**Research and offline component development in progress. There is no flashable
+OpenWrt image or functioning AX radio driver in this repository.** This is a device-specific investigation;
 AX10 v1, v2, and v3 are not interchangeable.
 
 ## What we know
@@ -34,6 +34,11 @@ prove that an unpublished or later port cannot exist.
 - [Current stock driver metadata and ABI boundary](docs/DRIVER_BINARY_AUDIT.md)
 - [REA/Ghidra setup and scope](docs/REA_SETUP.md)
 - [Initial REA native-driver findings](docs/REA_INITIAL_FINDINGS.md)
+- [First offline driver components and validation](driver/README.md)
+- [Core 130 attach, table and microcode-selection analysis](docs/DRIVER_ATTACH_AUDIT.md)
+- [Vendor driver source map](docs/DRIVER_SOURCE_MAP.md)
+- [Upstream driver baseline and missing blocks](docs/DRIVER_BASELINE_AUDIT.md)
+- [Pinned radio firmware/table object inventory](findings/RADIO_FIRMWARE_INVENTORY.json)
 - [Existing boot/LuCI work and its limits](docs/BOOT_AND_LUCI.md)
 - [Public-safe hardware inventory](findings/HARDWARE_INVENTORY.json)
 - [Portable module metadata](findings/MODULE_METADATA.json)
@@ -42,6 +47,10 @@ prove that an unpublished or later port cannot exist.
 - [Publication boundary](docs/PUBLICATION_POLICY.md)
 
 ## Intended implementation sequence
+
+Offline driver development can proceed while boot/recovery evidence is pending.
+The initial components are implemented and tested against private stock input;
+the sequence below describes dependencies for eventual hardware validation.
 
 1. Establish exact board, flash, boot and recovery evidence.
 2. Add an ARMv7 BCMBCA OpenWrt target and AX10-specific device tree; prepare an
@@ -88,8 +97,8 @@ public repository and publish only reviewed findings.
 
 ## Publication scope
 
-This repository contains research reports, links, portable metadata and
-original inspection scripts. It contains no router credentials, private keys,
+This repository contains research reports, links, portable metadata, original
+inspection scripts and offline C components/tests. It contains no router credentials, private keys,
 configuration backups, raw device dumps, MAC/serial identifiers, calibration
 or NVRAM material, proprietary driver binaries, firmware images, or local
 client/agent configuration. Original research/scripts use the MIT license;
