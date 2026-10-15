@@ -10,6 +10,12 @@ callback with actual PHY, table, SI PMU and GPIO children. This is one registere
 stage. The complete PHY/radio scheduler, calibration and working Wi-Fi driver
 remain open.
 
+The [subsequent scheduler implementation](PHY_SCHEDULER_MODEL.md) now reconstructs
+all sixteen common init stages and their ordering, with real closed callback
+children. Runtime pointer/lifetime/down-registry acquisition and remaining
+radio/channel/calibration bodies are still separate requirements. Its complete
+target vector stops at required radio7, before this table8 callback.
+
 ## Registered table path
 
 AC registration calls `phy_ac_tbl_register_impl` when the common PHY table

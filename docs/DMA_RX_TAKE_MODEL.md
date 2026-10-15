@@ -94,3 +94,9 @@ frame length and status parsing, split/status-FIFO variants, packet/cache/DMA
 ownership, buffer-pool lifetime, interrupts/deferred work, error recovery and
 Linux delivery remain separate work. Passing synthetic traces or returning a
 nonzero label does not complete those requirements.
+
+The current [bulk/status list leaves](DMA_RX_LIST_MODEL.md) and
+[higher packet/status bodies](RX_PROCESSING_MODEL.md) are now implemented
+separately. The current bulk helper does not call this slot leaf. BMAC parsing,
+actual OS/DMA ownership, its registered pool callback, IRQ and Linux delivery
+remain unfinished; these newer bodies do not change the slot API's limits.

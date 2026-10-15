@@ -1,0 +1,596 @@
+{
+  "schema_version": 1,
+  "scope": "Original complete current target PHY init registry order and bounded source-backed dispatcher; metadata only",
+  "subject": {
+    "name": "wl.ko",
+    "version": "17.10.121.37",
+    "bytes": 5803056,
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4"
+  },
+  "registry": {
+    "direct_registration_callers": 14,
+    "init_call_sites": 16,
+    "capacity_init_plus_down": 23,
+    "equal_priority_insertion": "before existing equal",
+    "full_return": -22,
+    "sorted_priorities": [
+      1,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      16,
+      19,
+      20,
+      21
+    ]
+  },
+  "records": [
+    {
+      "record": "assembly-ac-hirssi-init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_hirssi_init"
+      },
+      "evidence_id": "ev_72389059d955fe5144682e858e010745293ae1f5151c815a5029374174ba9df9"
+    },
+    {
+      "record": "assembly-ac-type-binding",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_attach"
+      },
+      "evidence_id": "ev_95da3ed45c586919b03e73fcdbcd1238d6fc0aa7024ceffe71762a34921a9708"
+    },
+    {
+      "record": "assembly-add-init-fn",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_init_add_init_fn"
+      },
+      "evidence_id": "ev_79f737ee1443be18a25981b424fe421aab5c9c3e2f1505d15e0e4b3e5067805d"
+    },
+    {
+      "record": "assembly-callback-phy_ac_ana_switch",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_ana_switch"
+      },
+      "evidence_id": "ev_13611e161528aa1e2739590850d94926f5a546bc0b1b405c8c64c48dea364758"
+    },
+    {
+      "record": "assembly-callback-phy_ana_init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ana_init"
+      },
+      "evidence_id": "ev_3938144b440398901426d4d992310d2e653f75fa64897fc84bda2d4a7d2c170b"
+    },
+    {
+      "record": "assembly-callback-phy_antdiv_init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_antdiv_init"
+      },
+      "evidence_id": "ev_08349ce069ff17cfd4b6a2f636bb42bd2b04fc41c2dd7ca938a07848dcf39a77"
+    },
+    {
+      "record": "assembly-callback-phy_btcx_init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_btcx_init"
+      },
+      "evidence_id": "ev_747c9af96cdb4017ee82f382f6447182df099880cf682f849f37c5320301d378"
+    },
+    {
+      "record": "assembly-callback-phy_cache_init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_cache_init"
+      },
+      "evidence_id": "ev_2ba055c6f755268b5b4e628fbe1d5dc27ffea6476453b1e9c0dfe9a50613cdc4"
+    },
+    {
+      "record": "assembly-callback-phy_chanmgr_init_chanspec",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_chanmgr_init_chanspec"
+      },
+      "evidence_id": "ev_0db92fe9545ecdbf295a31d490a193b490e13c0a9b7c06b532a8e038a8dd7bff"
+    },
+    {
+      "record": "assembly-callback-phy_chanmgr_set_bw",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_chanmgr_set_bw"
+      },
+      "evidence_id": "ev_1ae6f220d4331c631586d23f4d389d8366bd88f7d5393c9cfa93f02ece0c2f2c"
+    },
+    {
+      "record": "assembly-callback-phy_hirssi_init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_hirssi_init"
+      },
+      "evidence_id": "ev_ab256f9f1ee15c696e63b61926aab6a3e7c9f2686438975b120db2af1bf1b749"
+    },
+    {
+      "record": "assembly-callback-phy_malloc_fatal",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_malloc_fatal"
+      },
+      "evidence_id": "ev_4dffb72978808439122e4399d35364b1ba28136a5c9dbd04df265cc16a3d6127"
+    },
+    {
+      "record": "assembly-callback-phy_noise_init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_noise_init"
+      },
+      "evidence_id": "ev_1f9b9be0e7d6c589b920498d602ec4397638869aab88b3c366d6bf55d32106f3"
+    },
+    {
+      "record": "assembly-callback-phy_noise_reset",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_noise_reset"
+      },
+      "evidence_id": "ev_35022e793a58d6640f2b06d9c19800cd5844118f5cd37efe5c62cf4579ef7c0f"
+    },
+    {
+      "record": "assembly-callback-phy_papdcal_init_cb",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_papdcal_init_cb"
+      },
+      "evidence_id": "ev_d55a2a391e6faf0eedb6b47b87c320b2433622d0cada999c7a7cad0c4592cedf"
+    },
+    {
+      "record": "assembly-callback-phy_radar_init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "_phy_radar_init"
+      },
+      "evidence_id": "ev_37ef780bc015f23847862e1b4ba0190ab62b80c0f112665f2ff22444ecd9ac87"
+    },
+    {
+      "record": "assembly-callback-phy_rxgcrs_init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_rxgcrs_init"
+      },
+      "evidence_id": "ev_d00d9377eaaee83d9ee97c766367c18ce00314cfa652a3b7c0cc708f949257eb"
+    },
+    {
+      "record": "assembly-callback-phy_tpc_init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_tpc_init"
+      },
+      "evidence_id": "ev_494c6444f8d8cebe1c59f0a64665f0a9b0a4d061fb39ffcf32a4da3914fa5e32"
+    },
+    {
+      "record": "assembly-child-phy_ac_antdiv_set_rx",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_antdiv_set_rx"
+      },
+      "evidence_id": "ev_01a70d8b1fb95a9c3269dba2792f89fa2f0d6b6d4eba4ceb9225c0c247ffceb4"
+    },
+    {
+      "record": "assembly-child-phy_ac_btcx_init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_btcx_init"
+      },
+      "evidence_id": "ev_bfaed47d7e54222627684cf9ac6b59c5f07c66292c561d630b955e8a6c816318"
+    },
+    {
+      "record": "assembly-child-phy_ac_noise_reset",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_noise_reset"
+      },
+      "evidence_id": "ev_aeb795886d63c49273a4731f54bebc1d9e17af3ba62e38e27d89c7001428a1d5"
+    },
+    {
+      "record": "assembly-child-phy_ac_rxgcrs_init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_rxgcrs_init"
+      },
+      "evidence_id": "ev_d4caf61524dac5cd9e93936f88305e8aef41b48e63dc4b83770efc3a94298081"
+    },
+    {
+      "record": "assembly-child-phy_ac_tpc_init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_tpc_init"
+      },
+      "evidence_id": "ev_217f6b6288f46c844e8ea221e1a2be2f6575fea5c86d96cc58a44d0a39c8ca24"
+    },
+    {
+      "record": "assembly-child-phy_antdiv_set_rx",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_antdiv_set_rx"
+      },
+      "evidence_id": "ev_d1fc9832387097733f80447270d9624909f8b2d864481db060bb7c2ab8146d02"
+    },
+    {
+      "record": "assembly-child-wlc_bmac_bw_check",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_bmac_bw_check"
+      },
+      "evidence_id": "ev_0614b500a98032dde97b0c2e09705120fc3c51327f7b5bc03e3ebbb4dfe774cb"
+    },
+    {
+      "record": "assembly-common-phy-init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "_phy_init"
+      },
+      "evidence_id": "ev_224b431d444e985beb5355a757ff5675425012f6fc27b228db1456d45be5b633"
+    },
+    {
+      "record": "assembly-init-attach",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_init_attach"
+      },
+      "evidence_id": "ev_f022e9c2dfd8ae367e9e3ed67d64891cdd27ff1e949872f64abe31705fdba193"
+    },
+    {
+      "record": "assembly-invoke-init-fns",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_init_invoke_init_fns"
+      },
+      "evidence_id": "ev_08824914a14a6f5cdf965971c2202b35a32fcdc24613902133ffee7a9b0e2cc3"
+    },
+    {
+      "record": "assembly-register-type-impl",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_register_impl"
+      },
+      "evidence_id": "ev_b612010955b2ffee69088eb968e6fc45605e033a333acc83dba59b494473c60d"
+    },
+    {
+      "record": "assembly-set-sliceupstate",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_set_sliceupstate"
+      },
+      "evidence_id": "ev_4ee2222bc7e6d0caf98bf9092d29d86f8792d324a4f32184902a7aa504d94b5f"
+    },
+    {
+      "record": "assembly-type-init-impl",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_type_init_impl"
+      },
+      "evidence_id": "ev_b4a12a72e7e3e9674a78410dc29f91dd2b6c6189135515cb57ee292adb8a3510"
+    },
+    {
+      "record": "callers-add-init-fn",
+      "operation": "procedure_callers",
+      "parameters": {
+        "procedure": "phy_init_add_init_fn"
+      },
+      "evidence_id": "ev_be45acae2e3d4369dc1272524a053d369aa15156b2a84f9d1a6920a9a16680c2"
+    },
+    {
+      "record": "pseudo-binding-phy_ac_antdiv_register_impl",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_antdiv_register_impl"
+      },
+      "evidence_id": "ev_29caabec534f653351188cefcda1aeda97291d210f6c0d76a1820cccc4f02d7a"
+    },
+    {
+      "record": "pseudo-binding-phy_ac_btcx_register_impl",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_btcx_register_impl"
+      },
+      "evidence_id": "ev_ce2f7487b010d856e703583a6efd11845e0d087f3f75b9e9f2bd13400a39b609"
+    },
+    {
+      "record": "pseudo-binding-phy_ac_cache_register_impl",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_cache_register_impl"
+      },
+      "evidence_id": "ev_8da3a0ad8ed9cb916f492ca25042e01016bdf0be229652df998d826560d19c89"
+    },
+    {
+      "record": "pseudo-binding-phy_ac_chanmgr_register_impl",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_register_impl"
+      },
+      "evidence_id": "ev_ea7c218e7dab38439919f4fc526d7ec55c2c1c2415cf9d0a325d90ba2c5073ac"
+    },
+    {
+      "record": "pseudo-binding-phy_ac_hirssi_register_impl",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_hirssi_register_impl"
+      },
+      "evidence_id": "ev_529f39542a9e1eb3be63e811831e118265f10fbe23fe68cb92acbec1f3944066"
+    },
+    {
+      "record": "pseudo-binding-phy_ac_noise_register_impl",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_noise_register_impl"
+      },
+      "evidence_id": "ev_e8d996ee6cac197f7745460c633fc716355406e59a2cab3d1156910f1b0e33f5"
+    },
+    {
+      "record": "pseudo-binding-phy_ac_radar_register_impl",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_radar_register_impl"
+      },
+      "evidence_id": "ev_cfaf28695b69804f88a1469bac039fcce037edde543fff644489fb98c55b6310"
+    },
+    {
+      "record": "pseudo-binding-phy_ac_rxgcrs_register_impl",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_rxgcrs_register_impl"
+      },
+      "evidence_id": "ev_ad44cb3a2652f3936217bf5356067429449f22cee926b1edf25eb2e183c6a1fa"
+    },
+    {
+      "record": "pseudo-binding-phy_ac_tpc_register_impl",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_tpc_register_impl"
+      },
+      "evidence_id": "ev_33877ab09da23465a632a72200657786989ad396b7af7b45f152418cf3c21a8d"
+    },
+    {
+      "record": "pseudo-child-phy_ac_chanmgr_init_chanspec",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_init_chanspec"
+      },
+      "evidence_id": "ev_b2b1c455ed68de2e3bc906495969442b3d06a90462868c9e61ab14a6aeb5137d"
+    },
+    {
+      "record": "pseudo-child-phy_ac_noise_set_mode",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_noise_set_mode"
+      },
+      "evidence_id": "ev_eb30972abf453b4528387d95be1a8fd21030a66bd34d46e779cfac1018fedd2e"
+    },
+    {
+      "record": "pseudo-child-wlapi_bmac_bw_check",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlapi_bmac_bw_check"
+      },
+      "evidence_id": "ev_88b99bf2f02a530ffa53d15853fc7e385726d0f982d4d288cafbd66496f128f9"
+    },
+    {
+      "record": "pseudo-child-wlapi_bmac_bw_set",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlapi_bmac_bw_set"
+      },
+      "evidence_id": "ev_e15e4f117c7fe686c57094a8aeee738ba82f9b32bc590b9a65cb1bdef7a5754c"
+    },
+    {
+      "record": "pseudo-child-wlc_bmac_bw_set",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_bmac_bw_set"
+      },
+      "evidence_id": "ev_82d81264fc083dadf961e3e4cee2d39a527b8ec3a2126c36f3a4be5d7deaa7ab"
+    },
+    {
+      "record": "pseudo-registration-bd694",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "0xbd694"
+      },
+      "evidence_id": "ev_42f91f2fd3a39ccd5993e405b7d7e5beebb50d469564bea6f72b86cf86c17f1d"
+    },
+    {
+      "record": "pseudo-registration-bd76c",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "0xbd76c"
+      },
+      "evidence_id": "ev_01896a5bc3ca752672297f31a34864fc5d32e5896cd34d68507cf5cf7e2fc2bb"
+    },
+    {
+      "record": "pseudo-registration-bdc50",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "0xbdc50"
+      },
+      "evidence_id": "ev_25adb1b572e9c82b53b25f1e5d4b0e24482ae8e699b59ab0c3324e521ab0a0af"
+    },
+    {
+      "record": "pseudo-registration-bed10",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "0xbed10"
+      },
+      "evidence_id": "ev_75b6be757a89c458fe19df4006c88ca8a1706f0d255a9508749239985899bb39"
+    },
+    {
+      "record": "pseudo-registration-bf92c",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "0xbf92c"
+      },
+      "evidence_id": "ev_f00a66a7225be4fb269fc14fd197aca92ecd5fa4db0370a684083fdf79221af0"
+    },
+    {
+      "record": "pseudo-registration-c1c10",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "0xc1c10"
+      },
+      "evidence_id": "ev_287b14631476ae7e6d46962456054542af7217e9f945cd3fd707f446cbdb8f4b"
+    },
+    {
+      "record": "pseudo-registration-c28ec",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "0xc28ec"
+      },
+      "evidence_id": "ev_4d5cee29142ef538c1def228d8571267f89292e984ec60af82beac874c0681f7"
+    },
+    {
+      "record": "pseudo-registration-c34a4",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "0xc34a4"
+      },
+      "evidence_id": "ev_b8047bd646e48e1daf1683706ae59e57ea087965c8d0ed8ee75522e2300fed21"
+    },
+    {
+      "record": "pseudo-registration-c3810",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "0xc3810"
+      },
+      "evidence_id": "ev_2baf1c3b9abd7e6644fdad121d8895ebaf550ab4bd02dc88e7a31ff86d6e28b1"
+    },
+    {
+      "record": "pseudo-registration-c7a0c",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "0xc7a0c"
+      },
+      "evidence_id": "ev_51d8e23c9955eaae4b253a45a26065d123881018505b00d3dc19e18432d9dc78"
+    },
+    {
+      "record": "pseudo-registration-c822c",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "0xc822c"
+      },
+      "evidence_id": "ev_a16e9f44e35daff4c05d9f69d2a7bd6d5cfc9136e2a65589c0bae0eb6f60a390"
+    },
+    {
+      "record": "pseudo-registration-c9044",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "0xc9044"
+      },
+      "evidence_id": "ev_bc022c86899cf1d5703db12f2277512250274d51fdc0fdb6303105ae0e0a8695"
+    },
+    {
+      "record": "pseudo-registration-c95ac",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "0xc95ac"
+      },
+      "evidence_id": "ev_6318d5a4a5eae7ed67db5d53a297e1e90527e50ec5a326b7e2b16e84f033407d"
+    },
+    {
+      "record": "references-add-init-fn",
+      "operation": "procedure_references",
+      "parameters": {
+        "procedure": "phy_init_add_init_fn",
+        "direction": "incoming"
+      },
+      "evidence_id": "ev_25080828367298ff863b75e96942cea47904deb8b812148936110c8a0cc56e1a"
+    },
+    {
+      "record": "pseudo-phy-module-attach",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_module_attach"
+      },
+      "evidence_id": "ev_11b3698b4de85d747fef84a5e1debc11a54fdebe0aa87da70bdc13059efcb2d8",
+      "reused": true
+    },
+    {
+      "record": "pseudo-phy-ac-register-impl",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_register_impl"
+      },
+      "evidence_id": "ev_630970e9e6170b3c1d25d0667553fbb1e945e82a9f875b3b33a0d1e87313ccd4",
+      "reused": true
+    },
+    {
+      "record": "pseudo-ac-analog-registration",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_ana_register_impl"
+      },
+      "evidence_id": "ev_9b763c6178e4cdefee5aa595c66c2868f7154ac43a3adbdd30752c8b2a639f78",
+      "reused": true
+    },
+    {
+      "record": "bytes-analog-reset-field",
+      "operation": "read_bytes",
+      "parameters": {
+        "address": "0x3a4910",
+        "length": 2
+      },
+      "evidence_id": "ev_5eec65057bd8415e9b28e0355fe80b0597180d15919d7ee19cf6875f8f82664d",
+      "reused": true
+    },
+    {
+      "record": "assembly-phy-tbl-init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_tbl_init"
+      },
+      "evidence_id": "ev_9de762a081263500ead5846d9df934009323596a591cd810f012e3ba4c3b8cea",
+      "reused": true
+    },
+    {
+      "record": "assembly-ac-tbl-init",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_tbl_init"
+      },
+      "evidence_id": "ev_53cab1606d04d10a73a30adbce7ae7be9073e7d8eea16f6de126a2604fdbeadd",
+      "reused": true
+    }
+  ],
+  "validation": {
+    "strict_C11_ASan_UBSan": "passed",
+    "freestanding_ARMv7": "passed",
+    "literal_real_prefix_events": 6,
+    "literal_real_table_events": 412,
+    "literal_nested_antdiv_events": 6,
+    "literal_real_radio_prefix_events": 21,
+    "callback_error_cancel_both_boundaries": 1335,
+    "semantic_mutants_rejected": 7,
+    "scheduler_stock_ARM_execution": false
+  },
+  "session_exported_and_closed": true,
+  "limitations": [
+    "Actual common-context labels, catalog/allocator ownership, OTP/NVRAM/radio identity and private spans are caller bindings, not acquired by this scheduler.",
+    "The full target stops at reached radio continuation, or earlier differing-bandwidth reset/init branch; no successful unimplemented callback is supplied.",
+    "Remaining radar/noise-mode/chanspec/calibration children, OS/backend/DMA/IRQ/Linux and physical validation remain.",
+    "Immutable registry/metadata and strict bounded checks narrow stock live reloads and unchecked ranges.",
+    "Raw assembly/arrays, board identifiers and local paths are excluded."
+  ]
+}

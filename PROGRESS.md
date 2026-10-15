@@ -1,10 +1,11 @@
 # Current progress and continuation checkpoint
 
-Updated 2026-10-15. This checkpoint adds physical object-memory initialization,
-the mandatory core130 SMC path, the complete registered PHY51 table-init
-callback, and current DMA descriptor/TX-post/RX-take components. It builds on
-the enclosing/lower core-reset checkpoint `788eee4` and the earlier baseline
-`1deea16`. These remain offline implementations, not a working radio driver.
+Updated 2026-10-15. This checkpoint adds the complete recovered sixteen-stage
+PHY init registry and real closed children, target radio OFF/register helpers
+and an explicit unfinished ON prefix, both current RX list leaves, and higher
+packet/status processing with real list children. It builds on initialization/
+DMA checkpoint `16853c6` and reset checkpoint `788eee4`. These remain offline
+implementations, not a working radio driver.
 Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
 
 ## Current reset checkpoint
@@ -25,8 +26,23 @@ components, with no hardware backend or claimed working Wi-Fi driver.
 
 ## Resume here
 
-**Next: finish the remaining radio/channel/calibration callbacks and receive
-list/ownership path, using the recovered enclosing call graphs.** The
+**Next: finish radio power-on and its logen/PLL/RCAL children, remaining PHY
+callbacks and RX-fill/BMAC/IRQ integration.** The
+[scheduler](docs/PHY_SCHEDULER_MODEL.md) reconstructs all sixteen registered
+initialization stages. A complete target invocation currently stops at required
+priority7 radio-on after five earlier callbacks; it cannot skip that stage to
+claim the later table/channel/calibration work completed. The
+[radio controller](docs/RADIO_CONTROL_MODEL.md) completes actual target OFF and
+register operations. Explicit identity50e0 ON executes its recovered prefix and
+private table, then stops before `wlc_phy_radio20704_sel_logen_mode`; other radio
+ON dispatches remain dependencies. Actual board ID/subrevision stays unknown.
+
+The [bulk list leaves](docs/DMA_RX_LIST_MODEL.md) and
+[packet/status bodies](docs/RX_PROCESSING_MODEL.md) now implement the observed
+current RX paths with typed fresh memory and real children. A reached nonnull
+status-pool callback with node index other than-1 remains unimplemented; OS
+trim/free/delay are explicit adapter services. RX fill, BMAC frame/status merge,
+IRQ/deferred work and Linux delivery remain separate requirements. The
 [BMAC audit](docs/DRIVER_BMAC_INIT_AUDIT.md) establishes actual initialization
 order: core-unit word150 gates download calls; the separate microcode-skip and
 SMC-loaded bytes have different meanings. SMC support is true for core130 and
@@ -69,8 +85,8 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | D0 offline foundation | Implemented and host-tested within stated limits | Four C components, pinned object inspector, synthetic/fault tests and private-input comparisons. |
 | D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper/startup, PSM control, DMA reset, D11/ChipCommon clock, table/all-core TSSI, target PHY reset and BF cleaner implemented. SI/WL clock and enclosing core-reset composition are implemented offline; higher initialization, runtime/OS resources and MBSS/fatal recovery remain. |
 | D2 complete register/SHM/context contracts | Partial implementation, host-tested | Effective-init now lowers through real physical object writers; addend acquisition, complete register map and SHM ABI remain. |
-| D3 PHY 51/radio/channel/calibration | Partial implementation, host-tested | Complete registered PHY51 table-init, generic AC table writer, SI PMU/GPIO and mandatory SMC path implemented; radio/channel/calibration, runtime board inputs and full registry remain. |
-| D4 DMA/interrupt/RX | Partial offline implementation | Current descriptor formatting/ring arithmetic and actual RX slot-take leaf implemented; allocation/cache/list parsing, RX fill, IRQ and kernel resources remain. |
+| D3 PHY 51/radio/channel/calibration | Partial implementation, host-tested | Full16 init order and real closed children, table/SMC and target radio OFF/register paths implemented; required priority7 ON, channel/calibration and runtime board inputs remain. |
+| D4 DMA/interrupt/RX | Partial offline implementation | Current descriptors, slot/bulk/status-list leaves and higher packet/status bodies implemented; status-pool callback, allocation/cache/OS adapters, RX fill, BMAC parsing/IRQ and kernel resources remain. |
 | D5 TX/Linux WLAN integration | Descriptor-only TX leaf implemented offline | Actual descriptor posting is implemented; normal packet TX/completion and Linux WLAN architecture/integration remain. |
 | D6 HE/features/stability | Not implemented | Requires validated baseline driver and hardware tests. |
 | B0 flash/boot investigation | Partial | 21 vendor-declared regions and NOR rootfs corroboration; physical geometry/authentication/calibration coverage unresolved. |
@@ -96,6 +112,10 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | `driver/dma_descriptor.c` | Current sixteen-byte codec/formatter, address-extension/parity rules and bounded ring/range arithmetic. | Pure values; stricter host bounds, no DMA mapping/cache/lifetime ownership. |
 | `driver/dma_tx_post.c` | Actual descriptor-only posting, fresh memory parity reads, out/producer/availability commitment. | Raw input differs from formatter; copied mutation and explicit resources, no normal packet TX/completion. |
 | `driver/dma_rx_take.c` | Actual status/cached-current/force gates, slot clear, consumer/availability stores and mode-dependent sentinel skip. | Returns a packet label, not parsed packet or DMA/cache/allocator ownership. |
+| `driver/radio_control.c` | Real radio read/write/modify, target63178 OFF and recovered50e0 ON prefix/private records. | Every ON remains dependency at its first unrecovered child; no board identity or radio-ready claim. |
+| `driver/phy_scheduler.c` | Actual capacity23 insertion/ties, full16 target constructor, ordered dispatch and real closed PHY/radio/table/PSM/SI children. | Full target stops at required radio ON; immutable registry narrows live reloads, later radar/noise/channel and fatal/bandwidth branches remain. |
+| `driver/dma_rx_list.c` / `dma_rx_status_list.c` | Actual closed bulk leaves, discarded descriptor reads, distinct NEXT widths and software commit order. | Explicit coherent serialized memory/resources; no unmap/cache call occurs in these current leaves. |
+| `driver/rx_packets.c` / `rx_status.c` | Actual length polling, trim/fragment/drop paths, status processing and inlined pool return with real list children. | Required OS adapter and registered pool callback explicit; retained labels/counts are not validated frames or Linux delivery. |
 | `driver/ai_reset.c` | AI primary/optional-secondary wrapper trace, bounded busy/release loops and readback-dependent control. | Used by actual lower reset composition; trace completion can include stuck reset. |
 | `driver/psm_start.c` | Cached main/extended controls, exact ACK loops/final reads, physical SHM16 FIFO verification. | Startup-suspended predicate only; explicit fail-stop policy, no hardware backend. |
 | `driver/psm_control.c` | Wake, suspend/enable, generic override set/clear, actual wake-control action and current-mask policy integration. | Reached unknown policy/public state or MBSS/fatal recovery remains explicit; stricter fail-stop policy, no backend. |
@@ -143,6 +163,18 @@ These are historical validation results for the named baseline. Re-run relevant
 checks when code or inputs change; do not imply a new hardware test occurred.
 
 ## Latest implementation and retained evidence
+
+- [Recovered PHY registry and execution](docs/PHY_SCHEDULER_MODEL.md) establishes
+  all sixteen stages and real closed callback bodies. The complete target vector
+  retains required radio7/table8 order; smaller isolated vectors are tests only.
+- [Radio control](docs/RADIO_CONTROL_MODEL.md) and
+  [selected observations/private-span metadata](findings/RADIO_CONTROL_EVIDENCE.json)
+  distinguish the mandatory scheduler on-slot from BMAC's actually null optional
+  init-slot and the still-unimplemented BT/common switch wrapper.
+- [Current bulk/status list contracts](docs/DMA_RX_LIST_MODEL.md),
+  [higher packet/status processing](docs/RX_PROCESSING_MODEL.md) and
+  [four-body assembly index](findings/RX_PROCESSING_EVIDENCE.json) close actual
+  source operations without importing older GPL cache/unmap branches.
 
 - [Object writers and physical initialization](docs/OBJECT_MEMORY_MODEL.md)
   and [selected assembly](findings/OBJECT_MEMORY_EVIDENCE.json) close the real
@@ -216,6 +248,39 @@ checks when code or inputs change; do not imply a new hardware test occurred.
   raw records; the new session was exported/closed with unchanged input hash.
 
 Latest validation (host/build and isolated synthetic ARM execution only):
+
+- All 43 runtime programs pass the shared ASan/UBSan suite, including all six
+  new components. All 44 C objects and the combined 45-header probe pass strict
+  freestanding ARMv7 compilation. Optional private raw/effective-init, selector,
+  upload and full SMC comparisons also pass. No kernel module is linked/loaded.
+- [Both actual list leaves](docs/DMA_RX_LIST_MODEL.md) match3264 packet-bulk and
+  408 status-bulk cases,952552 actual instructions and six negative probes.
+  Current source has no helper calls or relocations; descriptor reads remain
+  mandatory observations. All callback exits and eight private mutants pass.
+- [Composed RX ARM execution](docs/RX_PROCESSING_ARM_CHECKS.md) matches304 cases
+  across four actual functions,74457 instructions and48 real continuation bulk
+  refills. All four reviewed internal CALL sites execute actual children; zero
+  external success stubs are supplied. Seven negative probes reject unknown
+  calls/fields and missing/unused reads, including actual reached OS calls.
+  Timeout/nonlinear/free/pool branches remain literal C/source coverage, not
+  stock OS execution. Twelve compiling RX-processing mutants are rejected.
+- Actual radio READ/WRITE/MODIFY matches200 ARM cases with two exact real
+  MODIFY branch bindings. Target OFF and unfinished ON have independent C
+  traces/fault checks; those power sequences are not emulated as stock ARM.
+  Six private mutants are rejected. No actual board radio ID is inferred.
+- A separate private-input comparison validates the published220-byte span
+  metadata and matches all54 register pairs through the complete245-operation
+  ON prefix with independent literal PHY/control operations and a synthetic
+  read sample. Its final state remains the required logen/PLL dependency.
+  This is C/private-data coverage, not stock power-sequence or hardware execution.
+- Scheduler tests check capacity/ties/full16 construction, real cache/analog/SI
+  prefix, real412-event table child, nested antdiv PSM and closed software
+  leaves, with1335 callback exit boundaries and seven private mutants. A full
+  target vector stops at required radio7; no partial vector proves full init.
+
+Retained component-specific results from checkpoint `16853c6` follow. Their
+runtime programs are included in the current shared rerun; earlier optional ARM
+comparisons are historical unless explicitly rerun above.
 
 - New independent literal tests cover object lane/stride/readback ordering,
   physical initialization completion, all AC table widths/guards, SMC load/skip
@@ -430,8 +495,10 @@ Critical distinctions to preserve:
    installation/analysis.
 2. Follow the [actual BMAC initialization groups](docs/DRIVER_BMAC_INIT_AUDIT.md)
    and the earlier lifecycle caller that invokes core reset. Reuse the real
-   reset/upload/start/object/SMC/table-init components. Finish the PHY init
-   registry ordering and remaining actual radio switch/on, channel-manager and
+   reset/upload/start/object/SMC/table-init and full16 scheduler components.
+   Close `wlc_phy_radio20704_sel_logen_mode` and the surrounding actual power-on
+   PLL/RCAL continuation for explicit50e0, plus reached other-radio dispatches.
+   Implement remaining actual common BT/switch, channel-manager and
    calibration children; acquire the observed radio ID/subrevision and reached
    board inputs. Keep conditional VASIP, BMC, coexistence, offload and diagnostic
    operations explicit; do not publish a coordinator that skips them as success.
@@ -447,9 +514,11 @@ Critical distinctions to preserve:
    unsupported, not no-ops. Analog null checks occur AFTER the chip63178 bandwidth
    store's required PHY dereference. Core130 delay100 is a common post-pulse join.
 
-6. Finish D2 runtime addend acquisition and needed SHM ABI. For D4, follow
-   `_dma_getnext_rxlist` and its actual cache/unmap/list ownership, then implement
-   `dma_rx` bounded lengths/continuations/errors and RX fill. Recover the real
+6. Finish D2 runtime addend acquisition and needed SHM ABI. For D4, reuse the
+   actual bulk/status/packet jobs; recover the status-pool callback registration
+   and implementation, RX-fill allocation/mapping/cache resources, and BMAC
+   header/status/RSSI/frame processing. The current bulk leaves have no cache/
+   unmap call; do not import older optional source paths. Recover the real
    MAC ISR/deferred-work acknowledgement/masks. Descriptor formatting, descriptor-
    only posting and slot take do not establish normal packet TX/RX. Continue
    Linux integration and full features. Separate recovery/RAM-boot/board work remains
@@ -458,7 +527,8 @@ Critical distinctions to preserve:
    independent read queues, bank/core/space/width/barriers/delays, no implicit
    zero/write-echo, missing/exhausted/unconsumed read rejection and consumed-bit
    checks. ARM execution covers the pure wake predicate, primitives, object writers,
-   DMA leaves and selected composed table/TSSI inactive-MAC paths; extend to actual PSM/action/clock only with proven caller
+   DMA leaves, composed packet/status processing and selected table/TSSI
+   inactive-MAC paths; extend to actual PSM/action/clock only with proven caller
    closure and strict contexts, not successful external stubs. Optional live ARM
    accessor coverage design does not replace implementation.
 8. Add independent traces/boundaries/failure/cancel regressions, run affected
@@ -509,6 +579,9 @@ python3 tests/check_dma_descriptor_arm.py /private/path/to/wl.ko
 python3 tests/check_dma_tx_post_arm.py /private/path/to/wl.ko
 python3 tests/check_dma_rx_take_arm.py /private/path/to/wl.ko
 python3 tests/check_radio_identity_arm.py /private/path/to/wl.ko
+python3 tests/check_radio_control_arm.py /private/path/to/wl.ko
+python3 tests/check_dma_rx_list_arm.py /private/path/to/wl.ko
+python3 tests/check_rx_processing_arm.py /private/path/to/wl.ko
 ```
 
 For a new bounded named-function pass, configure the child process as described
@@ -558,7 +631,8 @@ assembly, typed references and descriptor reads as required by the evidence.
 | `b9b2877` | SI selector, HND resource/IRQ/clock wrapper and complete WL clock-select composition with exact inline cache/reason stores. |
 | `1deea16` | AI/PHY header namespace integration fix and combined-header compile gate. |
 | `788eee4` | Enclosing/lower core reset, generic auxiliary AI reset, selected-wrapper SI helpers, exact mctrl reset and independent trace regressions. |
-| This checkpoint | Actual object/init writes, mandatory SMC, PHY51 table initialization and PMU/GPIO, radio-identity query/decode, current DMA formatter/post/take, strict stock ARM comparisons and retained caller audits. |
+| `16853c6` | Actual object/init writes, mandatory SMC, PHY51 table initialization and PMU/GPIO, radio-identity query/decode, current DMA formatter/post/take, strict stock ARM comparisons and retained caller audits. |
+| This checkpoint | Full16 PHY registry and actual closed children, target radio OFF/register operations and unfinished ON prefix, current bulk/status list leaves and higher packet/status processing with strict real-child ARM comparisons. |
 
 At each future checkpoint, add a concise milestone entry and replace the active
 next-work package with the actual next task. Keep unresolved defects visible.

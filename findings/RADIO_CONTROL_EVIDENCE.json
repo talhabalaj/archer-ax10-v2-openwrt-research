@@ -1,0 +1,134 @@
+{
+  "scope": "Actual target63178 radio OFF, identity50e0 ON prefix and exact radio register leaves; original offline C and selected metadata only",
+  "input": {
+    "name": "wl.ko",
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4",
+    "optional_arm_emulator": "Unicorn2.1.4"
+  },
+  "records": [
+    {
+      "procedure_or_field": "phy_ac_radio_switch",
+      "evidence_id": "ev_f7d8f6051cecf3d432cf33700a852916d322f81ff95ec8adf6b05f9c4e808b18",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure_or_field": "phy_ac_radio_on",
+      "evidence_id": "ev_08edb4971c8380735a170023942e0cf017f678eb223faa0d193ab135d4c1998c",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure_or_field": "phy_radio_switch",
+      "evidence_id": "ev_d81b97ec7d6634e623ab863272426eb47b7b17f8ae32d30a929db2a79e6d228b",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure_or_field": "phy_radio_on",
+      "evidence_id": "ev_459564cb1def7ef65c8ad9cd099c5ca89c81605579b08bc919fc908750210376",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure_or_field": "phy_radio_init",
+      "evidence_id": "ev_1841d44b139b4f1960edc0d3fceab3d1b954d1a99b930ff0b782d356cc8cadf2",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure_or_field": "wlc_phy_switch_radio_acphy.constprop.21",
+      "evidence_id": "ev_ac651c95d3284971cebc03fb9cbcc35e70e2b7201f8f64d173e2b84e9b1781f0",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure_or_field": "wlc_phy_set_regtbl_on_pwron_acphy",
+      "evidence_id": "ev_134756f359ea508f62a2591bcf24d55849188ca09722b47067bbb41147fc2e88",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure_or_field": "phy_ac_chanmgr_get_data",
+      "evidence_id": "ev_634e7549518d9979571c2bd9b97d61cb8afc866f80e213fa32cdc9781f3a9a32",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure_or_field": "wlapi_update_bt_chanspec",
+      "evidence_id": "ev_0eb8237cd065ac0acbc014505caa4db4347fde060ade40bfb759dcefb78db0f5",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure_or_field": "phy_utils_write_radioreg",
+      "evidence_id": "ev_6c5a9fb3ea879331c3919387588b127b660ce9bf1ecc65b07fde5d229def83de",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure_or_field": "phy_utils_mod_radioreg",
+      "evidence_id": "ev_5e7239bfa1ba2e63a88e989d948c086e9dcc5f868bedee56c6453d6e0faf121e",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure_or_field": "phy_utils_read_radioreg",
+      "evidence_id": "ev_c0e5ae2fca2e49b03fe0522aa5d87c8035588d514c56a9b3102ff8ffb7a1922a",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure_or_field": "wlc_phy_radio20704_sel_logen_mode",
+      "evidence_id": "ev_3d6f3ea087a1cb4e447a4d789d11872a486c8305b66bf95f668f9d20d6e18a74",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure_or_field": "wlc_bmac_update_bt_chanspec",
+      "evidence_id": "ev_2fd33cc1c8a876cf1a7cd94a1e14e489a370eb7b1eb5d37a3cd7be8374b5e7ae",
+      "evidence_type": "observed static pseudocode"
+    },
+    {
+      "procedure_or_field": "core130 common descriptor field8e",
+      "evidence_id": "ev_51f5b2477147507e801f1530fc48d5c6af77aed91924f01b127edd4ddd96480d",
+      "evidence_type": "observed bounded descriptor read"
+    },
+    {
+      "procedure_or_field": "phy_ac_radio_register_impl",
+      "evidence_id": "ev_cac6e9f2199ebd593afa45e11caeddea5081bb9ca6ddc85ee5f7bc604ec03bf9",
+      "evidence_type": "reused static pseudocode",
+      "switch_slot": 0,
+      "on_slot": 1,
+      "unregistered_optional_init_slot": 3,
+      "context_slot": 8
+    },
+    {
+      "procedure_or_field": "phy_radio_attach",
+      "evidence_id": "ev_51d8e23c9955eaae4b253a45a26065d123881018505b00d3dc19e18432d9dc78",
+      "evidence_type": "reused static pseudocode",
+      "on_scheduler_priority": 7
+    }
+  ],
+  "private_span_metadata": {
+    "symbol": "prefregs_20704_rev0",
+    "section": ".rodata",
+    "section_offset": 730740,
+    "file_offset": 3511012,
+    "size": 220,
+    "records_including_terminator": 55,
+    "register_writes": 54,
+    "sha256": "0538518084aa5ce44c72156c709c6ee711ed6343f6850cfcafbb6b3397abb584",
+    "selected_only_when_radio_id": 20704,
+    "maximum_radio_revision": 3,
+    "publication": "metadata only; no private register pairs embedded"
+  },
+  "validation": {
+    "literal_callback_fault_suite": "passed ASan/UBSan",
+    "armv7_freestanding_compile": "passed",
+    "all_current_public_headers_combined_armv7": "passed45headers",
+    "semantic_mutants_rejected": 6,
+    "actual_arm_register_leaf_cases": 200
+  },
+  "limitations": [
+    "No hardware/RF operation or actual board radio identity observation.",
+    "AC ON always stops at the first remaining logen/PLL continuation dependency after the implemented prefix; no radio-ready or full scheduler success.",
+    "Other radio ON dispatches and other-chip OFF tails stop as explicit dependencies.",
+    "The common switch wrapper includes physical maincontrol read and actual BT update graph; that entire wrapper is audited but not implemented by this AC-thunk API.",
+    "The optional BMAC radio-init slot3 and mandatory scheduler slot1 are distinct; known-null slot3 is the only completed common-init case.",
+    "Actual ARM comparison covers real radio read/write/modify leaves and exact two branch bindings, not power sequences or private register data.",
+    "No raw assembly, vendor arrays, calibration, private identifiers or host-local paths included."
+  ],
+  "session_lifecycle": "Native offline REA session exported and closed successfully; process exited0."
+}

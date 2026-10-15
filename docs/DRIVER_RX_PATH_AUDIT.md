@@ -6,6 +6,11 @@ selected observations are in [the evidence index](../findings/DRIVER_RX_PATH_EVI
 REA6.5.0/Ghidra12.1.4 records were exported and the session closed. Raw code,
 packets, firmware and device identifiers remain private. No hardware was used.
 
+The named bulk list and packet/status bodies are now implemented as original
+portable jobs; see [both closed list leaves](DMA_RX_LIST_MODEL.md) and
+[packet/status processing](RX_PROCESSING_MODEL.md). This call-path audit still
+separates those bodies from the unfinished BMAC/OS/IRQ/delivery layers.
+
 ## Three distinct layers
 
 The actual `dma_getnextrxp.part.1` leaf removes software packet labels from the
@@ -43,9 +48,11 @@ is adopted as a portable interface from these observations.
 
 ## Next implementation work
 
-Recover `_dma_getnext_rxlist` through the actual allocation/cache/unmap paths,
-then implement bounded packet/list ownership and the current `dma_rx` trimming,
-continuation and error rules. Separately recover RX-fill resources and the MAC
+The current bulk leaf was recovered and contains no allocation/cache/unmap call;
+those optional older-source paths must not be invented for this build. Both
+list leaves and the `dma_rx`/status trimming, continuation, timeout and error
+bodies are implemented within their explicit adapter/pool-callback boundaries.
+Recover that callback's actual registration/implementation, RX-fill resources and the MAC
 ISR/deferred-work acknowledgement/masking contract. Keep descriptor completion,
 packet DMA ownership, decoded frame metadata and Linux delivery distinct.
 Device receive validation and any RF work remain outside this offline change.

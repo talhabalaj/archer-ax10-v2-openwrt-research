@@ -77,11 +77,18 @@ mutating bring-up must follow the dependencies actually recovered from stock.
    clocks, calibration and channel initialization with no invented defaults.
    Physical object/init writes, SMC, generic table writes, PMU/GPIO and the
    complete registered PHY51 table-init callback now exist offline. Remaining
-   registry/radio/channel/calibration operations still require implementation.
+   radio/channel/calibration operations still require implementation. The full
+   [sixteen-stage init registry](docs/PHY_SCHEDULER_MODEL.md) and real closed
+   children are now implemented. Complete target execution stops at mandatory
+   radio7 before table8. [Radio OFF/register paths](docs/RADIO_CONTROL_MODEL.md)
+   complete offline; ON's logen/PLL/RCAL continuation remains open.
 5. **Build the data path:** DMA rings and interrupts, receive parsing, transmit,
    then the selected Linux WLAN integration. Current descriptor formatting,
    descriptor-only posting and RX slot take are implemented offline. Packet
-   ownership/cache/mapping, RX list/length/status processing, fill and IRQ remain.
+   ownership/cache/mapping adapters, fill and IRQ remain. Both current RX bulk
+   leaves and [packet/status bodies](docs/RX_PROCESSING_MODEL.md) are now
+   implemented, including real children and an explicit registered-pool callback
+   boundary. BMAC parsing/status merge and Linux delivery remain separate.
    Validate each layer separately.
 6. **Establish board/recovery support:** exact-board console/recovery, modern
    OpenWrt RAM boot, Ethernet and exclusive radio resources. Offline work above
@@ -209,6 +216,10 @@ invalid inputs; no old firmware/SHM ABI is silently substituted.
   and [SMC loader/reset](docs/DRIVER_BMAC_INIT_AUDIT.md) are implemented offline,
   with real generic table/PMU/GPIO children. This does not close the other
   callbacks or establish the actual radio identity/calibration inputs.
+  The full16 init vector and source-backed scheduler now exist, with real
+  closed software/PHY/table/radio children. It preserves the required radio7
+  dependency rather than skipping to later callbacks. Source registry ordering
+  is established; complete runtime bindings and remaining children are not.
 - Document required calibration fields and precedence using private inputs;
   validate presence/format without publishing values or inventing defaults.
 - Implement ordered PHY/radio operations in the simulator, with settling delays,
@@ -228,7 +239,10 @@ Only device evidence can establish successful calibration or valid RF behavior.
   [descriptor-only posting](docs/DMA_TX_POST_MODEL.md) and
   [RX slot take](docs/DMA_RX_TAKE_MODEL.md) now have tests/ARM comparisons.
   [The RX call-path audit](docs/DRIVER_RX_PATH_AUDIT.md) identifies the still
-  missing list/cache/packet parsing, fill and delivery layers.
+  missing OS/cache adapters, BMAC parsing, fill and delivery layers. The current
+  list leaves and higher packet/status bodies now have original implementations;
+  [their boundaries](docs/RX_PROCESSING_MODEL.md) still include a reached unknown
+  registered pool callback. They do not transfer DMA ownership by returning a label.
 - Add a minimal kernel integration layer after board resources and ownership are
   established; validate DMA mapping, locking, lifetime and error recovery.
 - Start hardware validation with receive-only observations on an allowed channel;

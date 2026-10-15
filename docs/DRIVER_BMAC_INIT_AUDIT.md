@@ -66,10 +66,18 @@ Branches and runtime metadata remain explicit dependencies rather than defaults.
    initialization. Core130 band initialization writes primary and extended band
    tables and invokes actual PHY channel/calibration work; those leaves remain
    separate implementation requirements.
+
 9. Call SI low-power optimization. Original fast0 requests actual WL mode2. A
    runtime public flag can request actual main suspend/enable, then revisions
    above127 request PMU MAC resources using core-unit word150. Finally clear the
    separate hardware tail byte23f.
+
+The later [radio-control audit/implementation](RADIO_CONTROL_MODEL.md) resolves
+the common BMAC `phy_radio_init` optional slot3 as known null in this AC
+registration. It is distinct from mandatory scheduler slot1 radio-on at
+priority7. The known-null common body is modeled; required ON still stops at
+its actual unfinished continuation. Do not substitute the optional no-op for
+the required [PHY scheduler](PHY_SCHEDULER_MODEL.md) stage.
 
 This is a caller contract, not a complete initialization implementation. Object
 helpers, upload/start/reset components, and the new SMC/table-write components

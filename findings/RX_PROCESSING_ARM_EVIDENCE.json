@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "scope": "Composed current dma_rx and _dma_sts_rx with their actual closed list callees",
+  "artifact": {
+    "name": "wl.ko",
+    "version": "17.10.121.37",
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "functions": [
+    {
+      "name": "dma_rx",
+      "size_bytes": 532,
+      "sha256": "b351e00556dc0afadc2b43148e89602e0f7f011b2d3f025c2439580104229f6a",
+      "assembly_evidence_id": "ev_e94a84b4e7641739286f78d922cdbed9a25733b7c39fe9ae29e28793c7e30226",
+      "pseudocode_evidence_id": "ev_bdb1966c606d80492cd15392b5c03a859efbd5012f03ab9efb0ca12562cb38e3"
+    },
+    {
+      "name": "_dma_sts_rx",
+      "size_bytes": 324,
+      "sha256": "b874c626cfaed1a57188c3bd4da877fb12359261633ced7fd25cbd220437862c",
+      "assembly_evidence_id": "ev_609874bed20606aefd705098d782c7bb0457da8a8eccf0610ec45321cbe1b648",
+      "pseudocode_evidence_id": "ev_66fe885728ebe525c1d5cbc08eda314633adea5a918a4d45a44727e5d8c71f2d"
+    },
+    {
+      "name": "_dma_getnext_rxlist",
+      "size_bytes": 324,
+      "sha256": "74e18628df25fdbb4a62f289a0ff855a595796878342556825d21319dfc38450",
+      "assembly_evidence_id": "ev_941ab7ccce91340d5c6625ad26eeb4390789e9ded4e44ee606e3c6799df75fc8",
+      "pseudocode_evidence_id": "ev_c24b44c72897daca9bb65d29938c35405890a0c0fc3679c391e73f82f3040a50"
+    },
+    {
+      "name": "_dma_getnext_sts_rxlist",
+      "size_bytes": 280,
+      "sha256": "cd8eb6ca8fde6cdb9e229f70984867a8118d9a74779b55041f436f7236c78ce3",
+      "assembly_evidence_id": "ev_b0a9c3064fba74cb67b91673e01a360f06a9721c75ef519f48fbce7a006b66bb",
+      "pseudocode_evidence_id": "ev_dc6a512bb6a0f87bae6cbe71f5a7cf82057f0e3ff1be35dc1fd900a161e5485e"
+    }
+  ],
+  "validation": {
+    "cases": 304,
+    "actual_arm_instructions": 74457,
+    "actual_bound_internal_call_counts": {
+      "dma_rx+0x1c->_dma_getnext_rxlist": 296,
+      "dma_rx+0x13c->_dma_getnext_rxlist": 48,
+      "dma_rx+0x1c8->_dma_sts_rx": 200,
+      "_dma_sts_rx+0x14->_dma_getnext_sts_rxlist": 208
+    },
+    "rejection_probes": 7,
+    "strict_typed_initialized_memory": true,
+    "strict_fresh_status_and_descriptor_read_queues": true,
+    "per_io_context_and_output_comparison": true,
+    "final_packet_status_memory_and_context_comparison": true,
+    "external_helper_stubs": 0,
+    "hardware_operations": 0
+  },
+  "limits": [
+    "Selected positive-length linear packet/status executions only",
+    "Reached OS delay/trim/free calls fail before execution",
+    "Status timeout pool return and registered callback behavior are not executed in this comparison",
+    "No kernel loading, real MMIO, DMA mapping, packet ownership, Linux delivery or physical/RF validation"
+  ],
+  "publication": "Original checker, prose and selected provenance metadata only; no raw executable, assembly or local paths"
+}

@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "scope": "Current packet and status DMA receive list leaf execution contracts",
+  "artifact": {
+    "name": "wl.ko",
+    "version": "17.10.121.37",
+    "size_bytes": 5803056,
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "functions": [
+    {
+      "name": "_dma_getnext_rxlist",
+      "size_bytes": 324,
+      "sha256": "74e18628df25fdbb4a62f289a0ff855a595796878342556825d21319dfc38450",
+      "assembly_evidence_id": "ev_941ab7ccce91340d5c6625ad26eeb4390789e9ded4e44ee606e3c6799df75fc8",
+      "pseudocode_evidence_id": "ev_c24b44c72897daca9bb65d29938c35405890a0c0fc3679c391e73f82f3040a50",
+      "calls": 0,
+      "relocations": 0,
+      "key_observations": [
+        "Normal path always refreshes status with R32/SY before unsigned budget calculation",
+        "Primary head advances before each mandatory discarded descriptor-low read",
+        "Final NEXT is one WRITE32; primary index/available then optional linked mirror precede empty tail clear"
+      ]
+    },
+    {
+      "name": "_dma_getnext_sts_rxlist",
+      "size_bytes": 280,
+      "sha256": "cd8eb6ca8fde6cdb9e229f70984867a8118d9a74779b55041f436f7236c78ce3",
+      "assembly_evidence_id": "ev_b0a9c3064fba74cb67b91673e01a360f06a9721c75ef519f48fbce7a006b66bb",
+      "pseudocode_evidence_id": "ev_dc6a512bb6a0f87bae6cbe71f5a7cf82057f0e3ff1be35dc1fd900a161e5485e",
+      "calls": 0,
+      "relocations": 0,
+      "key_observations": [
+        "Normal path refreshes status only when cached index equals software in",
+        "Node NEXT uses byte0x1c; per-node primary head store precedes discarded descriptor observation",
+        "Detach is four WRITE8 operations; final index then empty tail then available stores"
+      ]
+    }
+  ],
+  "validation": {
+    "independent_literal_unit_tests": true,
+    "all_callback_error_cancel_and_both_prefixes": true,
+    "strict_c11": true,
+    "address_and_undefined_sanitizers": true,
+    "actual_arm_packet_cases": 3264,
+    "actual_arm_status_cases": 408,
+    "actual_arm_instructions": 952552,
+    "negative_rejection_probes": 6,
+    "strict_memory_and_read_queues": true,
+    "rejected_source_mutants": 8
+  },
+  "limits": [
+    "Original portable software models and synthetic tests only",
+    "No cache or unmap calls exist in these selected current leaves",
+    "Older public source version 17.10.86.5 is corroboration only",
+    "Strict ring/sample/capacity and explicit ownership policies narrow unchecked stock behavior",
+    "Snapshots require coherent immutable runtime metadata",
+    "No hardware, router, MMIO backend, RF, Linux delivery or DMA ownership validation"
+  ],
+  "private_analysis_session": {
+    "exported": true,
+    "closed": true
+  },
+  "publication": "Original C, tests, prose and selected provenance metadata; no raw executable, raw assembly or local paths"
+}
