@@ -1,0 +1,163 @@
+{
+  "absent_selected_members": [
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/net/wl/impl59/main/src/wl/sys/wl_linux.c",
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/net/wl/impl59/main/src/wl/sys/wl_linux.h",
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/net/wl/impl59/main/src/wl/sys/wlc.c",
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/net/wl/impl59/main/src/wl/sys/wlc_bmac.c"
+  ],
+  "archive": {
+    "filename": "ax10v2_GPL_20240317.tar.gz",
+    "members": 121525,
+    "sha256": "9670b07a1449dc7e338db9becbb019d154f0486569c1621a40f759843f655a87",
+    "size": 644861617,
+    "sum_regular_member_bytes": 1830215245,
+    "url": "https://static.tp-link.com/upload/gpl-code/2025/202503/20250317/ax10v2_GPL_20240317.tar.gz"
+  },
+  "selected_members": {
+    "ax10v2_GPL/Iplatform/build/Makefile": {
+      "sha256": "9bf312140d3c0480c19091991b691ad0a81cc1e601ecf991435530b4dcd6fe8f",
+      "size": 1432,
+      "type": "0"
+    },
+    "ax10v2_GPL/Iplatform/build/product_configs/ax10v2/basic.config": {
+      "sha256": "466353401dbfae7c3268e3564e61841cd43019c278e7c5398d5302d4c8b62984",
+      "size": 1402,
+      "type": "0"
+    },
+    "ax10v2_GPL/Iplatform/build/product_configs/ax10v2/kernel.config": {
+      "sha256": "d40c8a31430795e8189df7f6c48acbc2629eb6fde0cbac967db9f78cc2e6d3a3",
+      "size": 63617,
+      "type": "0"
+    },
+    "ax10v2_GPL/Iplatform/openwrt/include/version.mk": {
+      "sha256": "1b5a13b49cce2323a2c1e8f913b9194f0ec38a000570c0d2640e8af198af5e5e",
+      "size": 1479,
+      "type": "0"
+    },
+    "ax10v2_GPL/Readme.txt": {
+      "sha256": "fd2134a78823c3e2a92811fd09d9cce4ffce925ebd819839d1da93c035772331",
+      "size": 421,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/char/archer/impl1/archerTP6750.o_save": {
+      "sha256": "712898a064490f6e519d35fc9b1b913e637ac7b1c84e99eeabae9ce7f79e3811",
+      "size": 2910700,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/char/bcmlibs/impl1/bcmlibsTP6750.o_save": {
+      "sha256": "d47693eb9ec20a42d5965e1e132135087de0e56c3a815bdb5479023f4840c148",
+      "size": 13852,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/char/pktflow/impl1/pktflowTP6750.o_save": {
+      "sha256": "1547eae5c1c0c8f86d8e4cca0e58e1a11b1bcc5efd72fef70b9b57a14706ec50",
+      "size": 250644,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/char/wlcsm_ext/impl1/wlcsmTP6750.o_save": {
+      "sha256": "c9c687510414573e3f6b10c069107294fee04492925067606be17cc919d922a9",
+      "size": 11392,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/net/wl/impl59/main/components/router/hnd_wl/wl_generic.mk": {
+      "sha256": "f7afc8e977a52af2234cf3a457e2bdae7fce694a7e5fba02dace6f1154f6117f",
+      "size": 10956,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/net/wl/impl59/main/src/hnd/linux/prebuilt/hnd.o": {
+      "sha256": "3f21394e5e94dae60804dbe548101c058baaa0603c93c32c8f9957d20edbc436",
+      "size": 502600,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/net/wl/impl59/main/src/include/epivers.h": {
+      "sha256": "04b4cf1c7c572e6795617af9134d28bc177a0a19aac9c2c2c659c1fe233f3ad3",
+      "size": 1399,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/net/wl/impl59/main/src/shared/hndpmu.c": {
+      "sha256": "10c88cb830c807113c4aaccea2987193915f6088dba62e8edd5fb93f5a689795",
+      "size": 210123,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/net/wl/impl59/main/src/shared/linux_osl.c": {
+      "sha256": "5921f8e4706cb15ab1800a012e3cb7ae5adfb10f9ab9bb0421068d3504c4f987",
+      "size": 66868,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/net/wl/impl59/main/src/shared/siutils.c": {
+      "sha256": "d96944bc5083c63881b920d6e7b9d13c0de846907690ef24c8b3f11e3de9d9e3",
+      "size": 241049,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/net/wl/impl59/main/src/wl/linux/prebuilt/wl.ko": {
+      "sha256": "191367a22920c0e258e1788d5fe15bf97d6f578bc0fe1cb73bcfaaabe0b8ebd8",
+      "size": 7833296,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/net/wl/impl59/main/src/wl/linux/prebuilt/wl.o": {
+      "sha256": "45e1b4127c2ad9ad1786306a57a3f2566d7310d196d0bb9f8d5032406a298b0e",
+      "size": 7832348,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/broadcom/net/wl/impl59/sys/src/wl/sys/wl_cfg80211.c": {
+      "sha256": "a99a51c4eb3489252fc97e61caa37efc7ce3a69c3b08108ab871373f7ab08455",
+      "size": 671951,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/opensource/bus/pci/host/impl1/arm/pcie-bcm963xx.c": {
+      "sha256": "269e629c7968f3660b8ef4a5cfe2bf966d41f2607d1fcf201f847ff3ad07e263",
+      "size": 101359,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/opensource/bus/pci/host/impl1/arm/pcie-vcore.c": {
+      "sha256": "44834183aef9ce84ebe97cc39d5ab261549be16ffc90d8ce70b8a8d108e20a72",
+      "size": 23936,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/opensource/net/enet/impl7/archer.c": {
+      "sha256": "e8dd4fdb905161ffd45ec40911f6ce6096b50492126b802df19bc421122c9518",
+      "size": 24172,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/opensource/net/enet/impl7/enet.c": {
+      "sha256": "6f2bb178d028863bd52633bc8bc32a2a077fec55b45e830848a9caa706392a36",
+      "size": 81016,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/bcmdrivers/opensource/net/enet/impl7/sf2.c": {
+      "sha256": "fd5b143d295853c8bd81dd17c9257c16aa9605890b5875768a5a3d673028b3aa",
+      "size": 191452,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/kernel/dts/63178/963178.dts": {
+      "sha256": "0aaec1208130539e6580a2ab82bcead61e33f15d801a1ee8e99ae2636578a614",
+      "size": 7470,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/kernel/linux-4.1/Makefile": {
+      "sha256": "202f399f017502c9b9af46152b90189976a2540df51914f10afd0373b3d7e2b0",
+      "size": 69110,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/kernel/linux-4.1/arch/arm/mach-bcm963xx/board_963xx.c": {
+      "sha256": "41eedc465afd755343316538cf9da539952a97af5ca3fcb04f1e39e519dba508",
+      "size": 14454,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/shared/opensource/boardparms/bcm963xx/boardparms_63178.c": {
+      "sha256": "d1f78d0c5e488d52a218375ed3eb0c07c6a5a40b13522f8e6848fb7c67d3a285",
+      "size": 52342,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/bcm963xx_router/version.make": {
+      "sha256": "6e167ae59f625afeb267a07984d83f21f2991a9cd8b66b377153fc0ed79fdb94",
+      "size": 58,
+      "type": "0"
+    },
+    "ax10v2_GPL/bcm675x/toolchain/crosstools-arm-gcc-5.5-linux-4.1-glibc-2.26-binutils-2.28.1.Rel1.10.tar.bz2": {
+      "sha256": "8869879f4aec56ab1e658c8eec74662722c5a62a5f5155248b6ec970e149ebe7",
+      "size": 58597000,
+      "type": "0"
+    }
+  }
+}

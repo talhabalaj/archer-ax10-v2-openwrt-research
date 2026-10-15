@@ -1,0 +1,215 @@
+[
+  {
+    "artifact": "wl.ko",
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c",
+    "bytes": 5803056,
+    "elf": {
+      "class": 32,
+      "byte_order": "little",
+      "machine": "ARM",
+      "type": 1
+    },
+    "module_metadata": {
+      "license": "Proprietary",
+      "depends": "hnd,emf,cfg80211,archer,bcmlibs,pktflow,igs",
+      "vermagic": "4.1.52 SMP preempt mod_unload ARMv7 p2v8 "
+    },
+    "defined_function_count": 6952,
+    "undefined_symbol_count": 438,
+    "scope": "Static symbol/ABI observations only; not runtime behavior or recovered source."
+  },
+  {
+    "artifact": "bcm_pcie_hcd.ko",
+    "sha256": "c41357c6860e41f33473a7b505131f3514f53f31bd647b5486c5bd9ff278d960",
+    "bytes": 54224,
+    "elf": {
+      "class": 32,
+      "byte_order": "little",
+      "machine": "ARM",
+      "type": 1
+    },
+    "module_metadata": {
+      "license": "GPL",
+      "depends": "wlcsm",
+      "vermagic": "4.1.52 SMP preempt mod_unload ARMv7 p2v8 "
+    },
+    "defined_function_count": 23,
+    "undefined_symbol_count": 61,
+    "scope": "Static symbol/ABI observations only; not runtime behavior or recovered source."
+  },
+  {
+    "artifact": "bcm_enet.ko",
+    "sha256": "fe4e2cf9c8d97f82c9626e911a41521a83f1af20737859998f71bd73f43c2db6",
+    "bytes": 175828,
+    "elf": {
+      "class": 32,
+      "byte_order": "little",
+      "machine": "ARM",
+      "type": 1
+    },
+    "module_metadata": {
+      "license": "GPL",
+      "depends": "bcmlibs",
+      "vermagic": "4.1.52 SMP preempt mod_unload ARMv7 p2v8 "
+    },
+    "defined_function_count": 242,
+    "undefined_symbol_count": 153,
+    "scope": "Static symbol/ABI observations only; not runtime behavior or recovered source."
+  },
+  {
+    "artifact": "hnd.ko",
+    "sha256": "d05ff061b3a636630955a13fdd20a953f3dfb07ee92904a987dd4c77b648b45a",
+    "bytes": 366060,
+    "elf": {
+      "class": 32,
+      "byte_order": "little",
+      "machine": "ARM",
+      "type": 1
+    },
+    "module_metadata": {
+      "license": "GPL and additional rights",
+      "depends": "wlcsm",
+      "vermagic": "4.1.52 SMP preempt mod_unload ARMv7 p2v8 "
+    },
+    "defined_function_count": 795,
+    "undefined_symbol_count": 60,
+    "scope": "Static symbol/ABI observations only; not runtime behavior or recovered source."
+  },
+  {
+    "artifact": "bcmlibs.ko",
+    "sha256": "fc359fe3d98fd2df8fcd2f2dc9f03140a62ecf06674bb296c4249d557b278e05",
+    "bytes": 26180,
+    "elf": {
+      "class": 32,
+      "byte_order": "little",
+      "machine": "ARM",
+      "type": 1
+    },
+    "module_metadata": {
+      "license": "Proprietary",
+      "version": "v0.1",
+      "srcversion": "425C386D7934579D8C261DC",
+      "depends": "",
+      "vermagic": "4.1.52 SMP preempt mod_unload ARMv7 p2v8 "
+    },
+    "defined_function_count": 42,
+    "undefined_symbol_count": 13,
+    "scope": "Static symbol/ABI observations only; not runtime behavior or recovered source."
+  },
+  {
+    "artifact": "wlcsm.ko",
+    "sha256": "041680cf0d11005a19c1971dacc388bd625ce1c1cf66f0ccfb614ffc4cce365e",
+    "bytes": 11444,
+    "elf": {
+      "class": 32,
+      "byte_order": "little",
+      "machine": "ARM",
+      "type": 1
+    },
+    "module_metadata": {
+      "license": "Proprietary",
+      "depends": "",
+      "vermagic": "4.1.52 SMP preempt mod_unload ARMv7 p2v8 "
+    },
+    "defined_function_count": 19,
+    "undefined_symbol_count": 28,
+    "scope": "Static symbol/ABI observations only; not runtime behavior or recovered source."
+  },
+  {
+    "artifact": "archer.ko",
+    "sha256": "aa947eb2146565f63434b3cd9c2afd742906d3f667376d2868650f37b37487aa",
+    "bytes": 215844,
+    "elf": {
+      "class": 32,
+      "byte_order": "little",
+      "machine": "ARM",
+      "type": 1
+    },
+    "module_metadata": {
+      "license": "Proprietary",
+      "version": "0.1",
+      "depends": "cmdlist,bcmlibs,bcm_ingqos,pktflow",
+      "vermagic": "4.1.52 SMP preempt mod_unload ARMv7 p2v8 "
+    },
+    "defined_function_count": 215,
+    "undefined_symbol_count": 97,
+    "scope": "Static symbol/ABI observations only; not runtime behavior or recovered source."
+  },
+  {
+    "artifact": "pktflow.ko",
+    "sha256": "ec66619d128dee7f51c6e7396157f8f819b2ac9063319c1f57ceb9d8d9540ee2",
+    "bytes": 259744,
+    "elf": {
+      "class": 32,
+      "byte_order": "little",
+      "machine": "ARM",
+      "type": 1
+    },
+    "module_metadata": {
+      "license": "Proprietary",
+      "version": "v4.0",
+      "depends": "bcmlibs",
+      "vermagic": "4.1.52 SMP preempt mod_unload ARMv7 p2v8 "
+    },
+    "defined_function_count": 262,
+    "undefined_symbol_count": 125,
+    "scope": "Static symbol/ABI observations only; not runtime behavior or recovered source."
+  },
+  {
+    "artifact": "emf.ko",
+    "sha256": "3797036d7ac5636e94f3766a78440731308294037f8c02249172c66437782eb2",
+    "bytes": 29860,
+    "elf": {
+      "class": 32,
+      "byte_order": "little",
+      "machine": "ARM",
+      "type": 1
+    },
+    "module_metadata": {
+      "license": "Proprietary",
+      "depends": "hnd",
+      "vermagic": "4.1.52 SMP preempt mod_unload ARMv7 p2v8 "
+    },
+    "defined_function_count": 41,
+    "undefined_symbol_count": 44,
+    "scope": "Static symbol/ABI observations only; not runtime behavior or recovered source."
+  },
+  {
+    "artifact": "igs.ko",
+    "sha256": "912e2ac4a770e184b8bfecb3fec7d369d02ef084c41f0b079bd25fb68c185cb2",
+    "bytes": 23548,
+    "elf": {
+      "class": 32,
+      "byte_order": "little",
+      "machine": "ARM",
+      "type": 1
+    },
+    "module_metadata": {
+      "license": "Proprietary",
+      "depends": "emf,hnd",
+      "vermagic": "4.1.52 SMP preempt mod_unload ARMv7 p2v8 "
+    },
+    "defined_function_count": 37,
+    "undefined_symbol_count": 47,
+    "scope": "Static symbol/ABI observations only; not runtime behavior or recovered source."
+  },
+  {
+    "artifact": "cfg80211.ko",
+    "sha256": "81e4283955435ce316af20244caa84fcab280c163eac3faa796b47b0456efb2e",
+    "bytes": 229256,
+    "elf": {
+      "class": 32,
+      "byte_order": "little",
+      "machine": "ARM",
+      "type": 1
+    },
+    "module_metadata": {
+      "license": "GPL",
+      "depends": "",
+      "vermagic": "4.1.52 SMP preempt mod_unload ARMv7 p2v8 "
+    },
+    "defined_function_count": 348,
+    "undefined_symbol_count": 116,
+    "scope": "Static symbol/ABI observations only; not runtime behavior or recovered source."
+  }
+]
