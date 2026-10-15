@@ -3,23 +3,12 @@
 #define AXD_PSM_START_H
 #include <stddef.h>
 #include <stdint.h>
+#include "d11_io.h"
 
 /* Core-130 wowlucode_start helper boundary, not complete device bring-up.
  * Caller must establish exclusive ownership, clocks/reset, uploaded microcode,
  * and any required PHY/SMC/VASIP prerequisites. No backend is supplied.
  */
-enum axd_start_kind {
-    AXD_START_STORE_BARRIER = 1,
-    AXD_START_FULL_BARRIER,
-    AXD_START_WRITE32,
-    AXD_START_READ32,
-    AXD_START_READ16,
-    AXD_START_DELAY_US
-};
-struct axd_start_operation {
-    enum axd_start_kind kind;
-    uint32_t offset, value; /* D11-relative byte offset; delay uses value only. */
-};
 struct axd_start_context {
     uint16_t core, minor;
     uint32_t main_control, extended_control, mirror_control;
@@ -47,15 +36,9 @@ struct axd_psm_start {
     struct axd_start_context context;
     uint32_t last_read, repetitions;
     unsigned stage, queued, cursor, bank;
-    struct axd_start_operation operations[6];
+    struct axd_d11_operation operations[6];
     uint64_t attempted_ops, completed_ops;
 };
-/* For reads, set *read_value only on success. Other events ignore that value.
- * Each event is synchronous; delay callbacks must implement the requested delay.
- */
-typedef int (*axd_start_io_fn)(void *context,
-                             const struct axd_start_operation *operation,
-                             uint32_t *read_value);
 int axd_psm_start_begin(struct axd_psm_start *job,
                         const struct axd_start_context *context);
 /* At most one callback per step; no callback for a pure state transition.
@@ -69,6 +52,6 @@ int axd_psm_start_begin(struct axd_psm_start *job,
  * Successful callback cancellation survives; simultaneous callback error wins.
  */
 enum axd_start_phase axd_psm_start_step(struct axd_psm_start *job,
-                                        axd_start_io_fn io, void *context);
+                                        axd_d11_io_fn io, void *context);
 enum axd_start_phase axd_psm_start_cancel(struct axd_psm_start *job);
 #endif

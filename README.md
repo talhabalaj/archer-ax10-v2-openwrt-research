@@ -40,6 +40,10 @@ prove that an unpublished or later port cannot exist.
 - [Initial REA native-driver findings](docs/REA_INITIAL_FINDINGS.md)
 - [First offline driver components and validation](driver/README.md)
 - [Core 130 attach, table and microcode-selection analysis](docs/DRIVER_ATTACH_AUDIT.md)
+- [Wake/suspend/enable model and policies](docs/PSM_CONTROL_MODEL.md)
+- [Current DMA reset model and limits](docs/DMA_RESET_MODEL.md)
+- [Clock, PLL, PHY/TSSI, wake policy and DMA reset evidence](docs/DRIVER_RESOURCE_AUDIT.md)
+- [Published common DMA64 contracts](docs/DMA64_SOURCE_AUDIT.md)
 - [Offline reset/start model boundaries](docs/LIFECYCLE_MODEL.md)
 - [Reset, startup, suspend and wake evidence](docs/DRIVER_LIFECYCLE_AUDIT.md)
 - [Effective initialization semantics and tests](docs/EFFECTIVE_INIT_AUDIT.md)
@@ -61,7 +65,8 @@ prove that an unpublished or later port cannot exist.
 Driver-first offline development is the current priority. Selection, raw-table
 replay, effective initialization, upload simulation and reset/start subsets are
 implemented; the next task is composing the remaining lifecycle/resource
-contracts and implementing suspend/enable/wake. PHY, DMA, RX/TX and Linux WLAN
+contracts, including clock/PLL/PHY operations and wake policy. Wake/suspend/enable
+and DMA-reset subsets now have tests, with unfinished dependencies explicit. PHY, DMA, RX/TX and Linux WLAN
 integration follow their recovered dependencies.
 
 The separate board workstream establishes console/recovery, minimal OpenWrt RAM

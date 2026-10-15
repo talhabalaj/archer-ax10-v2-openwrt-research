@@ -1,15 +1,16 @@
 # Current progress and continuation checkpoint
 
-Updated 2026-10-15. This checkpoint includes the effective-init, AI-wrapper
-reset and PSM startup implementation. Previous driver baseline:
-[`00e6fdb`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/00e6fdbec3f96bd51768bc2907edfb258b51bd4f).
+Updated 2026-10-15. This checkpoint adds PSM wake/suspend/enable and current
+TX/RX DMA-reset subsets, plus clock/PLL/PHY/TSSI/wake-policy evidence. Previous
+implementation checkpoint:
+[`2a80787`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/2a807872a27d2085cb5c8640fd9e7bebf0a5f783).
 Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
 
 ## Resume here
 
-**Next milestone: finish D1's higher lifecycle/resource contracts and implement
-suspend/enable/wake around the tested reset/start subsets.** Reuse the completed
-lifecycle evidence; do not restart the same decompilation queries.
+**Next: implement the recovered clock/PLL and PHY-register/TSSI reset operations,
+resolve required optional/imported branches and compose the higher lifecycle with
+actual runtime resources.** Reuse the resource ledger; do not repeat queries.
 
 Current priority is driver work first. Offline analysis/simulation remains
 unblocked by pending UART/recovery work. No device upload, radio initialization
@@ -22,10 +23,10 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | --- | --- | --- |
 | Target and reference inventory | Established for inspected inputs | [Hardware](findings/HARDWARE_INVENTORY.json), [binary](docs/DRIVER_BINARY_AUDIT.md), [GPL](docs/GPL_AUDIT.md). Reverify drift-prone device state before device work. |
 | D0 offline foundation | Implemented and host-tested within stated limits | Four C components, pinned object inspector, synthetic/fault tests and private-input comparisons. |
-| D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper reset and main/extended startup subsets implemented; higher clock/PHY/DMA reset, resource context and suspend/enable/wake remain. |
+| D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper/startup, PSM control and current DMA-reset subsets implemented; clock/PLL/PHY reset and wake-policy evidence retained. Higher composition, optional branches and runtime resources remain. |
 | D2 complete register/SHM/context contracts | Partial implementation, host-tested | Effective-init semantics and startup SHM16 FIFO read implemented; addend acquisition, physical init-object writes, complete register map and SHM ABI remain. |
 | D3 PHY 51/radio/channel/calibration | Attach dispatch mapped; initialization pending | Radio-specific callbacks and required private board inputs remain to be recovered. |
-| D4 DMA/interrupt/RX | Not implemented | Requires descriptor/status/resource contracts and later exact-board validation. |
+| D4 DMA/interrupt/RX | Reset helpers only; data path not implemented | Current reset paths tested offline; common older source mapped. Current queue/resources, descriptors, IRQ and RX remain to establish. |
 | D5 TX/Linux WLAN integration | Not implemented | Integration architecture and baseline feature implementation remain open. |
 | D6 HE/features/stability | Not implemented | Requires validated baseline driver and hardware tests. |
 | B0 flash/boot investigation | Partial | 21 vendor-declared regions and NOR rootfs corroboration; physical geometry/authentication/calibration coverage unresolved. |
@@ -45,11 +46,13 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | `driver/effective_init.c` | Runtime `0x130` adjustment, width truncation and bounded semantic object-copy events. | Explicit synthetic/caller context; no object-helper port lowering. |
 | `driver/ai_reset.c` | AI primary/optional-secondary wrapper trace, bounded busy/release loops and readback-dependent control. | No SI mapping or higher reset; trace completion can include stuck reset. |
 | `driver/psm_start.c` | Cached main/extended controls, exact ACK loops/final reads, physical SHM16 FIFO verification. | Startup-suspended predicate only; explicit fail-stop policy, no hardware backend. |
+| `driver/psm_control.c` | Wake, main/extended suspend and enable, depth/cache state and bounded SHM polling. | Main enable can end with unimplemented wake-control/MBSS dependency; stricter failure policy, no real callouts. |
+| `driver/dma_reset.c` | Current TX/RX reset, direct/indirect selector, status masks, bounds and cache semantics. | No queue mapping, buffers, reclaim or IRQ; returned success need not be an observed disabled state. |
 | `driver/status_poll.c` | Caller-defined status predicate and monotonic timestamps; bounded steps, timeout and cancellation. | Synthetic configurable infrastructure; no recovered device-ready register/mask. |
 | `scripts/radio_firmware_inventory.py` | Exact hash, ELF object bounds/relocation checks, size companions and metadata inventory. | Payloads remain private; different/older modules rejected. |
 | `scripts/test_driver.sh` | Public ASan/UBSan suite; optional private stock comparison. | Host validation only. |
 
-Recorded passes at the implementation baseline:
+Earlier baseline validation (retained and still checked where relevant):
 
 - 1,404 raw initialization records from four private stock tables replay exactly.
 - Eight selector cases match array names/sizes; five unsupported identities fail.
@@ -70,93 +73,104 @@ checks when code or inputs change; do not imply a new hardware test occurred.
 
 ## Latest implementation and retained evidence
 
-- [Effective-init implementation/evidence](docs/EFFECTIVE_INIT_AUDIT.md) and
-  [published source corroboration](docs/D2_CONTEXT_SOURCE_NOTES.md).
-- [Lifecycle ledger](docs/DRIVER_LIFECYCLE_AUDIT.md),
-  [selected Evidence IDs](findings/DRIVER_LIFECYCLE_EVIDENCE.json), and
-  [implemented boundaries/policies](docs/LIFECYCLE_MODEL.md).
-- `tests/test_effective_init.c`, `tests/test_psm_start.c` and
-  `tests/test_ai_reset.c` supply independent literal/synthetic expected traces.
-- `scripts/test_driver.sh` runs all six synthetic test programs and optional
-  pinned private-input comparisons. All seven portable C components compile
-  for freestanding ARMv7 with strict warnings.
+- [Resource ledger](docs/DRIVER_RESOURCE_AUDIT.md) and
+  [40 selected Evidence IDs](findings/DRIVER_RESOURCE_EVIDENCE.json) establish
+  actual clock/PLL/PHY-reset/TSSI, wake-policy and DMA-reset contracts.
+- [PSM-control implementation/policies](docs/PSM_CONTROL_MODEL.md),
+  [DMA-reset implementation/policies](docs/DMA_RESET_MODEL.md),
+  [prior lifecycle ledger](docs/DRIVER_LIFECYCLE_AUDIT.md) and
+  [earlier reset/start boundaries](docs/LIFECYCLE_MODEL.md).
+- [Published DMA64 source map](docs/DMA64_SOURCE_AUDIT.md) pins seven source
+  members/hashes. It is older-version corroboration, not current queue support.
+- [Effective-init semantics](docs/EFFECTIVE_INIT_AUDIT.md),
+  [context/source notes](docs/D2_CONTEXT_SOURCE_NOTES.md) and earlier table/upload
+  comparisons remain available; do not discard the independent raw recorder.
 
-Latest recorded validation (host/build only):
+Latest validation (host/build only):
 
-- Effective-init: 4,212 private-table record comparisons under three explicit
-  synthetic addends; every callback in a 13-event mixed trace tested for
-  failure/cancellation/simultaneous error. Raw/selection/upload checks still pass.
-- PSM startup: literal main/extended and cached/mirrored traces, preservation of
-  outside-mask mirror bits, delayed/last-loop/final-only ACK and lost ACK,
-  separate 100,000-delay budgets, FIFO predicates and every-event error/cancel.
-- AI reset: independent wrapper traces, non-echo control readbacks, optional
-  secondary-first ordering, 30-delay busy boundaries, nine release writes and
-  stuck-reset diagnostics; every-event error/cancel and terminal silence.
-- Synthetic tests pass under ASan/UBSan. No MMIO, firmware execution, calibration
-  access, radio operation, Linux module linking or router test occurred.
+- All eight synthetic test programs pass under ASan/UBSan; all nine portable C
+  components compile for freestanding ARMv7 with strict warnings.
+- PSM-control literal traces cover all five commands, forced-wake/mirror and
+  cached/no-band paths, 40-us wake plus rounded u16 budget through 65,535,
+  suspend's 8,300-delay limit/final confirmation, main enable's 1,001 reads/
+  1,000 delays, separate nesting and all-ones checks. Every callback in selected
+  normal/delayed traces covers errors/cancellation/coincident errors.
+- DMA-reset traces cover zero-count/early-disabled returns, forced selector and
+  low-byte cache, direct/indirect paths, separate 1,000-delay waits, suspend
+  exhaustion followed by disable, TX-only 300-us timeout delay, return value
+  versus actual observed disabled state, and every-event errors/cancellation.
+- A real chaining bug was fixed: begin from `&job.context` previously cleared
+  its own input before copying. Control, startup and AI-reset now snapshot first;
+  chain/restart regressions pass and private removal mutants fail at those cases.
+- The optional private-input suite still matches 1,404 raw records, 4,212
+  effective-record cases under three synthetic addends, eight selector cases/
+  five unsupported identities and 104,440 upload words across four stock pairs.
+- No MMIO, firmware execution, calibration access, RF operation, Linux module
+  linking or router test occurred. Private bytes remain outside this checkout.
 
-The lifecycle's WL/HND/FIFO-wrapper analysis sessions were exported and closed;
-exact inputs remained unchanged. Raw records are retained outside this checkout
-under sibling private-workspace directories `driver-private/rea-lifecycle`,
-`driver-private/rea-hnd-reset` and `driver-private/rea-fifo-shm`. Retain those
-private bundles for follow-up; publish only reviewed summaries. The current
-`hnd.ko` is 366,060 bytes, SHA-256
+The new exact-WL resource session was exported and closed with unchanged input
+SHA-256. Retained raw records live privately under `driver-private/rea-resources`;
+older private directories are `rea-lifecycle`, `rea-hnd-reset` and `rea-fifo-shm`.
+The public reports/JSON contain original descriptions and selected metadata, not
+raw decompilation or payloads. Current `hnd.ko`: 366,060 bytes, SHA-256
 `d05ff061b3a636630955a13fdd20a953f3dfb07ee92904a987dd4c77b648b45a`.
-The earlier kernel-boundary proposal is retained privately under
-`board-audit/KERNEL_BOUNDARY_AND_INIT_TEST_NOTES.md`; it is a design input,
-not implemented kernel support.
+The private kernel-boundary proposal remains under
+`board-audit/KERNEL_BOUNDARY_AND_INIT_TEST_NOTES.md`, as design input only.
 
 Critical distinctions to preserve:
 
-- Startup waits for **suspended acknowledgement**, then verifies FIFO layout.
-  It does not prove radio readiness. A separate final read is mandatory even
-  after immediate ACK; exact stock loops are not generic deadline polling.
-- The stock extended-timeout path continues after a diagnostic; the new startup
-  model deliberately fail-stops. The outer stock BMAC init ignores the helper
-  return. Do not claim identical stock failure traces or invent fatal cleanup.
-- AI reset continues through busy exhaustion/stuck reset; inspect its diagnostics.
-  `TRACE_COMPLETE` does not attest successful reset or clock/PHY readiness.
-- FIFO SHM16's wrapper is now resolved to selector `0x10000`; its high-halfword
-  access is implemented. The complete SHM ABI and init-object write helper are
-  still unresolved.
-- The runtime addend comes from **host `hw + 0x260`** and targets hardware
-  register `0x130`; there is no established host field at `+0x130`. The object
-  address remains u32; only the copied value is narrowed to 16 bits.
+- Main enable ends `DEPENDENCY` if wake policy or MBSS work is needed. Required
+  callouts are recorded, never silently executed as successful stubs. Failed
+  wake/enable/suspend traces stop before some stock diagnostics/cleanup; exact
+  policy differences are documented. Depth wrapping is rejected.
+- Wake, suspend, enable, clock and DMA loops have different read/count/final-read
+  contracts. A generic elapsed-time poller does not reproduce them automatically.
+- Clock/PLL stock routines are void and can finish after timeout; PLL may skip
+  ready polling when request bits are already set. Software state or helper
+  return is not physical readiness. The eventual coordinator needs postconditions.
+- PHY reset invokes TSSI save/restore through suspend/enable/PHY-register nesting.
+  MAC run-bit guards can make those calls no-ops during initial reset; do not
+  invent an unconditional cycle requiring already-running microcode.
+- AI reset can finish stuck. DMA empty/indirect-no-poll success need not observe
+  disabled state. No trace state proves valid RF calibration, RX/TX or safe reclaim.
+- RSDB, capability words, core maps, PHY core count, callback presence and queue
+  flags/resources are runtime inputs. Do not infer false/zero from the chip name.
+- Runtime `hw + 0x260` adjusts hardware register `0x130`; these are separate
+  address spaces. Init-object byte addresses remain u32; low16 narrowing is value.
 
 ## Exact next work package
 
-1. Read Git status, this checkpoint, the lifecycle ledger and implementation
-   boundaries. Preserve unrelated changes; fetch/check remote main before
-   publication. Reuse exported evidence instead of reinstalling/repeating queries.
-2. Recover the current higher `wlc_bmac_corereset` dependencies using retained
-   evidence: runtime interconnect/wrapper mapping, core unit, mode-dependent
-   normal/reset bits, clock/PLL, DMA/PHY and auxiliary-core operations. Expand
-   only missing actual callees. VASIP/SMC prerequisites must be resolved too.
-3. Design explicit resource/context contracts and a lifecycle coordinator that
-   composes the proven wrapper reset, initialization/upload and startup stages.
-   Do not introduce successful stubs or infer clock/reset state from transfer
-   completion. Bind runtime inputs to observations before hardware use.
-4. Implement the already-recovered suspend/enable/wake paths with separate
-   main/extended nesting depths, wake override state, SHM debug-state access,
-   exact iteration/final-read behavior and explicit fatal/down callout policy.
-   Reject unsupported or invalid nesting/state rather than inventing recovery.
-5. Extend D2 object/SHM contracts where those paths require them. Resolve
-   `hw + 0x260` stores/acquisition and physical init-object writes. Keep unknown
-   board/runtime values explicit; preserve the independent raw-table recorder.
-6. Add independent trace/error/cancel and boundary tests for each new behavior.
-   Run relevant ASan/UBSan/private comparisons and strict ARMv7 compilation.
-   Host validation cannot satisfy Linux integration or exact-board gates.
-7. Export/close owned analysis sessions, verify input identity, update this file
-   and roadmap, review/scan an exact publication allowlist, commit/push and
-   verify remote commit/tree. Keep private bytes and local host paths out.
-8. Continue D3 PHY51/radio/channel/calibration, then DMA/interrupt/RX, TX/Linux
-   integration and full features. In the board workstream establish recovery,
-   RAM boot and resources before exact-board hardware validation and firmware.
+1. Read this checkpoint, [resource ledger](docs/DRIVER_RESOURCE_AUDIT.md), relevant
+   implementation notes and Git status. Preserve unrelated work; check remote
+   main before publication. Reuse closed-session Evidence instead of repeating
+   installation/analysis.
+2. Implement clock request and PLL jobs from the retained exact operations.
+   Preserve RMW ordering (`ST,read,SY,write`), condition-dependent 64-us delays,
+   distinct status samples, counter limits and PLL's already-requested shortcut.
+   Expose unverified/timeout postconditions; do not map void return to readiness.
+3. Expand actual missing dependency callees only: imported `si_clkctl_cc` fallback
+   in HND, RSDB secondary mapping/interrupt contract and optional PHY-clock
+   workaround. Make runtime capability/core-count/ownership state explicit.
+4. Implement PHY-register read/modify and core-130 analog/PHY-reset operations,
+   TSSI low10 snapshot/restore for proven core counts, and core-flags updates.
+   Resolve PHY-register enter/exit wake overrides, optional beamforming and
+   relevant table-read branches before claiming the entire PHY-reset path.
+5. Compose the higher reset coordinator around proven clock/AI/DMA/PHY jobs,
+   correct caller mode/reset bits and actual queue/resources. Resolve optional
+   VASIP/SMC and full wake policy/MBSS dependencies; do not introduce success stubs.
+6. Complete D2 physical init-object writes, addend acquisition and full needed
+   SHM ABI; then continue D3 radio/channel/calibration, D4 descriptors/IRQ/RX,
+   TX/Linux integration and full features. The separate recovery/RAM-boot/board
+   workstream is required before exact-board execution and persistent firmware.
+7. Add independent traces/boundaries/failure/cancel regressions, run affected
+   ASan/UBSan/private comparisons and strict ARMv7 builds. Export/close sessions,
+   verify exact input identity and update this checkpoint/roadmap with limitations.
+8. Review/scan an exact public allowlist, commit/push and verify remote commit/
+   tree. Keep private payloads, calibration, credentials and local host paths out.
 
-**D1 remains partial.** Its higher reset/resource/optional dependencies and
-suspend/enable/wake implementation are still missing. Simulator completion does
-not mean hardware startup. Follow recovered dependencies into D2/D3 rather than
-bypassing them; keep the complete-driver objective unchanged.
+**D1 remains partial.** Higher clock/PLL/PHY composition, optional dependencies,
+wake policy and actual resource ownership remain unfinished. Maintain the full
+working-driver and modern-OpenWrt objective; host tests do not meet hardware gates.
 
 ## Input and tool identities
 
@@ -225,7 +239,8 @@ assembly, typed references and descriptor reads as required by the evidence.
 | `aecc211` | Boot chain, official image layout and RAM-boot constraints. |
 | `71610f8` | Original selector, initialization decoder/replayer and object inventory. |
 | `00e6fdb` | Exact upload trace simulator, generic status polling, fault/cancellation regressions and test runner. |
-| This checkpoint | Effective initialization, current-HND AI-wrapper reset, PSM startup/FIFO trace, independent tests and lifecycle evidence. |
+| `2a80787` | Effective initialization, current-HND AI-wrapper reset, PSM startup/FIFO trace and independent tests/evidence. |
+| This checkpoint | PSM control, current DMA reset, context-alias fix and clock/PLL/PHY/TSSI/wake-policy evidence. |
 
 At each future checkpoint, add a concise milestone entry and replace the active
 next-work package with the actual next task. Keep unresolved defects visible.

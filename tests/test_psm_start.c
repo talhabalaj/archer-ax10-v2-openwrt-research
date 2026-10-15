@@ -11,15 +11,15 @@
  * selector0x10000 to the evidenced six-event object-memory read helper.
  */
 struct event {
-    enum axd_start_kind kind;
+    enum axd_d11_kind kind;
     uint32_t offset, value, response;
 };
-#define SB {AXD_START_STORE_BARRIER, 0, 0, 0}
-#define FB {AXD_START_FULL_BARRIER, 0, 0, 0}
-#define W(o,v) {AXD_START_WRITE32, (o), (v), 0}
-#define R(o,v) {AXD_START_READ32, (o), 0, (v)}
-#define H(o,v) {AXD_START_READ16, (o), 0, (v)}
-#define D {AXD_START_DELAY_US, 0, 10, 0}
+#define SB {AXD_D11_STORE_BARRIER, 0, 0, 0}
+#define FB {AXD_D11_FULL_BARRIER, 0, 0, 0}
+#define W(o,v) {AXD_D11_WRITE32, (o), (v), 0}
+#define R(o,v) {AXD_D11_READ32, (o), 0, (v)}
+#define H(o,v) {AXD_D11_READ16, (o), 0, (v)}
+#define D {AXD_D11_DELAY_US, 0, 10, 0}
 static const struct event main_prefix[] = {
     SB, W(0x128, 0xffffffffu), SB, W(0x120, 0x04020406), SB, W(0x120, 0x04020402)
 };
@@ -60,7 +60,7 @@ static struct trace trace_for(const struct event *events, size_t count)
     t.fail_at = t.cancel_at = (size_t)-1;
     return t;
 }
-static int io(void *context, const struct axd_start_operation *op, uint32_t *value)
+static int io(void *context, const struct axd_d11_operation *op, uint32_t *value)
 {
     struct trace *t = context;
     size_t current = t->cursor++;
@@ -68,11 +68,11 @@ static int io(void *context, const struct axd_start_operation *op, uint32_t *val
     assert(current < t->count);
     e = &t->events[current];
     assert(op->kind == e->kind && op->offset == e->offset && op->value == e->value);
-    if (op->kind == AXD_START_WRITE32 && op->offset == 0x1c0)
+    if (op->kind == AXD_D11_WRITE32 && op->offset == 0x1c0)
         t->bank = 1;
-    if (op->kind == AXD_START_DELAY_US)
+    if (op->kind == AXD_D11_DELAY_US)
         t->delays[t->bank]++;
-    if (op->kind == AXD_START_READ32 && (op->offset == 0x128 || op->offset == 0x1c0))
+    if (op->kind == AXD_D11_READ32 && (op->offset == 0x128 || op->offset == 0x1c0))
         t->reads[t->bank]++;
     if (t->cancel_job != NULL && current == t->cancel_at)
         assert(axd_psm_start_cancel(t->cancel_job) == AXD_START_CANCELLED);
@@ -278,6 +278,36 @@ static void caches_and_flags(void)
     success(&c, mirrored, sizeof(mirrored) / sizeof(mirrored[0]), 0x04020c02);
 }
 
+static void restart_context_alias(void)
+{
+    /* The completed extended-control cache suppresses its second write. */
+    static const struct event restarted[] = {
+        SB, W(0x128, 0xffffffffu),
+        SB, W(0x120, 0x04020406), SB, W(0x120, 0x04020402),
+        R(0x128, 1), FB, R(0x128, 1), FB,
+        SB, W(0x1c0, 0xffffffffu),
+        R(0x1c0, 1), FB, R(0x1c0, 1), FB,
+        SB, W(0x160, 0x10108), R(0x160, 0xdeadbeef), FB, H(0x166, 0x4000), FB
+    };
+    struct axd_start_context c = context_for(1);
+    struct axd_psm_start job;
+    struct trace t = trace_for(immediate, sizeof(immediate) / sizeof(immediate[0]));
+    assert(axd_psm_start_begin(&job, &c) == 0);
+    run(&job, &t);
+    assert(job.phase == AXD_START_SUSPENDED && t.cursor == t.count);
+    assert(job.context.main_control == 0x04020402 && job.context.extended_control == 0x402);
+    assert(axd_psm_start_begin(&job, &job.context) == 0);
+    assert(job.context.core == 130 && job.context.minor == 1 && job.context.psmx_enabled == 1);
+    assert(job.context.main_control == 0x04020402 && job.context.extended_control == 0x402);
+    assert(job.attempted_ops == 0 && job.completed_ops == 0);
+    t = trace_for(restarted, sizeof(restarted) / sizeof(restarted[0]));
+    run(&job, &t);
+    assert(job.phase == AXD_START_SUSPENDED && job.error == AXD_START_NO_ERROR);
+    assert(t.cursor == t.count && t.count == 22);
+    assert(job.attempted_ops == t.count && job.completed_ops == t.count);
+    terminal(&job, &t, AXD_START_SUSPENDED);
+}
+
 static void validation_and_fifo(void)
 {
     struct axd_start_context c = context_for(1);
@@ -341,6 +371,7 @@ int main(void)
     struct axd_start_context c = context_for(1);
     success(&c, immediate, sizeof(immediate) / sizeof(immediate[0]), 0);
     caches_and_flags();
+    restart_context_alias();
     fault_matrix(&c, immediate, sizeof(immediate) / sizeof(immediate[0]));
     success(&c, one_delay_each, sizeof(one_delay_each) / sizeof(one_delay_each[0]), 0);
     fault_matrix(&c, one_delay_each, sizeof(one_delay_each) / sizeof(one_delay_each[0]));

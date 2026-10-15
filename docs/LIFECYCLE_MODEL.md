@@ -88,7 +88,9 @@ writing all ones does not implement W1C status behavior in an arbitrary backend.
 These components are not an end-to-end bring-up coordinator. The higher WL
 reset includes DMA, PHY, PLL, clock and auxiliary-core operations, and supplies
 mode-dependent bits to HND. Actual SI mapping/resource state, those prerequisites,
-suspend/enable/wake models, and cleanup/recovery remain outstanding. Required
+complete wake-policy/MBSS/fatal handling and cleanup/recovery remain outstanding.
+The [wake/suspend/enable model](PSM_CONTROL_MODEL.md) and
+[DMA-reset model](DMA_RESET_MODEL.md) implement additional bounded subsets. Required
 VASIP/SMC paths must be resolved rather than assumed absent. A subsequent model
 must compose proven stages with explicit prerequisites before any hardware use.
 

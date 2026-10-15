@@ -170,6 +170,29 @@ static void success(const struct event *events, size_t count, unsigned secondary
     assert(r.delay_us == delays && r.fake_elapsed_us == count * UINT64_C(1000000));
     terminal(&job, &r, AXD_RESET_TRACE_COMPLETE);
 }
+static void restart_context_alias(void)
+{
+    struct axd_ai_reset job;
+    struct axd_reset_context c = context(0, 4);
+    struct recorder r = recorder(&job, literal, N(literal));
+    assert(axd_ai_reset_begin(&job, &c) == 0);
+    run(&job, &r);
+    assert(job.phase == AXD_RESET_TRACE_COMPLETE && r.calls == N(literal));
+    assert(job.completed_wrappers == 1 && job.release_writes == 1);
+    assert(axd_ai_reset_begin(&job, &job.context) == 0);
+    assert(job.context.core_id == 0x812 && job.context.revision == 130);
+    assert(job.context.interconnect == 4 && job.context.secondary_present == 0);
+    assert(job.context.bits == 0x100 && job.context.reset_bits == 0x20);
+    assert(job.attempted_ops == 0 && job.completed_ops == 0 && job.completed_wrappers == 0);
+    r = recorder(&job, literal, N(literal));
+    run(&job, &r);
+    assert(job.phase == AXD_RESET_TRACE_COMPLETE && job.error == AXD_RESET_NO_ERROR);
+    assert(r.calls == N(literal) && job.attempted_ops == N(literal) && job.completed_ops == N(literal));
+    assert(job.completed_wrappers == 1 && job.release_writes == 1);
+    assert(job.busy_exhaustions == 0 && job.reset_nonzero_mask == 0 && r.delay_us == 13);
+    terminal(&job, &r, AXD_RESET_TRACE_COMPLETE);
+}
+
 static void sweep(const struct event *events, size_t count, unsigned secondary)
 {
     size_t i;
@@ -257,6 +280,7 @@ int main(void)
     size_t i;
     assert(N(literal) == 34);
     arguments();
+    restart_context_alias();
     for (i = 0; i < N(supported); i++)
         success(literal, N(literal), 0, supported[i], 0, 0, 13);
     for (i = 0; i < N(literal); i++) { dual.events[dual.count] = literal[i]; dual.events[dual.count++].wrapper = 1; }

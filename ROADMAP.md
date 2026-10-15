@@ -59,11 +59,12 @@ mutating bring-up must follow the dependencies actually recovered from stock.
 
 1. **Use the saved implementation:** effective initialization, wrapper reset and
    startup subsets have tests/evidence; preserve their exact operation contracts.
-2. **Complete the higher lifecycle/resource contracts:** resolve runtime mapping,
-   clocks/PLL, DMA/PHY reset and optional VASIP/SMC prerequisites, then compose
-   the tested stages with explicit state.
-3. **Implement suspend/enable/wake:** use the recovered main/extended nesting,
-   SHM state, final-read and failure behavior; add independent host regressions.
+2. **Implement the recovered clock/PLL/PHY reset contracts:** resolve runtime
+   mapping and remaining optional/imported prerequisites, then compose with
+   tested AI-wrapper/DMA reset and PSM stages using explicit state.
+3. **Finish wake policy and callouts:** wake/suspend/enable register paths now
+   have tests; actual BSS/scan/association policy, MBSS and fatal recovery remain
+   separate dependencies rather than successful placeholders.
 4. **Finish register/SHM and PHY 51 support:** resolve required radio/board inputs,
    clocks, calibration and channel initialization with no invented defaults.
 5. **Build the data path:** DMA rings and interrupts, receive parsing, transmit,
@@ -105,7 +106,9 @@ is provided. See [driver/README.md](driver/README.md) for exact restrictions.
 1. Reuse existing `wlc_bmac_init`, attach and upload evidence. Inspect the
    recovered enable/suspend/wake and current HND reset routines tracked in
    [PROGRESS.md](PROGRESS.md). Their bounded report and wrapper/startup models
-   are retained. Higher resource/clock/PHY/DMA dependencies remain unresolved.
+   are retained along with PSM-control and current DMA-reset models. The
+   [resource ledger](docs/DRIVER_RESOURCE_AUDIT.md) recovers clock/PLL/PHY/TSSI
+   operations; implementation/composition and actual runtime resources remain.
 2. Follow callers and reset/control helpers only as necessary to establish the
    core-130 main and extended PSM sequences. Resolve register descriptors rather
    than assuming older b43/brcmsmac offsets or masks.
@@ -150,7 +153,8 @@ invalid inputs; no old firmware/SHM ABI is silently substituted.
 
 - Establish the radio ID/subrevision path and required clocks, voltage, chain
   and board-data inputs. Chip ID or the `AC` family label alone is insufficient.
-- Recover `phy_ac_tbl_init`, radio switching, channel setup and necessary
+- Reuse recovered PHY51 reset/TSSI/analog callback evidence, then recover
+  `phy_ac_tbl_init`, radio switching, channel setup and necessary
   calibration callbacks for the observed PHY/radio revision.
 - Document required calibration fields and precedence using private inputs;
   validate presence/format without publishing values or inventing defaults.

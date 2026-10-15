@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "scope": "core130_clock_pll_phy_reset_wake_policy_dma_reset",
+  "analysis_mode": "offline_static",
+  "artifact": {
+    "name": "wl.ko",
+    "size": 5803056,
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4"
+  },
+  "session": {
+    "exported": true,
+    "closed": true,
+    "source_digest_rechecked": true
+  },
+  "records": [
+    {
+      "record": "assembly-ac-analog-reset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_d85721d02a36b7a8116678bafe959755231959b8cb7651463f13807a7c7377b8"
+    },
+    {
+      "record": "assembly-ac-idle-tssi-force",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_1d4fc437c331fd1eb9da1b87ed8f6a02e57a135d6551ba7b5d6b81f9dbd71626"
+    },
+    {
+      "record": "assembly-clock-control",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_fcc33e70b1e7b43825b239589a5d0e106190027002658aae1f07a6061446202e"
+    },
+    {
+      "record": "assembly-dma-rxreset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_f3cfd40664db9b3784e0e9b5e09e05dd447431bf7c103c343cb3801e9384dcd4"
+    },
+    {
+      "record": "assembly-dma-txreset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_c95a387ad02ec4432934600cc17adffa630bb3abe76441534d8a59ccaa8594dd"
+    },
+    {
+      "record": "assembly-idle-tssi-force",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_d2a071d2ba25e3342b40e5d79b5c27e0fd33459df3c9bdfa0eba0bb72f721b30"
+    },
+    {
+      "record": "assembly-phy-clock",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_67d73bead494391573358efaaa86dd9677343647b649efc36f9e229887c58413"
+    },
+    {
+      "record": "assembly-phy-pll-control",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_016dd5d002c6b5efa7225455e99b153ff6fd12a89a75c4f2bef7d1e7e2852237"
+    },
+    {
+      "record": "assembly-phy-register-modify",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_ba74c33fde85cab3ba8b4e66e6981d0406bcbd4bbb5abe6490002ab0f44c60a0"
+    },
+    {
+      "record": "assembly-phy-register-read",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_2b12a9e501d6e400d43b4748e95dddd2a845669b912c6ff03a13644a70e8c33c"
+    },
+    {
+      "record": "assembly-phy-reset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_88ab7f82543911a0b6e796994a952e2664124975ae6a818227a16cdc0611ab2b"
+    },
+    {
+      "record": "assembly-secondary-clock-request",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_cb8ef1381d3ca1a9b64ed8a37844c65a9abd06c074cb83881a9f65606be0ec1c"
+    },
+    {
+      "record": "assembly-wake-control-actual",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_0cfe65103a36056c0a1f6a2a64cf493cbf87ae17dedf6f8bde350b4d45523fa0"
+    },
+    {
+      "record": "assembly-wake-control",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_4fc9a8878c4b3e1360d31aace73c0d5bb5354d3c8621d7c637d42797a105cfe0"
+    },
+    {
+      "record": "bytes-analog-reset-field",
+      "operation": "read_bytes",
+      "evidence_id": "ev_5eec65057bd8415e9b28e0355fe80b0597180d15919d7ee19cf6875f8f82664d"
+    },
+    {
+      "record": "bytes-clock-control-field",
+      "operation": "read_bytes",
+      "evidence_id": "ev_d53c4a5db7d5fcaca6e3d491fb25378bdb3dfe237472258b50dd3a55a760ac33"
+    },
+    {
+      "record": "bytes-phy-address-data-fields",
+      "operation": "read_bytes",
+      "evidence_id": "ev_26f8365d1f1b453fc5d85f240e23d5a3ef0f9df39c1c9d46b790161178bedad6"
+    },
+    {
+      "record": "bytes-phy-reset-control-field",
+      "operation": "read_bytes",
+      "evidence_id": "ev_5c1b922910454d108181b58a790169e13ec3358a78b051afdcf76ceec78235a2"
+    },
+    {
+      "record": "pseudo-ac-analog-registration",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_9b763c6178e4cdefee5aa595c66c2868f7154ac43a3adbdd30752c8b2a639f78"
+    },
+    {
+      "record": "pseudo-ac-analog-reset",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_37eeeea19c9378fa6aaaaf6290bc87c2d943e47098aebf77f9586fb3cf53f383"
+    },
+    {
+      "record": "pseudo-ac-idle-tssi-force",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_34b43ae81ebad3ed73d517fa12380f203ea03a4575d55fe5756209de0c0f080c"
+    },
+    {
+      "record": "pseudo-ac-tssi-registration",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_524752596b790018b2bb73c7795dd9b9db3cf233b8425ead1327fbdf01913c38"
+    },
+    {
+      "record": "pseudo-analog-reset",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_fe3023e6d751affe4a1306b9e337b819fa96088324387ae4604fbbaed4037e42"
+    },
+    {
+      "record": "pseudo-clock-control",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_d0ee03b5f717fd60ac6a6163afe409c0d824a2f3a87c20fd5bafb523c2fc0af2"
+    },
+    {
+      "record": "pseudo-dma-rxreset",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_c67207c2bde7712d0e0a64794f36600336752f0827de87743e02fb49ecfd4b45"
+    },
+    {
+      "record": "pseudo-dma-txreset",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_760e7b65726e3dd36ea5686d151bebc6c0bfdce7cbefd804120380a013992743"
+    },
+    {
+      "record": "pseudo-idle-tssi-force",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_477101057a0c964e1150d1a03c9acbcb460b9357b65be6e7006769abc6f3523e"
+    },
+    {
+      "record": "pseudo-phy-bandwidth-state",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_9792bbad4205651fedd1a219f8cfe47f5f4e4d0c47fac3499e3dbcced930c855"
+    },
+    {
+      "record": "pseudo-phy-clock",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_04c2ccf42ed7d026999ae1704988ebd8abfaeef063d0ff83fa422878a6fc3354"
+    },
+    {
+      "record": "pseudo-phy-pll-control",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_0930267bbb8e62aa5c86f3d1ef7413c8a9dfd9638a19067bebbc63f60bdac97c"
+    },
+    {
+      "record": "pseudo-phy-register-enter",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_031d1e1b0f743201f9f800db8fb1d50165f0eb3e0908e8df16582fc9480f2182"
+    },
+    {
+      "record": "pseudo-phy-register-exit",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_1aeb4b143a51e8152b02bc59da5275defc959e0f3dccec4797ae0bcd0a1d40e5"
+    },
+    {
+      "record": "pseudo-phy-register-modify",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_066e95b961abe91317cecf8495f01c5bdcf085ecfd52c19d61fa1051b192025e"
+    },
+    {
+      "record": "pseudo-phy-register-read",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_bf55b7560cc01b9282870b8619575f7ac0088a07bbcf45dba7ced23725a27a4b"
+    },
+    {
+      "record": "pseudo-phy-reset",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_bc029fe5f1ba739f1f5f89146cf99710eda9481f846de55e2da48bd46b53a3bb"
+    },
+    {
+      "record": "pseudo-rsdb-capability",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_de70a151d016e7c8bcc361529c0bfb99423ba299b21e90709e2662b3c494e941"
+    },
+    {
+      "record": "pseudo-secondary-clock-request",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_f542bca163ed29f8493a25faf0012a45d7c9d7195e0869916351df1a89333bfa"
+    },
+    {
+      "record": "pseudo-stay-awake-policy",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_35c03073c825591d1eac9afd2170a9bf6b04a6a329e63ec83649627966d62af7"
+    },
+    {
+      "record": "pseudo-wake-control-actual",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_0c8ba845e0f26e05efbd07f4885ca42453a4949ce6cb47653b0d1525c0b29e7e"
+    },
+    {
+      "record": "pseudo-wake-control",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_669812e081a61db96cd345a3314a2aa3fd95c28d4807066908dca3bfa2490bc0"
+    }
+  ],
+  "limitations": [
+    "Runtime flags and resource mappings were not sampled from hardware.",
+    "No router action, target execution, or physical MMIO occurred.",
+    "Raw pseudocode, disassembly and proprietary payloads are excluded.",
+    "This bounded resource ledger is not a complete driver."
+  ]
+}

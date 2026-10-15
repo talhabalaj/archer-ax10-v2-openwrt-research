@@ -127,8 +127,13 @@ int axd_ai_reset_begin(struct axd_ai_reset *job,
                         const struct axd_reset_context *context)
 {
     const struct axd_ai_reset empty = {0};
+    struct axd_reset_context snapshot;
     if (job == NULL)
         return -1;
+    if (context != NULL) {
+        snapshot = *context; /* Permit a new job from its previous context. */
+        context = &snapshot;
+    }
     *job = empty;
     fail(job, AXD_RESET_BAD_ARGUMENT);
     if (context == NULL || context->secondary_present > 1)

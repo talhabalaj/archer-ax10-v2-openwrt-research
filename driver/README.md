@@ -28,6 +28,10 @@ All original code here uses the repository's MIT license.
   Trace completion does not claim reset success.
 - `psm_start.c`: main/extended startup-suspended acknowledgement and SHM FIFO
   verification, with explicit control caches/flags and fail-stop policy.
+- `psm_control.c`: wake, main/extended suspend and enable traces with nesting,
+  exact SHM/poll budgets and explicit unimplemented callout dependencies.
+- `dma_reset.c`: actual current TX/RX reset paths, including indirect selection,
+  bounded state polls and separate observed-disabled versus returned-success.
 - `effective_init.c`: context-dependent initialization semantics with explicit
   `0x130` addend, width truncation and a separate semantic object-copy operation.
   Whole-table preflight validates caller-supplied bounds before callbacks.
@@ -55,7 +59,7 @@ See [effective-init semantics and tests](../docs/EFFECTIVE_INIT_AUDIT.md) for
 exact termination, widths, address units, policies and cancellation behavior.
 
 Hardware microcode upload, the complete higher reset/clock/PHY/DMA lifecycle,
-suspend/enable/wake implementation, complete register/SHM typing, resource
+complete wake-policy/fatal/MBSS handling, complete register/SHM typing, resource
 ownership, calibration, AC-PHY 51 initialization and Linux TX/RX integration
 remain absent. Offline wrapper reset and startup subsets are described in
 [their implementation boundaries](../docs/LIFECYCLE_MODEL.md). PHY type 11 and
@@ -106,7 +110,13 @@ The checks passed on 2026-10-15:
 - Startup/reset literal traces, cache/mirror behavior, independent poll/retry
   boundaries, non-echo readbacks, FIFO predicates, stuck-reset diagnostics and
   every-event error/cancellation checks pass under ASan/UBSan.
-- All seven C files cross-compile with Clang for `armv7-none-eabi` in freestanding
+- Wake/suspend/enable paths cover literal traces, nesting, maximum budgets,
+  unexecuted callout requirements and every-event errors/cancellation. DMA reset
+  covers direct/indirect TX/RX, both wait budgets, selector/cache semantics and
+  failed/successful returns without inventing status observation.
+- Restart/chaining regressions preserve aliased `&job.context`; removal mutants
+  fail these checks. Startup/reset/control context is copied before job clearing.
+- All nine C files cross-compile with Clang for `armv7-none-eabi` in freestanding
   mode with warnings treated as errors. This proves compilation, not linking
   into Linux, execution on ARM or hardware behavior.
 
@@ -161,9 +171,12 @@ firmware/table versions must not be silently mixed.
 
 ## Next implementation boundary
 
-Compose the recovered wrapper reset/start subsets with actual higher-level
-clock/resource/PHY/DMA prerequisites, then implement suspend/enable/wake paths
-and required SHM access contracts. See [the lifecycle model](../docs/LIFECYCLE_MODEL.md)
-and [current checkpoint](../PROGRESS.md) for exact remaining work. The models
-have no hardware backend, resource ownership or kernel integration. PHY 51
-initialization and calibration remain required; hardware execution is untested.
+Implement the recovered clock/PLL and PHY-register/TSSI/analog-reset operations,
+resolve their optional/imported branches, and compose the full higher reset
+with proven runtime resources. Complete wake policy and MBSS/fatal callouts;
+main-enable `DEPENDENCY` remains unfinished work. See
+[resource evidence](../docs/DRIVER_RESOURCE_AUDIT.md),
+[PSM control policies](../docs/PSM_CONTROL_MODEL.md),
+[DMA reset policies](../docs/DMA_RESET_MODEL.md) and
+[current checkpoint](../PROGRESS.md). PHY51 radio/channel/calibration, DMA data
+path, kernel integration and hardware execution remain required and untested.
