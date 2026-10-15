@@ -1,12 +1,28 @@
 /* SPDX-License-Identifier: MIT */
 #include "idle_tssi.h"
 
-enum stage { ENTRY, ENTER_PHY, CALLBACK, EXIT_PHY, ENABLE_MAC, FINISH, RUN_MAC, RUN_GUARD, RUN_TSSI };
+enum stage { ENTRY, ENTER_PHY, CALLBACK, CALLBACK_CONTEXT, CALLBACK_PHY, START_TSSI,
+             EXIT_PHY, ENABLE_MAC, FINISH, RUN_MAC, RUN_GUARD, RUN_TSSI };
 struct relay { struct axd_idle_tssi *job; axd_d11_io_fn io; void *context; };
 static void fail(struct axd_idle_tssi *job, enum axd_idle_error error)
 {
     job->phase = AXD_IDLE_FAILED;
     job->error = error;
+}
+static int binding(struct axd_idle_tssi *job, enum axd_idle_binding_field field,
+                     struct axd_wake_u32 value)
+{
+    job->binding_field = field;
+    job->binding_accesses++;
+    if (value.known == 0) {
+        job->phase = AXD_IDLE_DEPENDENCY;
+        return 0;
+    }
+    if (value.known != 1 || value.value == 0) {
+        fail(job, AXD_IDLE_CALLBACK_BINDING);
+        return 0;
+    }
+    return 1;
 }
 static int perform(void *opaque, const struct axd_d11_operation *operation, uint32_t *value)
 {
@@ -113,6 +129,10 @@ int axd_idle_tssi_begin(struct axd_idle_tssi *job, enum axd_tssi_command command
         return -1;
     job->context = *context;
     if (context->callback_present) {
+        if (context->callback_binding_required > 1) {
+            fail(job, AXD_IDLE_CALLBACK_BINDING);
+            return -1;
+        }
         if (!context->tssi.hardware.mac_context_valid) {
             fail(job, AXD_IDLE_MAC_CONTEXT);
             return -1;
@@ -152,6 +172,21 @@ enum axd_idle_phase axd_idle_tssi_step(struct axd_idle_tssi *job,
         guard(job, AXD_PHY_ENTER, CALLBACK);
         break;
     case CALLBACK:
+        job->stage = job->context.callback_binding_required ? CALLBACK_CONTEXT : START_TSSI;
+        break;
+    case CALLBACK_CONTEXT:
+        if (binding(job, AXD_IDLE_CONTEXT, job->context.callback_context))
+            job->stage = CALLBACK_PHY;
+        break;
+    case CALLBACK_PHY:
+        if (binding(job, AXD_IDLE_CONTEXT_PHY, job->context.callback_phy)) {
+            if (job->context.callback_phy.value != job->context.phy_identity)
+                fail(job, AXD_IDLE_CALLBACK_BINDING);
+            else
+                job->stage = START_TSSI;
+        }
+        break;
+    case START_TSSI:
         if (axd_phy_tssi_begin(&job->tssi_job, job->command, &job->context.tssi) != 0)
             fail(job, AXD_IDLE_TSSI_ERROR);
         else

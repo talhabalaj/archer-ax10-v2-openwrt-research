@@ -61,7 +61,7 @@ These are recovered selector rules, not a channel-validity or regulatory check.
 
 The [exact reset order](DRIVER_PHY_RESET_BF_AUDIT.md) places the outer TSSI
 snapshot **before** `RESET_PREPARE`; the restore follows pulse, bandwidth and
-analog reset. The full coordinator must run the pulse and its core-130 100-us delay before
+analog reset. The [target coordinator](PHY_RESET_MODEL.md) runs the pulse and its core-130 100-us delay before
 invoking `RECORD_BANDWIDTH` at the actual later software-state location. Keeping
 that command separate prevents publishing the new bandwidth-state word early.
 No pulse, TSSI snapshot/restore, table-29 sequence or beamforming callout is
@@ -110,5 +110,5 @@ barrier and final delay. Tests also cover alias restart, all accepted
 interconnects, identity/boolean rejection, absent callbacks, cancellation before
 I/O, bounded progress and terminal silence. Strict ASan/UBSan execution and
 freestanding ARMv7 compilation pass. No Linux binding, device test, physical
-mapping, measured timing or RF operation was performed. Runner/checkpoint
-integration remains with the enclosing change.
+mapping, measured timing or RF operation was performed. The shared runner and
+checkpoint include these tests; the target reset composes this job as a real child.

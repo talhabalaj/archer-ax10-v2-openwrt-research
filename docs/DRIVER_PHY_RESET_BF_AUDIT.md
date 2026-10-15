@@ -15,21 +15,25 @@ reset resource acquisition. Host offsets below are not MMIO addresses.
 ## Reset ordering: snapshot precedes preparation
 
 Let `HW` be the reset argument, `W=*(HW+0)`, current band `B=*(HW+0x1a8)`,
-and public PHY information `Q=*(W+0x30)`. For the supported type-AC/PHY-51
-context, retained assembly at `0x1adec8` establishes this sequence:
+and public PHY information `Q=*(W+0x30)`. For type AC and band revision 51,
+with the public PHY revision supplied independently, retained assembly at
+`0x1adec8` establishes this sequence:
 
 1. Initialize the 8-byte local TSSI save buffer to zero and derive bandwidth
    flags from the chanspec selector. Neither is the callback snapshot.
 2. If band type `u16(B+0x1c)==0x0b` and public PHY revision
    `u16(Q+0x0a)==51`, call the actual outer
    `wlc_idletssi_force(phy,save_buffer,1)` at `0x1ae190`.
-3. The ordinary AC revision-51 path then calls SI core flags with mask
+3. The ordinary AC band-revision-51 path then calls SI core flags with mask
    `0x8ce`, value `bandwidth_flags | 0xe` at `0x1ae144`; delay 2;
    call `wlc_bmac_core_phy_clk(HW,1)` at `0x1adf44`.
-4. Execute the retained inline PHY reset pulse for band revision 51, followed
-   by the core-130 delay of 100.
-5. For chip 63178 record bandwidth state, then call analog reset if its PHY
-   context exists.
+4. Execute the retained inline PHY reset pulse for band revision 51. The
+   common join after the pulse decision separately delays 100 for core
+   revisions above 64. Core 130 takes that delay independently of the pulse
+   revision predicate.
+5. For chip 63178, store the raw bandwidth selector in the PHY context,
+   without a preceding PHY-context null check. The later analog call alone
+   has an explicit PHY-context null guard.
 6. Re-evaluate current band type and public PHY-revision conditions and call
    outer `wlc_idletssi_force(phy,save_buffer,0)` at `0x1ae17c` when reached.
 7. Evaluate the optional beamforming branch described below, then return.
@@ -39,8 +43,23 @@ The exact callback snapshot must precede that component, not follow it.
 Restore is after pulse, delay, bandwidth and analog operations. Snapshot and
 restore use the **public PHY-revision field**; the pulse has a separate test
 of **band revision**. Coherent attached PHY-51 context satisfies both, but the
-binary does not merge those predicates. The different revision-47/minor-2
-preparation branch is not substituted for revision 51.
+binary does not merge those predicates. The special preparation branch tests
+**band revision 47 and band minor revision 2**, not the public PHY revision.
+It is not substituted for band revision 51. A narrowed model can require band
+revision 51 while accepting any explicit 16-bit public PHY revision; public
+revision 51 enables both TSSI gates and another value skips them. It must
+retain these independent inputs rather than infer one from the other.
+
+The local buffer is two zeroed 32-bit words, representing four initialized
+16-bit slots. The stock function has no saved-value validity mask. Zero
+initialization establishes defined bytes, not observed TSSI measurements.
+When the idle-TSSI callback is absent, its outer wrapper returns before MAC,
+PHY-register or buffer operations. With a stable absent binding, both save
+and restore are no-ops and the buffer stays zero. A model may mark all slots
+available because initialized; it must not label them observed snapshots.
+
+The bandwidth selector and analog module/table distinction are recorded in
+[the exact reset-path addendum](PHY_RESET_EXACT_PATH.md).
 
 The outer idle-TSSI call is not merely its AC callback: it retains the actual
 MAC suspend, PHY-register enter/wake, callback, PHY exit/wake and MAC enable
@@ -140,6 +159,8 @@ The cleaner does not test helper success returns before continuing. Existing
 MAC fatal/dependency behavior and any model fail-stop policy remain explicit.
 Runtime metadata initialization and kernel ownership are not supplied here.
 
-No source files were edited in this analysis pass. Full-driver resource
-integration, optional VASIP/SMC and later PHY/radio/calibration/data paths
-remain separate open work.
+The complete retained reset body has no VASIP or SMC call. Its return is void;
+it adds no status result, readiness poll or rollback around these children.
+VASIP/SMC elsewhere in higher initialization, full-driver resource integration
+and later PHY/radio/calibration/data paths remain separate open work. No
+production source files were edited in this analysis pass.

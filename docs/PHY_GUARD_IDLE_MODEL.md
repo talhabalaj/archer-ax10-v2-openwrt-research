@@ -45,6 +45,16 @@ overflow is checked later at the actual guard transition, so a bad depth can
 stop after MAC suspend with that partial MAC context retained. Callback absence
 skips these unused validations.
 
+An optional explicit callback-binding check now runs at the actual callback
+point after MAC suspend and PHY enter. A known nonnull callback context must
+contain the expected PHY identity in its first word. Unknown reached bindings
+end DEPENDENCY; null, invalid or mismatched bindings fail with the entered depth
+and partial MAC state retained. Callback absence skips these unused fields.
+The [target reset](PHY_RESET_MODEL.md) enables this check and separately binds
+the dispatch module/table before its callback null gate. Legacy normalized
+standalone contexts keep their explicit owner/resource-coherence obligation;
+they do not claim raw pointer-graph validation.
+
 `entered`, `exited` and `callback_completed` indicate whole child completion.
 They do not hide earlier partial buffer, depth, cache or reason changes. For
 example, cancelled callback data can remain in a valid direct-read slot while
@@ -76,11 +86,11 @@ Outer tests cover snapshot/restore for all four core counts, inactive/active
 MAC, actual table children, optional absence, partial saved data/depth/context,
 semantic failures, alias-safe restart and terminal silence.
 
-The full PHY reset coordinator must place the **outer snapshot before**
+The [target PHY reset coordinator](PHY_RESET_MODEL.md) places the **outer snapshot before**
 `RESET_PREPARE`, then pulse/delay100, bandwidth recording, analog reset,
 outer restore and optional beamforming cleaner. The
 [new beamforming/order audit](DRIVER_PHY_RESET_BF_AUDIT.md) establishes that
 cleaner's core-130 no-SHM child paths but preserves its real main/extended MAC
-operations and metadata scans. That coordinator/cleaner and higher device
-reset integration remain unfinished. Host checks do not establish device
+operations and metadata scans. The [cleaner](BF_CLEAN_MODEL.md) now preserves those real operations; higher
+device-reset integration remains unfinished. Host checks do not establish device
 timing, physical wake/PHY state, calibration or RF operation.

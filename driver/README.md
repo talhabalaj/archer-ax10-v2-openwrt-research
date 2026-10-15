@@ -56,6 +56,10 @@ All original code here uses the repository's MIT license.
   distinguish reached missing state from an actual false predicate.
 - `phy_clock.c`: AI core-flags, PHY clock enable/disable, bandwidth preparation
   and optional secondary-core workaround, with typed owned wrapper resources.
+- `phy_reset.c`: composed target AC/band-PHY51 reset, outer snapshot before
+  preparation, pulse/delay100, late bandwidth store, analog, restore and real BF.
+- `bf_clean.c`: main/extended MAC and ordered metadata scans with actual core130
+  no-SHM leaf paths; explicit reached bounds/availability and strict 256-slot cap.
 - `effective_init.c`: context-dependent initialization semantics with explicit
   `0x130` addend, width truncation and a separate semantic object-copy operation.
   Whole-table preflight validates caller-supplied bounds before callbacks.
@@ -161,7 +165,9 @@ The checks passed on 2026-10-15:
 - Guard/outer idle-TSSI and override/action tests cover current cleared masks,
   optional absence, all core counts, partial buffers/depth/cache, mirror prefix
   timing and every selected event error/cancellation/coincident errors.
-- All eighteen C files cross-compile with Clang for `armv7-none-eabi` in freestanding
+- Target PHY reset/BF cleaner tests check literal composition, metadata/binding
+  boundaries, partial contexts and callback fault/cancellation behavior.
+- All twenty C files cross-compile with Clang for `armv7-none-eabi` in freestanding
   mode with warnings treated as errors. This proves compilation, not linking
   into Linux, execution on ARM or hardware behavior.
 
@@ -216,13 +222,13 @@ firmware/table versions must not be silently mixed.
 
 ## Next implementation boundary
 
-Use tested idle-TSSI, PHY-clock, pulse and analog jobs to implement full PHY
-reset: outer snapshot BEFORE RESET_PREPARE, independently gated pulse, bandwidth
-record, analog, outer restore, then the optional real beamforming cleaner.
-Preserve its main/extended MAC operations and exact metadata scan boundaries.
-Compose actual SI/clock ownership/lifetime and higher device reset next. Runtime
-predicate input acquisition, MBSS/fatal recovery and resource discovery remain
-unfinished; reached child dependencies stay explicit. See
+Use the tested target PHY reset and BF cleaner with AI/DMA/PSM jobs to compose
+the enclosing device-reset lifecycle. Implement actual SI/clock ownership,
+mapping/index restoration, IRQ lifetime and WL cache/reason0x10 updates. Runtime
+predicate/metadata acquisition, synchronization, MBSS/fatal recovery and resource
+discovery remain unfinished; reached child dependencies stay explicit. See
+[target PHY reset](../docs/PHY_RESET_MODEL.md),
+[BF cleaner](../docs/BF_CLEAN_MODEL.md),
 [PHY nesting/outer wrapper](../docs/PHY_GUARD_IDLE_MODEL.md),
 [reset/beamforming audit](../docs/DRIVER_PHY_RESET_BF_AUDIT.md),
 [wake policy](../docs/WAKE_POLICY_MODEL.md),

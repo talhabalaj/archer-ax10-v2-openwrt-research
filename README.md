@@ -43,6 +43,8 @@ prove that an unpublished or later port cannot exist.
 - [PHY nesting and complete outer idle-TSSI wrapper](docs/PHY_GUARD_IDLE_MODEL.md)
 - [Pure wake policy and explicit runtime inputs](docs/WAKE_POLICY_MODEL.md)
 - [Actual ARM wake-policy/load-trace comparisons](docs/WAKE_POLICY_ARM_CHECKS.md)
+- [Composed target PHY reset](docs/PHY_RESET_MODEL.md)
+- [Core130 beamforming cleaner and metadata bounds](docs/BF_CLEAN_MODEL.md)
 - [Exact PHY-reset and beamforming-cleaner ordering](docs/DRIVER_PHY_RESET_BF_AUDIT.md)
 - [Wake/suspend/enable model and policies](docs/PSM_CONTROL_MODEL.md)
 - [Current DMA reset model and limits](docs/DMA_RESET_MODEL.md)
@@ -79,8 +81,9 @@ prove that an unpublished or later port cannot exist.
 
 Driver-first offline development is the current priority. Selection, raw-table
 replay, effective initialization, upload simulation and reset/start subsets are
-implemented; the next task is the full PHY-reset coordinator and beamforming
-cleaner, followed by remaining SI/clock and higher lifecycle/resource contracts.
+implemented, including the target PHY-reset coordinator and real beamforming
+cleaner. The next task is remaining SI/clock and higher device-reset/resource
+composition.
 Outer PHY nesting and idle-TSSI now join the tested table/TSSI, PHY-clock,
 D11/ChipCommon, direct PHY/reset, PSM and DMA-reset subsets. The complete pure
 wake predicate and its control action are implemented with explicit runtime

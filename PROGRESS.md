@@ -1,27 +1,27 @@
 # Current progress and continuation checkpoint
 
-Updated 2026-10-15. This checkpoint adds PHY-register wake nesting, the complete
-outer idle-TSSI wrapper and the recovered pure stay-awake decision/action.
+Updated 2026-10-15. This checkpoint adds the composed target PHY reset and
+core-130 beamforming cleaner, using the previously tested children.
 Previous implementation:
-[`69f946b`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/69f946b1496b3250ef2254c309325920a87defce).
+[`86ab211`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/86ab21131f50b93c17aa326843d135a746871a5c).
 Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
 
 ## Resume here
 
-**Next: implement the full PHY reset coordinator and optional beamforming cleaner
-using the exact newly recovered ordering and the tested children.** The outer
-TSSI snapshot precedes RESET_PREPARE, then the independently gated pulse/delay,
-bandwidth recording, analog reset, outer restore and optional cleaner follow.
-The cleaner has real main/extended MAC operations and metadata scans even though
-its core-130 leaf helpers emit no SHM. Use the
-[reset/beamforming audit](docs/DRIVER_PHY_RESET_BF_AUDIT.md); do not omit it as a no-op.
+**Next: compose actual SI/clock selection and higher device reset around the
+implemented target PHY reset, AI/DMA/PSM children and explicit runtime resources.**
+The [target PHY reset](docs/PHY_RESET_MODEL.md) now performs the outer snapshot
+BEFORE preparation, pulse/delay100, late bandwidth store, analog, outer restore
+and optional [beamforming cleaner](docs/BF_CLEAN_MODEL.md). The cleaner retains
+real main/extended MAC work and ordered metadata traversal; core-130 leaf no-SHM
+paths are proven behavior. This is not yet the enclosing device-reset lifecycle.
 
-PHY nesting and outer idle-TSSI now use real PSM children. The pure stay-awake
-predicate and public-up/cached-control/wait action are implemented, with exact
-current post-clear reasons. Runtime input acquisition, synchronization, MBSS and
-fatal recovery remain dependencies. SI selection/restore and WL cached-mode/wake
-updates still surround the separate ChipCommon body. Reuse closed-session
-Evidence and existing independent trace/ARM harnesses instead of repeating analysis.
+Runtime policy/metadata acquisition, synchronization, MBSS and fatal recovery
+remain dependencies. Actual SI selection/restoration, IRQ lifetime and WL
+cached-mode/reason0x10 changes still surround the separate ChipCommon body.
+Reuse closed-session Evidence and independent trace/ARM harnesses instead of
+repeating analysis. The target reset accepts explicit AC/band PHY51; unsupported
+other band revisions are rejected rather than silently skipping their operations.
 
 Current priority is driver work first. Offline analysis/simulation remains
 unblocked by pending UART/recovery work. No device upload, radio initialization
@@ -34,7 +34,7 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | --- | --- | --- |
 | Target and reference inventory | Established for inspected inputs | [Hardware](findings/HARDWARE_INVENTORY.json), [binary](docs/DRIVER_BINARY_AUDIT.md), [GPL](docs/GPL_AUDIT.md). Reverify drift-prone device state before device work. |
 | D0 offline foundation | Implemented and host-tested within stated limits | Four C components, pinned object inspector, synthetic/fault tests and private-input comparisons. |
-| D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper/startup, PSM control, DMA reset, D11/ChipCommon clock, table/all-core TSSI, PHY-clock and direct reset subsets implemented. Higher reset/SI composition, optional branches, runtime policy/resource acquisition and MBSS/fatal recovery remain. |
+| D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper/startup, PSM control, DMA reset, D11/ChipCommon clock, table/all-core TSSI, target PHY reset and BF cleaner implemented. Higher device reset/SI composition, optional branches, runtime policy/resource acquisition and MBSS/fatal recovery remain. |
 | D2 complete register/SHM/context contracts | Partial implementation, host-tested | Effective-init semantics and startup SHM16 FIFO read implemented; addend acquisition, physical init-object writes, complete register map and SHM ABI remain. |
 | D3 PHY 51/radio/channel/calibration | Attach dispatch mapped; initialization pending | Table/TSSI/PHY-clock subsets host-tested; radio-specific initialization/calibration and board inputs remain. |
 | D4 DMA/interrupt/RX | Reset helpers only; data path not implemented | Current reset paths tested offline; common older source mapped. Current queue/resources, descriptors, IRQ and RX remain to establish. |
@@ -66,8 +66,10 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | `driver/phy_tssi.c` | PHY51 callback for all four core counts, repeated table reads and masked/no-op restores. | Four-slot buffer validity is explicit; outer idle-TSSI is a separate implemented job, not implied by callback completion. |
 | `driver/phy_clock.c` | AI core-flags, enable/disable, bandwidth/reset preparation and RSDB workaround. | Typed owned wrappers; no mapper/IRQ execution or clock-ready proof; bandwidth recording is separate post-pulse work. |
 | `driver/phy_guard.c` | Byte-depth PHY enter/exit and real reason-2 override child; partial depth retained. | Rejects nesting wrap; requires explicit MAC/policy/ownership. |
-| `driver/idle_tssi.c` | Main suspend → PHY enter → all-core callback → PHY exit → main enable, with absent-callback no-op. | Full higher reset still absent; no invented failure unwind. |
+| `driver/idle_tssi.c` | Main suspend → PHY enter → all-core callback → PHY exit → main enable, with absent-callback no-op. | Higher device reset remains absent; no invented failure unwind. |
 | `driver/wake_policy.c` | Ordered globals, actual RRM/association/override and three 16-BSS passes; explicit availability/access provenance. | Pure immutable input bindings; no runtime acquisition or hardware action in this component. |
+| `driver/phy_reset.c` | Target AC/band PHY51 sequence with real outer TSSI, clock/pulse/analog and optional BF children. | Stable explicit inputs; no higher device reset or device/backend proof. |
+| `driver/bf_clean.c` | Real main/extended MAC, ordered primary-inclusive/secondary-exclusive scans and core130 no-SHM leaves. | Reached metadata/bindings explicit; strict 256-slot cap, no acquisition or ownership discovery. |
 | `driver/status_poll.c` | Caller-defined status predicate and monotonic timestamps; bounded steps, timeout and cancellation. | Synthetic configurable infrastructure; no recovered device-ready register/mask. |
 | `scripts/radio_firmware_inventory.py` | Exact hash, ELF object bounds/relocation checks, size companions and metadata inventory. | Payloads remain private; different/older modules rejected. |
 | `tests/check_phy_arm.py` | Exact selected stock ARM instructions versus C under 264 synthetic contexts; strict read queues and access bounds. | Requires private pinned input/Unicorn; three primitives only, no physical timing or device state. |
@@ -142,8 +144,22 @@ checks when code or inputs change; do not imply a new hardware test occurred.
 
 Latest validation (host/build and isolated synthetic ARM execution only):
 
-- All eighteen synthetic test programs pass under ASan/UBSan; all eighteen portable C
+- All twenty synthetic test programs pass under ASan/UBSan; all twenty portable C
   components compile for freestanding ARMv7 with strict warnings.
+- Target reset tests check independent region-tagged traces, snapshot before
+  preparation, public/band revision distinction, late bandwidth store, absent
+  callbacks and ordered BF gates. Per-event fault/cancel/both checks preserve
+  child software state and pending dependencies without inventing unwind.
+  Present idle-callback context/PHY binding is checked AFTER MAC suspend and
+  PHY enter; missing late inputs preserve those earlier effects. Analog context
+  must also bind its actual first-word PHY to this reset's resource.
+  Counts1..4, active MAC and RSDB paths pass; six private order/gate/commit/
+  context/policy mutants are rejected by the independent tests.
+- BF tests check real main/extended MAC order, inclusive primary zero-bound
+  iteration, exclusive secondary zero-count, bitmap/pointer/cubby short circuits,
+  actual leaf return gates, reached metadata and binding/bounds failures.
+  The explicit 256-slot cap rejects wrapping/oversized primary bounds at their
+  reached post-entry load; it is a stricter model policy than stock.
 - Generic override and actual wake-control tests cover reason zero, already
   absent clears, current post-clear masks, original physical sample versus cache,
   public-down/no-I/O and known/unknown/invalid reached policy. Actual input
@@ -216,6 +232,15 @@ The AC table-reader session was exported and closed with unchanged input digest;
 its 16 new Evidence IDs and six reused records were verified against retained
 raw records. Only reviewed descriptions/metadata are public.
 
+The new [exact PHY-reset boundary review](docs/PHY_RESET_EXACT_PATH.md) closes
+the actual analog dispatcher and bandwidth-store assembly. Its two new
+[Evidence IDs](findings/DRIVER_PHY_RESET_EXACT_EVIDENCE.json) were verified
+against retained raw records; five prior records are reused. The bounded session
+was exported/closed and the module hash rechecked. This corrects the common
+post-pulse delay, required late bandwidth PHY dereference and the analog
+callback's context-to-PHY ownership. No VASIP/SMC call occurs in this reset body;
+their higher initialization prerequisites remain separate.
+
 Two earlier exact-HND/WL dependency sessions were exported and closed. Their
 26 new Evidence IDs and eight reused records were checked against retained raw
 records. Runtime mapping/backend, policy input acquisition and optional branches
@@ -257,23 +282,20 @@ Critical distinctions to preserve:
    implementation notes and Git status. Preserve unrelated work; check remote
    main before publication. Reuse closed-session Evidence instead of repeating
    installation/analysis.
-2. Compose full PHY reset from tested idle-TSSI, PHY-clock, pulse and analog
-   children using the [exact reset/beamforming audit](docs/DRIVER_PHY_RESET_BF_AUDIT.md).
-   Snapshot comes BEFORE RESET_PREPARE. Preserve separate public/band PHY-revision
-   gates, post-pulse bandwidth store, analog/callback presence and restore gate.
-3. Implement the optional beamforming cleaner with explicit metadata/bitmap/cubby
-   inputs, inclusive primary bounds, exclusive secondary bounds and actual count
-   reload points. Bound the stock's potentially wrapping loop explicitly. Preserve
-   real main/extended suspend/enable even on core-130 no-SHM leaf paths.
-4. Use tested D11/ChipCommon bodies to compose clock selection through actual
-   SI ordinary/fast mapping and IRQ lifetime/restoration. Apply returned mode
-   byte and wake-reason0x10 in the WL caller; mode result never establishes ready.
-   Complete reached policy input acquisition and MBSS/fatal recovery. Runtime
-   RSDB, ownership, clocks, bus/threshold and queues require actual data.
-5. Compose higher reset around clock/AI/DMA/PHY jobs and proven caller state and
-   queue/resources. Resolve optional VASIP/SMC; no successful placeholders or
-   invented failure cleanup. Pure wake policy/action already exists, but does
-   not discover or synchronize its runtime input objects.
+2. Compose SI/clock ownership/lifetime around tested D11/ChipCommon bodies:
+   actual ordinary/fast mapping, current index restoration and IRQ wrapping.
+   Apply the returned mode byte and reason0x10 in the WL caller. A mode return
+   never establishes a ready clock. Reuse retained exact HND/WL mapping evidence.
+3. Compose higher device reset around AI-wrapper/DMA/PSM and the now implemented
+   target PHY reset. Acquire/validate actual queue, DMA and owner resources;
+   resolve optional VASIP/SMC where reached. Do not repeat the PHY wrapper as a
+   substitute for enclosing reset, upload/start or radio initialization.
+4. Implement reached policy/metadata acquisition, synchronization and MBSS/fatal
+   recovery. BF and pure wake inputs bind immutable external facts, not live
+   acquisition. Runtime RSDB, clocks, bus/threshold and queues need actual data.
+5. Preserve exact PHY reset scope and ordering. Broader PHY-revision paths are
+   unsupported, not no-ops. Analog null checks occur AFTER the chip63178 bandwidth
+   store's required PHY dereference. Core130 delay100 is a common post-pulse join.
 
 6. Complete D2 physical init-object writes, addend acquisition and needed SHM
    ABI; continue D3 radio/channel/calibration, D4 descriptors/IRQ/RX, TX/Linux
@@ -292,7 +314,7 @@ Critical distinctions to preserve:
 9. Review/scan an exact public allowlist, commit/push and verify remote commit/
    tree. Keep proprietary bytes, calibration, credentials and local paths private.
 
-**D1 remains partial.** Higher reset/clock composition, optional dependencies,
+**D1 remains partial.** Higher device-reset/SI clock composition, optional dependencies,
 policy input acquisition/MBSS/fatal recovery and actual resource ownership remain unfinished. Maintain the full
 working-driver and modern-OpenWrt objective; host tests do not meet hardware gates.
 
@@ -371,7 +393,8 @@ assembly, typed references and descriptor reads as required by the evidence.
 | `ef8dfb0` | PSM/DMA control and clock/PLL models with exact evidence and external research. |
 | `a50280e` | Direct PHY/ChipCommon models and actual ARM primitive comparisons. |
 | `69f946b` | Composed table/all-core TSSI and PHY-clock jobs with actual ARM comparisons. |
-| This checkpoint | PHY nesting, complete outer idle-TSSI, actual wake predicate/action and ARM load-trace comparisons; mirror-cache prefix fix and exact reset/beamforming evidence. |
+| `86ab211` | PHY nesting, complete outer idle-TSSI, actual wake predicate/action and ARM load-trace comparisons; mirror-cache prefix fix and reset/beamforming evidence. |
+| This checkpoint | Composed target PHY reset, real core130 BF cleaner and exact analog/bandwidth assembly closure. |
 
 At each future checkpoint, add a concise milestone entry and replace the active
 next-work package with the actual next task. Keep unresolved defects visible.

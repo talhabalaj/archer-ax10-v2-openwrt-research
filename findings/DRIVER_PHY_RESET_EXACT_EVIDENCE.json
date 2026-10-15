@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "scope": "phy_reset_exact_path_review",
+  "analysis_mode": "offline_static",
+  "artifact": {
+    "name": "wl.ko",
+    "size": 5803056,
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4"
+  },
+  "session_exported_and_closed": true,
+  "source_digest_rechecked": true,
+  "records": [
+    {
+      "record": "assembly-analog-reset-wrapper",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_e834c3d006f9403ae118ad3ecb0ff922e9b62789c13d3056996352583efb7b16"
+    },
+    {
+      "record": "assembly-bandwidth-store",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_75077cfc6247e6509fca8a700c5ce699319ca8b96a46efd8a7b10921f0779acd"
+    }
+  ],
+  "reused_records": [
+    {
+      "record": "assembly-ac-analog-reset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_d85721d02a36b7a8116678bafe959755231959b8cb7651463f13807a7c7377b8"
+    },
+    {
+      "record": "assembly-idle-tssi-force",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_d2a071d2ba25e3342b40e5d79b5c27e0fd33459df3c9bdfa0eba0bb72f721b30"
+    },
+    {
+      "record": "assembly-phy-reset",
+      "operation": "procedure_assembly",
+      "evidence_id": "ev_88ab7f82543911a0b6e796994a952e2664124975ae6a818227a16cdc0611ab2b"
+    },
+    {
+      "record": "bytes-analog-reset-field",
+      "operation": "read_bytes",
+      "evidence_id": "ev_5eec65057bd8415e9b28e0355fe80b0597180d15919d7ee19cf6875f8f82664d"
+    },
+    {
+      "record": "pseudo-ac-analog-registration",
+      "operation": "procedure_pseudo_code",
+      "evidence_id": "ev_9b763c6178e4cdefee5aa595c66c2868f7154ac43a3adbdd30752c8b2a639f78"
+    }
+  ],
+  "observations": [
+    "Public PHY revision and band PHY revision are independent input fields.",
+    "Core greater than 64 delay100 is reached at the common join independently of pulse revision selection.",
+    "BCM63178 bandwidth store writes PI+0x396 before the later analog PI null guard.",
+    "Analog module/table are unconditionally dereferenced; only callback absence is guarded.",
+    "AC analog callback dereferences the supplied callback context first word as PI before the store barrier and zero write.",
+    "Local zero-initialized TSSI bytes are defined buffer contents, not observed readings.",
+    "No VASIP/SMC call occurs in the complete retained reset function."
+  ],
+  "limitations": [
+    "No router access, target execution or physical MMIO.",
+    "No proprietary bytes, raw disassembly/pseudocode or host paths included.",
+    "Supported model boundary deliberately narrows to explicit AC band type and band revision51 with independently supplied public revision.",
+    "Runtime object acquisition, lifetime and immutable binding preconditions remain integration work."
+  ]
+}
