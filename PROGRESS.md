@@ -1,10 +1,11 @@
 # Current progress and continuation checkpoint
 
-Updated 2026-10-15. This checkpoint adds real explicit50e0 radio-on
-logen/PLL/RCAL/RCCAL operations, current normal RX fill, the registered status
-release with actual HND SI children, and target PHY51 radar/HWOBSS helpers.
-It builds on PHY/RX checkpoint `e65db6c`, initialization/DMA `16853c6` and reset
-`788eee4`. These remain offline implementations, not a working radio driver.
+Updated 2026-10-15. This checkpoint adds a functional verification loop and
+an executable full16-stage synthetic PHY probe on implementation checkpoint
+`830db0b`. The probe reports actual completed required callbacks and the first
+unresolved child separately from passing regression tests. Radio-on/calibration,
+normal RX fill, registered status release/SI and radar/HWOBSS remain the latest
+implemented bodies. These are offline components, not a working radio driver.
 Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
 
 ## Current reset checkpoint
@@ -22,6 +23,42 @@ entry shares the same implementation. The clock cache accepts the stock's full
 fast-clock byte. Optional PSM band bindings distinguish an unknown pointer from
 a known null pointer at the actual wait guard. These are original offline
 components, with no hardware backend or claimed working Wi-Fi driver.
+
+## Functional verification loop
+
+Run `python3 scripts/verify_driver.py --scope target`; see the complete
+[loop and functional gates](docs/VERIFICATION_LOOP.md). The real probe preserves
+all16 required PHY callbacks, uses explicit synthetic50e0/5GHz20MHz/channel36
+inputs and consumes a joined independent1163-event prefix/radio oracle.
+
+The baseline observation is: **five callbacks completed, current radio7,
+real switch completed, required `wlc_phy_set_regtbl_on_pwron_acphy` unresolved**.
+There is no final return or slice-up store. The command returns2 (incomplete),
+not a functional pass merely because existing tests expect this boundary.
+Unexpected operations, unused read queues, bad input identity, compiler/check
+failures or changing sources invalidate the run. A genuine failed probe retains
+its actual failure diagnostics even when it exits nonzero.
+
+The checkpoint scope also runs the sanitizer suite, ARMv7 builds and explicit
+private-input/Unicorn checks when supplied. The exact staged baseline was run
+through that complete command: all67 executed checks passed (target build/run,
+48-program sanitizer/private-comparison suite,49 C ARMv7 objects plus combined
+header probe, and all14 pinned ARM comparison programs). Its overall result
+remained incomplete/exit2, preserving the real required-child dependency.
+An initial run caught a virtual-environment launcher bug; preserving the supplied
+venv path fixed it, and the complete corrected command was rerun successfully. Reports, logs and build outputs go
+to a fresh external directory; optional previous reports compare only coherent
+same-fixture observations. A fixture change requires independent source review.
+Four verifier regression tests reject false success, partial vectors, a2GHz
+fixture bypassing the5GHz radar guard, malformed observations and lost nonzero
+probe diagnostics. The focused radio fault suite retains its unchanged oracle,
+now shared with the full-vector probe.
+
+This is one necessary PHY scenario, not full enclosing initialization. BMAC
+initialization, valid RX delivery, normal TX/completion, kernel integration and
+physical exact-board operation remain separate unverified gates. Keep the full
+working-driver/OpenWrt objective active; no device/RF operation is authorized
+or performed by this tool.
 
 ## Resume here
 

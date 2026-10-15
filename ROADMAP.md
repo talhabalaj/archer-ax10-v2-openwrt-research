@@ -117,6 +117,12 @@ are design references; tables, firmware and register assumptions are not importe
 An ARM inline-access coverage design is optional offline work, not a deployed
 tracer or a prerequisite replacing current PHY/lifecycle implementation.
 
+Use the [verification loop](docs/VERIFICATION_LOOP.md) to turn the roadmap into
+functional gates. `scripts/verify_driver.py` runs the complete synthetic PHY
+vector and reports the actual first unresolved operation independently of
+regression success. Full enclosing initialization, RX delivery, normal TX,
+kernel integration and exact-board operation require their own scoped proof.
+
 ## Driver milestones
 
 ### D0 — Reproducible offline foundation: implemented within documented scope

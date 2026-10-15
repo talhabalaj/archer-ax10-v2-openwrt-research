@@ -155,6 +155,20 @@ See [REA attach/selection evidence](../docs/DRIVER_ATTACH_AUDIT.md),
 
 ## Run the checks
 
+Use the [functional verification loop](../docs/VERIFICATION_LOOP.md) to assess
+progress toward the working-driver objective:
+
+```sh
+python3 scripts/verify_driver.py --scope target
+```
+
+This executes the entire synthetic sixteen-stage PHY vector and records the
+first real unresolved operation. Exit2 is an honestly incomplete functional
+gate, even if the regression suite below is green. Reports and binaries stay
+in a new external directory. Enclosing initialization, RX/TX/kernel integration
+and device validation remain separate requirements; this command cannot
+establish physical readiness.
+
 Build outputs stay outside the public checkout. A pinned stock `wl.ko` is needed
 only for the second, private-input check; it is not distributed here.
 

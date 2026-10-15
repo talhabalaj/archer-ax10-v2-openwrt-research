@@ -6,6 +6,9 @@
 2. Read the relevant milestone in [ROADMAP.md](ROADMAP.md).
 3. Read the linked evidence and [driver/README.md](driver/README.md) before driver
    changes. Read [PUBLICATION_POLICY.md](docs/PUBLICATION_POLICY.md) before staging.
+4. Use the [functional verification loop](docs/VERIFICATION_LOOP.md). Run the
+   full-target probe to identify the first required unresolved operation; do not
+   treat a higher test count or an expected dependency as functional completion.
 
 The active priority is offline BCM63178 driver development. The immediate next
 milestone is implementation of the recovered D1 clock/PLL/PHY reset operations
@@ -53,6 +56,16 @@ Run `sh scripts/test_driver.sh` for synthetic ASan/UBSan checks after relevant C
 changes. Use its optional private module argument for affected stock-data paths.
 Cross-compile changed C components for ARMv7 when applicable; report compilation
 separately from Linux integration or device execution.
+
+Run `python3 scripts/verify_driver.py --scope target` when advancing PHY
+composition. Preserve all sixteen required stages and independent explicit read
+queues. Exit2 means incomplete functional proof, even when regression tests pass;
+exit1 means a check or trace failed. Record actual completed stages, first
+dependency and final return/slice flags. Fixture changes need independent
+source review and are not automatically counted as functional advancement.
+The checkpoint scope additionally runs sanitizer/build/optional ARM comparisons.
+Kernel, enclosing BMAC/TX/RX integration and physical validation remain distinct
+gates; an offline success never completes the full working-driver objective.
 
 Only original code/tests, research, reviewed Evidence summaries and portable
 metadata belong here. Keep firmware, arrays, calibration/NVRAM, raw captures,
