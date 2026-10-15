@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "subject": {
+    "name": "wl.ko",
+    "version": "17.10.121.37",
+    "size": 5803056,
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "provider": {
+    "name": "Ghidra",
+    "version": "12.1.4",
+    "rea_version": "6.5.0"
+  },
+  "observations": [
+    {
+      "evidence_id": "ev_bdfb71d5da119cf1c983be2500f6c2f232afc36dc082059728b5b553a4e449f3",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "dma64_dd_upd"
+      },
+      "scope": "Current ARM32 four-word formatter, address extension and optional parity"
+    },
+    {
+      "evidence_id": "ev_b67aef6a2751b04614706155d14099eed669a2cf7cc5c635c2dc19d4978cd84c",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "dma_txdesc"
+      },
+      "scope": "Descriptor-only ring reservation,16-byte producer stride,EOT,parity and commit"
+    },
+    {
+      "evidence_id": "ev_b90eab4aef2720ddc5148bd41025d93f392169505d9a1d7bc75b4accb547fcea",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "dma_getnexttxp"
+      },
+      "scope": "Current/status1 masks,base subtraction,range selection and packet tracking"
+    },
+    {
+      "evidence_id": "ev_5e04f41132f110d603d0e972f88c81211056988a4380654b28d2fffce200c82d",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "dma_getnextrxp.part.1"
+      },
+      "scope": "RX current-pointer conversion and software packet tracking"
+    },
+    {
+      "evidence_id": "ev_e5ffb4cfe29dca4bfb1f8b792e201984a1a510324df40c250d1a487a6d63dbf3",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "dma_rxfill"
+      },
+      "scope": "RX updater call and channel-relative producer publication"
+    },
+    {
+      "evidence_id": "ev_06d42acc62088ed3390b50d7875d64f4c06bdeab9d6715217a7e52316bd62e5c",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "dma_txfast"
+      },
+      "scope": "Current packet-list wrapper and actual transmit-fast child dependency"
+    },
+    {
+      "evidence_id": "ev_d5157872dc7e8a29f28f6a3953a772b2490c95cf3227f3411fe906ebfcd96b87",
+      "operation": "search_procedures",
+      "parameters": {
+        "pattern": "dma_.*(error|active|pending)|dma_txfast",
+        "mode": "regex",
+        "case_sensitive": false
+      },
+      "scope": "Bounded current symbol-name search; does not establish IRQ routing"
+    }
+  ],
+  "arm_formatter_comparison": {
+    "module_sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c",
+    "function": "dma64_dd_upd",
+    "function_bytes": 200,
+    "function_sha256": "9748022cfb4db093dc534589086fd41751cba07d2938655408748a753ba402cd",
+    "cases": 864,
+    "word_write_orders": [
+      [
+        8,
+        12,
+        0,
+        4
+      ],
+      [
+        8,
+        12,
+        0,
+        4,
+        4
+      ]
+    ],
+    "write_count_cases": {
+      "4": 648,
+      "5": 216
+    },
+    "calls": 0,
+    "relocations": 0,
+    "strict_memory_ranges": true,
+    "hardware_operations": 0,
+    "unicorn_version": "2.1.4"
+  },
+  "limitations": [
+    "Static observations and synthetic offline execution only",
+    "No hardware/MMIO/RF operations",
+    "No runtime DMA mapping,ring capability,IRQ or ownership proof",
+    "Older GPL17.10.86.5 is corroboration only",
+    "Raw evidence and proprietary bytes are excluded"
+  ]
+}

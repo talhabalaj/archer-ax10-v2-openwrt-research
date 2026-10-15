@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "scope": "Current RX slot removal, list processing and enclosing receive call path",
+  "analysis_mode": "offline_static",
+  "artifact": {
+    "name": "wl.ko",
+    "size": 5803056,
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "tools": {"rea": "6.5.0", "ghidra": "12.1.4"},
+  "records": [
+    {"procedure": "wlc_bmac_recv", "operation": "procedure_pseudo_code", "evidence_id": "ev_d284a8ca03492f38dd1e378722eebb40183876e573006b36708fa19927416cea"},
+    {"procedure": "wlc_bmac_recv", "operation": "procedure_assembly", "evidence_id": "ev_10486088d7c4d80c3d4a31d22ceda3d334f711869916d12077dea4eb92cbe484"},
+    {"procedure": "dma_rx", "operation": "procedure_pseudo_code", "evidence_id": "ev_bdb1966c606d80492cd15392b5c03a859efbd5012f03ab9efb0ca12562cb38e3"},
+    {"procedure": "dma_rx", "operation": "procedure_assembly", "evidence_id": "ev_e94a84b4e7641739286f78d922cdbed9a25733b7c39fe9ae29e28793c7e30226"},
+    {"procedure": "dma_getnextrxp.part.1", "operation": "procedure_assembly", "evidence_id": "ev_5e04f41132f110d603d0e972f88c81211056988a4380654b28d2fffce200c82d"}
+  ],
+  "session_exported_and_closed": true,
+  "limitations": [
+    "Only the RX slot-removal leaf has an original implementation in this package",
+    "Higher list/DMA/cache/packet parsing, RX fill, interrupts and Linux delivery remain incomplete",
+    "No hardware, RF, module-loading or router operation was performed",
+    "Raw source records, firmware, packet data and local paths are excluded"
+  ]
+}

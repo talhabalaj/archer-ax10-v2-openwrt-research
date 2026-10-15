@@ -66,15 +66,23 @@ mutating bring-up must follow the dependencies actually recovered from stock.
    clock caller. Continue with actual runtime/OS adapters and remaining optional
    prerequisites. The enclosing core-reset coordinator now composes actual AI/SI auxiliary reset,
    per-slot DMA/PSM, caches and fresh PLL checks. Continue the enclosing BMAC
-   initialization caller and runtime acquisition with explicit state.
+   initialization caller and runtime acquisition with explicit state. The
+   [BMAC audit](docs/DRIVER_BMAC_INIT_AUDIT.md) now establishes actual call order
+   and its mandatory SMC path; reset occurs in an earlier caller.
 3. **Finish policy acquisition and callouts:** the actual BSS/RRM/association
    predicate and wake-control action have tests, including actual ARM predicate
    comparisons. Runtime state acquisition/synchronization, MBSS and fatal recovery
    remain separate dependencies rather than successful placeholders.
 4. **Finish register/SHM and PHY 51 support:** resolve required radio/board inputs,
    clocks, calibration and channel initialization with no invented defaults.
+   Physical object/init writes, SMC, generic table writes, PMU/GPIO and the
+   complete registered PHY51 table-init callback now exist offline. Remaining
+   registry/radio/channel/calibration operations still require implementation.
 5. **Build the data path:** DMA rings and interrupts, receive parsing, transmit,
-   then the selected Linux WLAN integration. Validate each layer separately.
+   then the selected Linux WLAN integration. Current descriptor formatting,
+   descriptor-only posting and RX slot take are implemented offline. Packet
+   ownership/cache/mapping, RX list/length/status processing, fill and IRQ remain.
+   Validate each layer separately.
 6. **Establish board/recovery support:** exact-board console/recovery, modern
    OpenWrt RAM boot, Ethernet and exclusive radio resources. Offline work above
    can continue while this hardware work is pending.
@@ -175,6 +183,9 @@ unverified until device testing.
   device-relative register offsets separate.
 - Recover object-memory selectors, addressing units, access widths, ordering,
   limits and PSM/PSMx shared-memory layouts used by the chosen microcode.
+  [Physical object writers and init lowering](docs/OBJECT_MEMORY_MODEL.md) now
+  implement the recovered ports/readbacks; complete SHM ABI and runtime addend
+  acquisition remain.
 - Preserve the implemented/tested effective initialization
   operations with explicit runtime context,
   including the adjustment at offset `0x130` and the separate object-memory path.
@@ -194,6 +205,10 @@ invalid inputs; no old firmware/SHM ABI is silently substituted.
 - Reuse recovered PHY51 reset/TSSI/analog callback evidence, then recover
   `phy_ac_tbl_init`, radio switching, channel setup and necessary
   calibration callbacks for the observed PHY/radio revision.
+  [The complete registered PHY51 table-init callback](docs/DRIVER_PHY_INIT_AUDIT.md)
+  and [SMC loader/reset](docs/DRIVER_BMAC_INIT_AUDIT.md) are implemented offline,
+  with real generic table/PMU/GPIO children. This does not close the other
+  callbacks or establish the actual radio identity/calibration inputs.
 - Document required calibration fields and precedence using private inputs;
   validate presence/format without publishing values or inventing defaults.
 - Implement ordered PHY/radio operations in the simulator, with settling delays,
@@ -209,6 +224,11 @@ Only device evidence can establish successful calibration or valid RF behavior.
 - Recover descriptor sizes/ownership, address width, alignment, ring layout,
   receive buffers, status/header formats and interrupt acknowledgement.
 - Implement host-side ring/descriptor parsers and simulated completion paths.
+  [Current descriptor formatting](docs/DMA_DESCRIPTOR_MODEL.md),
+  [descriptor-only posting](docs/DMA_TX_POST_MODEL.md) and
+  [RX slot take](docs/DMA_RX_TAKE_MODEL.md) now have tests/ARM comparisons.
+  [The RX call-path audit](docs/DRIVER_RX_PATH_AUDIT.md) identifies the still
+  missing list/cache/packet parsing, fill and delivery layers.
 - Add a minimal kernel integration layer after board resources and ownership are
   established; validate DMA mapping, locking, lifetime and error recovery.
 - Start hardware validation with receive-only observations on an allowed channel;

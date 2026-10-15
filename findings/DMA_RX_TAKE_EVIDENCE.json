@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "subject": {
+    "name": "wl.ko",
+    "version": "17.10.121.37",
+    "size": 5803056,
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "provider": {
+    "name": "Ghidra",
+    "version": "12.1.4",
+    "rea_version": "6.5.0"
+  },
+  "observation": {
+    "evidence_id": "ev_5e04f41132f110d603d0e972f88c81211056988a4380654b28d2fffce200c82d",
+    "operation": "procedure_assembly",
+    "parameters": {
+      "procedure": "dma_getnextrxp.part.1"
+    },
+    "function_bytes": 296,
+    "function_sha256": "e4c7021c6dd414b77c997303d6887f1acec45e4b50d0ab21d889ffee706daa26"
+  },
+  "actual_arm_comparison": {
+    "unicorn_version": "2.1.4",
+    "cases": 2304,
+    "empty_ring_cases": 864,
+    "actual_arm_instructions": 379379,
+    "functions": 1,
+    "calls": 0,
+    "relocations": 0,
+    "rejection_probes": 3,
+    "strict_memory_and_read_queues": true,
+    "hardware_operations": 0
+  },
+  "limits": [
+    "Current packet-slot leaf only, not the complete dma_rx/BMAC receive path",
+    "Copied immutable metadata and stricter pointer/slot bounds are explicit host policy",
+    "No DMA ownership,cache,unmap,packet parsing,IRQ or Linux delivery proof",
+    "Raw module and analysis payloads are excluded"
+  ]
+}

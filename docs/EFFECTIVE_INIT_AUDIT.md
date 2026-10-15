@@ -69,7 +69,9 @@ cleanup.
 - Synthetic tests pass under ASan/UBSan; the component compiles for freestanding
   ARMv7 with strict warnings. Raw/selection/upload comparisons remain separate.
 
-Remaining work includes addend acquisition, physical object-helper lowering,
+Physical object-helper lowering is now implemented by `init_io.c` and
+`object_memory.c`; see [the physical writer contract](OBJECT_MEMORY_MODEL.md).
+Remaining work includes addend acquisition,
 complete SHM/register contracts, lifecycle/clock/resource ownership, PHY 51,
 DMA/RX/TX and Linux integration. No firmware execution or radio operation is
 established by these tests.

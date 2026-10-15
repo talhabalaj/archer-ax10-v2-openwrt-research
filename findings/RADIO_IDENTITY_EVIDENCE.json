@@ -1,0 +1,67 @@
+{
+  "scope": "Original core130 AC radio identity query/thunk and distinct AC/common parser contracts; metadata only",
+  "input": {
+    "name": "wl.ko",
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4",
+    "optional_arm_emulator": "Unicorn2.1.4"
+  },
+  "records": [
+    {
+      "procedure": "phy_ac_radio_parse_idcode",
+      "evidence_id": "ev_3fa677e7f9f44e6071c70ecfc0ec94cf21e0e70c286609b344b7a9d3df8932d7",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "phy_ac_radio_query_idcode",
+      "evidence_id": "ev_2f1ffcb38ca506114f08f19182a66ae38eb20b11269a1c2bea85bbff05fb090a",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "_phy_ac_radio_query_idcode",
+      "evidence_id": "ev_0931b904259810d799bd9587fe77f8bd0e928839280427ee93c987e0b5525318",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "phy_utils_parse_idcode",
+      "evidence_id": "ev_35a1a8846810bf1be8c1941d349d535eb016ace53c7587d849e64096400097a6",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "phy_radio_register_impl",
+      "evidence_id": "ev_583bd6f5f8f31e65fd73d132aaf03ce183adbdbde1ba1c42f91a37490e4c0c3f",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "field": "core130 common descriptor fields88/8a",
+      "evidence_id": "ev_13bbe02b60ef3ee616788377f938707b764728cd8a81ea5bc6cba1ab5b49e706",
+      "evidence_type": "observed bounded descriptor read",
+      "resolved_address_port": 984,
+      "resolved_data_port": 986
+    },
+    {
+      "procedure": "phy_ac_radio_register_impl",
+      "evidence_id": "ev_cac6e9f2199ebd593afa45e11caeddea5081bb9ca6ddc85ee5f7bc604ec03bf9",
+      "evidence_type": "reused static pseudocode",
+      "query_slot": 4,
+      "context_slot": 8
+    }
+  ],
+  "validation": {
+    "synthetic_literal_callback_fault_suite": "passed ASan/UBSan",
+    "armv7_freestanding_compile": "passed",
+    "semantic_mutants_rejected": 5,
+    "actual_arm_query_cases": 68,
+    "actual_arm_decode_cases": 264
+  },
+  "limitations": [
+    "No actual router/radio identity or RF behavior was observed.",
+    "Selected stock ARM leaves execute only in an isolated emulator with synthetic contexts and strict supplied replies.",
+    "Registered-thunk relocation and complete attach/radio/channel/calibration/driver execution remain outside the ARM check.",
+    "No raw disassembly, payload, calibration, private identifier or local host path included."
+  ],
+  "session_lifecycle": "Native offline analysis exported and closed successfully; process exited0."
+}

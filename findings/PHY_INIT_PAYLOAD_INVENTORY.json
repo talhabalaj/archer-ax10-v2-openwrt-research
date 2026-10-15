@@ -1,0 +1,55 @@
+{
+  "module_sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c",
+  "function": "wlc_phy_init_acphy",
+  "objects": [
+    {
+      "file": "acphy51_table16_offset1000.bin",
+      "table_id": 16,
+      "offset": 4096,
+      "count": 8,
+      "width": 32,
+      "size": 32,
+      "sha256": "e4f7045d7e3ebdebaa44ec82f597a5e140c8188a54876bfaaa818a670aeccd45",
+      "source": {
+        "section": ".rodata",
+        "section_offset": 1619580,
+        "file_offset": 4399852
+      }
+    },
+    {
+      "file": "acphy51_table16_offset1040.bin",
+      "table_id": 16,
+      "offset": 4160,
+      "count": 64,
+      "width": 32,
+      "size": 256,
+      "sha256": "119b16e4c10038672e801e75359341b39aa1d46113b7a3799767da83a7318f99",
+      "source": {
+        "section": ".rodata",
+        "section_offset": 1619324,
+        "file_offset": 4399596
+      }
+    },
+    {
+      "file": "acphy51_table16_offset1020.bin",
+      "table_id": 16,
+      "offset": 4128,
+      "count": 1,
+      "width": 32,
+      "size": 4,
+      "sha256": "5201992a79d279834895fafea3d885be93c841185babced77ad5d1379fe63e7e",
+      "source": {
+        "source": "decoded ARM immediate construction",
+        "function_offsets": [
+          40,
+          44
+        ]
+      }
+    }
+  ],
+  "scope": "Metadata only; exact source bindings for three private target table spans",
+  "limitations": [
+    "Input identity/source decoding does not prove hardware readiness or initialization",
+    "OTP/PMU/GPIO and runtime object/resource bindings are separate requirements"
+  ]
+}

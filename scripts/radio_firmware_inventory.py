@@ -19,6 +19,10 @@ MICROCODE = tuple("d11" + side + "_" + profile + "130" + minor
                  for profile in ("mu", "btcxmu") for minor in ("", "_1"))
 
 
+SMC = ("d11smc1",)
+SMC_SHA256 = "0e791de621714ef23006b41687ae8338c24a034097f9f18a174f0441225784a4"
+
+
 def require(condition, reason):
     if not condition:
         raise ValueError(reason)
@@ -87,10 +91,10 @@ def objects(data, wanted):
 
 def inspect(data):
     require(hashlib.sha256(data).hexdigest() == MODULE_SHA256, "Unrecognized module hash")
-    selected = TABLES + MICROCODE + tuple(name + "sz" for name in MICROCODE)
+    selected = TABLES + MICROCODE + SMC + tuple(name + "sz" for name in MICROCODE + SMC)
     blobs = objects(data, selected)
     records = []
-    for name in TABLES + MICROCODE:
+    for name in TABLES + MICROCODE + SMC:
         item = blobs[name]
         block = item["data"]
         record = {"symbol": name, "section": item["section"],
@@ -106,6 +110,21 @@ def inspect(data):
             record.update(kind="init-table", records=len(rows),
                           writes16=sum(r[1] == 2 for r in rows[:-1]),
                           writes32=sum(r[1] == 4 for r in rows[:-1]))
+        elif name in SMC:
+            companion = blobs[name + "sz"]
+            size_word = companion["data"]
+            require(len(size_word) == 4 and struct.unpack("<I", size_word)[0] == len(block),
+                    "SMC size-symbol mismatch")
+            require(len(block) == 11420 and record["sha256"] == SMC_SHA256,
+                    "Unrecognized target SMC image")
+            rows = (len(block) // 6) & 0xffff
+            record.update(kind="smc-image", table_id=47, width=48, row_count=rows,
+                          transferred_bytes=rows * 6, ignored_trailing_bytes=len(block) % 6,
+                          size_symbol_matches=True,
+                          size_symbol={"symbol": name + "sz", "section": companion["section"],
+                              "file_offset": companion["file_offset"],
+                              "section_offset": companion["section_offset"],
+                              "size": len(size_word), "value": struct.unpack("<I", size_word)[0]})
         else:
             size_word = blobs[name + "sz"]["data"]
             require(len(size_word) == 4 and struct.unpack("<I", size_word)[0] == len(block),
@@ -117,7 +136,7 @@ def inspect(data):
             "scope": "Selected file-backed objects; no raw data, execution or RF operation",
             "limitations": ["Array names are not proof of runtime selection",
                 "Init records remain unadjusted; stock consumer has runtime-dependent fixups",
-                "Microcode decoding, upload, register maps, PHY programming and calibration are not implemented"]}, blobs
+                "Inventory does not execute uploads, PHY/radio programming or device validation"]}, blobs
 
 
 def main():
@@ -132,7 +151,7 @@ def main():
         public = Path(__file__).resolve().parents[1]
         require(not destination.is_relative_to(public), "Private output must be outside this repository")
         destination.mkdir(mode=0o700, parents=True, exist_ok=False)
-        for name in TABLES + MICROCODE:
+        for name in TABLES + MICROCODE + SMC:
             with (destination / (name + ".bin")).open("xb") as output:
                 (destination / (name + ".bin")).chmod(0o600)
                 output.write(blobs[name]["data"])

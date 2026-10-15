@@ -1,0 +1,146 @@
+{
+  "scope": "Original BMAC initialization and mandatory target SMC contracts; selected metadata only",
+  "inputs": {
+    "wl.ko": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c",
+    "hnd.ko": "d05ff061b3a636630955a13fdd20a953f3dfb07ee92904a987dd4c77b648b45a"
+  },
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4"
+  },
+  "records": [
+    {
+      "procedure": "phy_ac_smc_download",
+      "evidence_id": "ev_d913f15578ec454713f3481fb39f5188cc3e4804fc961bf2ea6aa9bb371c81d5",
+      "subject": "wl.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "phy_ac_smc_reset",
+      "evidence_id": "ev_32ef972b192ba7d9fa885a2748f9e4e9a014995210dcebbbf26d898cc2ae6a53",
+      "subject": "wl.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "wlc_bmac_init",
+      "evidence_id": "ev_7b8cf3de67af1e32149aaef74ae8d54800d7b08959164480419134f4bc2c5be6",
+      "subject": "wl.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "wlc_bmac_bsinit",
+      "evidence_id": "ev_24878926787b75cfd1d10672628c6c616626f12efe25a5ff95dc7df9e8e3a2f8",
+      "subject": "wl.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "phy_calmgr_init",
+      "evidence_id": "ev_e2de8829b51b5cbdbc76d2e2eee685486a0cdc80e0de022b4c113e2ed397270a",
+      "subject": "wl.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "wlc_phy_chanspec_radio_set",
+      "evidence_id": "ev_c04c9e8eaac31cc2fd134e6cc70625f2543f277ea6e6ae5e13ae6e62faa11734",
+      "subject": "wl.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "phy_smc_download",
+      "evidence_id": "ev_7f320a444f16862822889df4ef97211035cc4a14e7185036efe2bff54c4ce963",
+      "subject": "wl.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "phy_smc_reset",
+      "evidence_id": "ev_e35b038ce7735a7b4deff6c7a13e52d134f029d9acfd7a04914119d8f0b44715",
+      "subject": "wl.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "wlc_bmac_rcvlazy_update",
+      "evidence_id": "ev_140f6063fdcae5d17810751aad9def2b538983d0be5512fb6fd3fb45f87a9f8d",
+      "subject": "wl.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "wlc_setxband",
+      "evidence_id": "ev_d5d0cdd02d438c81acd2a39d34a856372a07f7326eebb7151434f7d6f8edd678",
+      "subject": "wl.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "si_clkctl_fast_pwrup_delay",
+      "evidence_id": "ev_93c01f31ef1c076cd2602ad9283f23fb32580d1ac20289e57b4b77b38f0c6748",
+      "subject": "hnd.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "wlc_smc_download",
+      "evidence_id": "ev_d554076c11ec5413b942b3668807039fe6916ba2118efb4db6bae04158ba0c53",
+      "subject": "wl.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "wlc_smc_hw_supported",
+      "evidence_id": "ev_9f0baabe47a8d1856a85d6ecf72cb0725982ad0435be32e998fcedeb7776388c",
+      "subject": "wl.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "wlc_bmac_synthpu_dly",
+      "evidence_id": "ev_f52b141ef4dc3e2a097a39a17e8e7d8e84d7d8970324763b144477695a2c647f",
+      "subject": "wl.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "wlc_bmac_update_fastpwrup_time",
+      "evidence_id": "ev_7b1e5970f4da8ba859a736fb282b8a7c19394d6b2fb8db4a4a29d3c0db5735fc",
+      "subject": "wl.ko",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "wlc_bmac_init",
+      "evidence_id": "ev_bff33b73bdefa3d52a4daf134ad0ccd9f13c5fd6037bde943a4880fe9242f6e4",
+      "subject": "wl.ko",
+      "evidence_type": "reused static pseudocode"
+    },
+    {
+      "procedure": "wlc_bmac_attach",
+      "evidence_id": "ev_9c5169ec2aebea30cb32004f1cf079127c180b4a9f7438b0b14ce36ce1ff45c4",
+      "subject": "wl.ko",
+      "evidence_type": "reused static pseudocode"
+    },
+    {
+      "procedure": "phy_utils_write_phyreg",
+      "evidence_id": "ev_4456d4d9d52841e9e9f571371f489f9ef1e8022d869a71dce732b8ae0297995e",
+      "subject": "wl.ko",
+      "evidence_type": "reused static assembly"
+    },
+    {
+      "field": "core130 descriptor root+f6",
+      "evidence_id": "ev_5c1b922910454d108181b58a790169e13ec3358a78b051afdcf76ceec78235a2",
+      "subject": "wl.ko",
+      "evidence_type": "observed bounded descriptor read",
+      "resolved_port": 1984
+    }
+  ],
+  "smc_object": {
+    "name": "d11smc1",
+    "declared_size": 11420,
+    "symbol_size": 11420,
+    "table_id": 47,
+    "width": 48,
+    "offset": 0,
+    "row_count": 1903,
+    "ignored_trailing_bytes": 2,
+    "sha256": "0e791de621714ef23006b41687ae8338c24a034097f9f18a174f0441225784a4",
+    "source_resolution": "ELF32 section-indexed STT_OBJECT and size companion; source digest checked; no payload included"
+  },
+  "limitations": [
+    "Observed static instruction order is not runtime device behavior.",
+    "BMAC initialization as a whole remains incomplete; SMC wrapper/reset and composed table writes are original offline implementations.",
+    "No raw analysis records, payloads, calibration, identifiers or local host paths included.",
+    "The failed sandbox analysis session was exported and closed. Authorized native offline wl/hnd sessions were exported/closed successfully; no target code or router action occurred."
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "scope": "Original SI PMU voltage-register/GPIO and actual register resource contracts; metadata only",
+  "input": {
+    "name": "hnd.ko",
+    "sha256": "d05ff061b3a636630955a13fdd20a953f3dfb07ee92904a987dd4c77b648b45a"
+  },
+  "tools": {
+    "rea": "6.5.0",
+    "ghidra": "12.1.4"
+  },
+  "records": [
+    {
+      "procedure": "ai_corereg",
+      "evidence_id": "ev_5d14b60131f496fd42c267ea3aa501fd6b851cb3bd1f2ff8a59d4a74eede1d2c",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "si_gpiocontrol",
+      "evidence_id": "ev_7e18ae0273975a4e7624b24706bc807cdaebdcadbe8c02855aa87ee636a7488e",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "si_pmu_vreg_control",
+      "evidence_id": "ev_2dcbe864ad06e9b02426ab8ff4143fcc9e2634093cf10a80950f57dcc650ee41",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "si_corereg",
+      "evidence_id": "ev_f3f62b6804d865d43aad531b13b6b54bdde9cf12babfceda1cbe0b53e94bfa93",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "si_findcoreidx",
+      "evidence_id": "ev_8308dd7763e05c4b4c371400c15ba6b4fd64b153dfbcc82aa8bd9959ce8fb50a",
+      "evidence_type": "observed static assembly"
+    },
+    {
+      "procedure": "si_pmu_corereg",
+      "evidence_id": "ev_29e907b86aa7af7dd01f12259f278bfceedbdb70c39bc32478d3152214dc7f93",
+      "evidence_type": "observed static assembly"
+    }
+  ],
+  "limitations": [
+    "Static order is not hardware execution or readiness.",
+    "OS mapping/MMIO/PCI/IRQ ownership and actual GPIO reservation remain supplied runtime facts.",
+    "SB register dispatch remains an explicit dependency; inspected catalogs are bounded at32.",
+    "No raw disassembly, proprietary payload, calibration, identifiers or local host paths included."
+  ],
+  "session_lifecycle": "Native offline analysis exported and closed successfully; process exited0."
+}

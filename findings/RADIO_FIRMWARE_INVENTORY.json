@@ -136,12 +136,35 @@
       "kind": "microcode",
       "words32": 9350,
       "size_symbol_matches": true
+    },
+    {
+      "symbol": "d11smc1",
+      "section": ".rodata",
+      "file_offset": 3762828,
+      "section_offset": 982556,
+      "size": 11420,
+      "sha256": "0e791de621714ef23006b41687ae8338c24a034097f9f18a174f0441225784a4",
+      "kind": "smc-image",
+      "table_id": 47,
+      "width": 48,
+      "row_count": 1903,
+      "transferred_bytes": 11418,
+      "ignored_trailing_bytes": 2,
+      "size_symbol_matches": true,
+      "size_symbol": {
+        "symbol": "d11smc1sz",
+        "section": ".rodata",
+        "file_offset": 3774248,
+        "section_offset": 993976,
+        "size": 4,
+        "value": 11420
+      }
     }
   ],
   "scope": "Selected file-backed objects; no raw data, execution or RF operation",
   "limitations": [
     "Array names are not proof of runtime selection",
     "Init records remain unadjusted; stock consumer has runtime-dependent fixups",
-    "Microcode decoding, upload, register maps, PHY programming and calibration are not implemented"
+    "Inventory does not execute uploads, PHY/radio programming or device validation"
   ]
 }

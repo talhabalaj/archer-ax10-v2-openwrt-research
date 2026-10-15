@@ -7,7 +7,7 @@ axd_build_dir=$(mktemp -d)
 trap 'rm -rf "$axd_build_dir"' EXIT HUP INT TERM
 cc -std=c11 -Wall -Wextra -Werror -pedantic -fsyntax-only tests/check_driver_headers.c
 printf '%s\n' 'Public driver headers compile together; numeric AI transport/state values preserved.'
-for axd_test in init_table effective_init ucode_upload status_poll psm_start ai_reset psm_control dma_reset clock_control phy_register chipcommon_clock phy_table phy_tssi phy_clock psm_override phy_guard idle_tssi wake_policy bf_clean phy_reset si_select si_clock wl_clock mctrl si_core core_reset_low core_reset; do
+for axd_test in init_table effective_init ucode_upload status_poll psm_start ai_reset psm_control dma_reset clock_control phy_register chipcommon_clock phy_table phy_tssi phy_clock psm_override phy_guard idle_tssi wake_policy bf_clean phy_reset si_select si_clock wl_clock mctrl si_core core_reset_low core_reset dma_descriptor object_memory init_io phy_table_write smc si_pmu_gpio phy_init dma_tx_post dma_rx_take radio_identity; do
     cc -std=c11 -Wall -Wextra -Werror -pedantic -fsanitize=address,undefined \
         driver/init_table.c driver/effective_init.c driver/ucode_select.c driver/ucode_upload.c driver/status_poll.c \
         driver/psm_start.c driver/ai_reset.c driver/psm_control.c driver/dma_reset.c driver/clock_control.c driver/phy_register.c driver/chipcommon_clock.c driver/phy_table.c driver/phy_tssi.c driver/phy_clock.c \
@@ -15,6 +15,9 @@ for axd_test in init_table effective_init ucode_upload status_poll psm_start ai_
         driver/bf_clean.c driver/phy_reset.c \
         driver/si_select.c driver/si_clock.c driver/wl_clock.c \
         driver/mctrl.c driver/si_core.c driver/core_reset_low_ai.c driver/core_reset_low.c driver/core_reset.c \
+        driver/dma_descriptor.c driver/object_memory.c driver/init_io.c driver/phy_table_write.c driver/smc.c \
+        driver/si_pmu_gpio.c driver/phy_init.c driver/dma_tx_post.c driver/dma_rx_take.c \
+        driver/radio_identity.c \
         "tests/test_$axd_test.c" -o "$axd_build_dir/test_$axd_test"
     "$axd_build_dir/test_$axd_test"
 done
@@ -30,6 +33,11 @@ if [ "$#" -gt 0 ]; then
         driver/bf_clean.c driver/phy_reset.c \
         driver/si_select.c driver/si_clock.c driver/wl_clock.c \
         driver/mctrl.c driver/si_core.c driver/core_reset_low_ai.c driver/core_reset_low.c driver/core_reset.c \
+        driver/dma_descriptor.c driver/object_memory.c driver/init_io.c driver/phy_table_write.c driver/smc.c \
+        driver/si_pmu_gpio.c driver/phy_init.c driver/dma_tx_post.c driver/dma_rx_take.c \
+        driver/radio_identity.c \
+        tests/smc_stock_adapter.c \
         -o "$axd_library"
     python3 tests/check_stock_firmware.py "$1" "$axd_library"
+    python3 tests/check_smc_stock.py "$1" "$axd_library"
 fi

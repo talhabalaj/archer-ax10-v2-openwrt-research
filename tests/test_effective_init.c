@@ -241,6 +241,12 @@ int main(void)
     assert(init.record_index == 10 && init.completed_records == 10 && init.skipped_records == 1);
     terminal(&init, &r, AXD_INIT_COMPLETE);
 
+    /* Chaining from its own opaque runtime addend must snapshot before clear. */
+    init.addend = 0x12345678u;
+    assert(axd_effective_init_begin(&init, 130, 1, mixed, sizeof(mixed),
+                                   &init.addend, 0x1000, 0x20000) == 0);
+    assert(init.addend == 0x12345678u);
+
     /* Every callback kind, both widths, every object width and final operation. */
     for (i = 0; i < events; i++) {
         r = fresh_recorder();

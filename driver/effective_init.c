@@ -52,9 +52,14 @@ int axd_effective_init_begin(struct axd_effective_init *init,
                               uint32_t mmio_window, uint32_t object_window)
 {
     const struct axd_effective_init empty = {0};
+    uint32_t addend_snapshot;
     size_t pos;
     if (init == NULL)
         return -1;
+    if (offset130_addend != NULL) {
+        addend_snapshot = *offset130_addend;
+        offset130_addend = &addend_snapshot;
+    }
     *init = empty;
     init->phase = AXD_INIT_FAILED;
     init->error = AXD_INIT_BAD_ARGUMENT;

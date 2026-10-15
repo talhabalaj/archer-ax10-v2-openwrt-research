@@ -1,8 +1,10 @@
 # Current progress and continuation checkpoint
 
-Updated 2026-10-15. This checkpoint implements the enclosing core-reset
-coordinator and actual lower auxiliary-reset path, with independent offline
-trace tests. It follows the received T3 handoff at baseline `1deea16`.
+Updated 2026-10-15. This checkpoint adds physical object-memory initialization,
+the mandatory core130 SMC path, the complete registered PHY51 table-init
+callback, and current DMA descriptor/TX-post/RX-take components. It builds on
+the enclosing/lower core-reset checkpoint `788eee4` and the earlier baseline
+`1deea16`. These remain offline implementations, not a working radio driver.
 Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
 
 ## Current reset checkpoint
@@ -23,11 +25,23 @@ components, with no hardware backend or claimed working Wi-Fi driver.
 
 ## Resume here
 
-**Next: recover the enclosing BMAC initialization context and runtime adapters
-around the now implemented core-reset package.** Follow the retained actual
-caller order for reset/upload/start, radio/table initialization and calibration
-inputs. Implement known operations and expose reached gaps. Do not substitute a
-completed reset trace or clock-cache byte for physical readiness.
+**Next: finish the remaining radio/channel/calibration callbacks and receive
+list/ownership path, using the recovered enclosing call graphs.** The
+[BMAC audit](docs/DRIVER_BMAC_INIT_AUDIT.md) establishes actual initialization
+order: core-unit word150 gates download calls; the separate microcode-skip and
+SMC-loaded bytes have different meanings. SMC support is true for core130 and
+cannot be skipped as an unsupported optional feature. `wlc_bmac_init` itself
+does not call core-reset; recover its earlier lifecycle caller before composing
+them. The [PHY audit](docs/DRIVER_PHY_INIT_AUDIT.md) distinguishes the now
+implemented registered table-init callback from the remaining registry/radio
+and calibration work. The [RX audit](docs/DRIVER_RX_PATH_AUDIT.md) distinguishes
+slot removal from higher `dma_rx`, RX fill and Linux delivery.
+
+The actual radio ID and subrevision are not established by the hardware
+inventory. Preserve explicit runtime OTP/NVRAM/private-span/resource bindings;
+never choose a radio/calibration branch from the BCM63178 name alone. Implement
+known operations and expose reached gaps. A completed trace is not physical
+readiness, DMA ownership or a successful packet transfer.
 
 [SI selection](docs/SI_SELECT_MODEL.md) now preserves actual map/cache/index
 stores and typed OS requests. [HND selection/IRQ/clock composition](docs/SI_CLOCK_MODEL.md)
@@ -54,10 +68,10 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | Target and reference inventory | Established for inspected inputs | [Hardware](findings/HARDWARE_INVENTORY.json), [binary](docs/DRIVER_BINARY_AUDIT.md), [GPL](docs/GPL_AUDIT.md). Reverify drift-prone device state before device work. |
 | D0 offline foundation | Implemented and host-tested within stated limits | Four C components, pinned object inspector, synthetic/fault tests and private-input comparisons. |
 | D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper/startup, PSM control, DMA reset, D11/ChipCommon clock, table/all-core TSSI, target PHY reset and BF cleaner implemented. SI/WL clock and enclosing core-reset composition are implemented offline; higher initialization, runtime/OS resources and MBSS/fatal recovery remain. |
-| D2 complete register/SHM/context contracts | Partial implementation, host-tested | Effective-init semantics and startup SHM16 FIFO read implemented; addend acquisition, physical init-object writes, complete register map and SHM ABI remain. |
-| D3 PHY 51/radio/channel/calibration | Attach dispatch mapped; initialization pending | Table/TSSI/PHY-clock subsets host-tested; radio-specific initialization/calibration and board inputs remain. |
-| D4 DMA/interrupt/RX | Reset helpers only; data path not implemented | Current reset paths tested offline; common older source mapped. Current queue/resources, descriptors, IRQ and RX remain to establish. |
-| D5 TX/Linux WLAN integration | Not implemented | Integration architecture and baseline feature implementation remain open. |
+| D2 complete register/SHM/context contracts | Partial implementation, host-tested | Effective-init now lowers through real physical object writers; addend acquisition, complete register map and SHM ABI remain. |
+| D3 PHY 51/radio/channel/calibration | Partial implementation, host-tested | Complete registered PHY51 table-init, generic AC table writer, SI PMU/GPIO and mandatory SMC path implemented; radio/channel/calibration, runtime board inputs and full registry remain. |
+| D4 DMA/interrupt/RX | Partial offline implementation | Current descriptor formatting/ring arithmetic and actual RX slot-take leaf implemented; allocation/cache/list parsing, RX fill, IRQ and kernel resources remain. |
+| D5 TX/Linux WLAN integration | Descriptor-only TX leaf implemented offline | Actual descriptor posting is implemented; normal packet TX/completion and Linux WLAN architecture/integration remain. |
 | D6 HE/features/stability | Not implemented | Requires validated baseline driver and hardware tests. |
 | B0 flash/boot investigation | Partial | 21 vendor-declared regions and NOR rootfs corroboration; physical geometry/authentication/calibration coverage unresolved. |
 | B1 console/recovery | Pending hardware evidence | Exact-board pins/voltage, console/command policy and return to stock not demonstrated. |
@@ -73,7 +87,15 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | `driver/ucode_select.c` | Core 130 minor 0/1 plus slice boardflags bit 0 selects primary/extended names and pinned sizes. | No input authentication, upload permission or readiness. |
 | `driver/init_table.c` | Strict 8-byte LE record validation and raw ordered replay, offsets below `0x1000`. | Omits runtime adjustment at `0x130` and object-memory translation. Not a hardware-write emulator. |
 | `driver/ucode_upload.c` | Explicit fresh chunk zero; main then extended; selector/readback/barrier and LE word-write trace; one event per step. | No MMIO, reset/start, SHM publication or hardware acknowledgement. Nonzero chunk state rejected. |
-| `driver/effective_init.c` | Runtime `0x130` adjustment, width truncation and bounded semantic object-copy events. | Explicit synthetic/caller context; no object-helper port lowering. |
+| `driver/effective_init.c` | Runtime `0x130` adjustment, width truncation and bounded semantic object-copy events; own-addend alias preserved. | Semantic layer; `init_io.c` supplies actual object-helper lowering, runtime addend acquisition remains. |
+| `driver/object_memory.c` / `init_io.c` | Actual object COPY/COPY32/SET32/WRITE16 ports, discarded selector readbacks, lane/stride rules and physical init-record completion. | Explicit source/owner/window bindings and stricter bounded lengths; no runtime map or SHM ABI discovery. |
+| `driver/phy_table_write.c` | Actual AC table wrapper, widths8/16/32/42/48/60/64 and packed PHY writes, with real PSM/PHY guards. | Borrowed private/synthetic data and explicit hardware state; no physical table proof. |
+| `driver/si_pmu_gpio.c` | Actual PMU vreg/GPIO corereg, bus0 map/cache and PCI/ordinary SI/IRQ paths. | Explicit catalog/global reservation and actual post-IRQ state; no OS adapter or voltage proof. |
+| `driver/phy_init.c` | Complete registered target51 table-init sequence with actual PHY/table/PMU/GPIO children. | Caller-known OTP/private spans, other registered callbacks and radio/calibration remain. |
+| `driver/smc.c` | Actual loaded-byte wrapper, reset0/pulse/table47-width48/reset1, software flags only after child return. | Pinned private image provenance/runtime graph required; no SMC execution or readiness proof. |
+| `driver/dma_descriptor.c` | Current sixteen-byte codec/formatter, address-extension/parity rules and bounded ring/range arithmetic. | Pure values; stricter host bounds, no DMA mapping/cache/lifetime ownership. |
+| `driver/dma_tx_post.c` | Actual descriptor-only posting, fresh memory parity reads, out/producer/availability commitment. | Raw input differs from formatter; copied mutation and explicit resources, no normal packet TX/completion. |
+| `driver/dma_rx_take.c` | Actual status/cached-current/force gates, slot clear, consumer/availability stores and mode-dependent sentinel skip. | Returns a packet label, not parsed packet or DMA/cache/allocator ownership. |
 | `driver/ai_reset.c` | AI primary/optional-secondary wrapper trace, bounded busy/release loops and readback-dependent control. | Used by actual lower reset composition; trace completion can include stuck reset. |
 | `driver/psm_start.c` | Cached main/extended controls, exact ACK loops/final reads, physical SHM16 FIFO verification. | Startup-suspended predicate only; explicit fail-stop policy, no hardware backend. |
 | `driver/psm_control.c` | Wake, suspend/enable, generic override set/clear, actual wake-control action and current-mask policy integration. | Reached unknown policy/public state or MBSS/fatal recovery remains explicit; stricter fail-stop policy, no backend. |
@@ -121,6 +143,31 @@ These are historical validation results for the named baseline. Re-run relevant
 checks when code or inputs change; do not imply a new hardware test occurred.
 
 ## Latest implementation and retained evidence
+
+- [Object writers and physical initialization](docs/OBJECT_MEMORY_MODEL.md)
+  and [selected assembly](findings/OBJECT_MEMORY_EVIDENCE.json) close the real
+  ports/readbacks and record-return boundary. The own-addend restart regression
+  fixes a semantic-layer alias that previously cleared its input before copying.
+- [BMAC order/SMC](docs/DRIVER_BMAC_INIT_AUDIT.md) and
+  [selected current evidence](findings/DRIVER_BMAC_INIT_EVIDENCE.json) distinguish
+  core-unit, microcode skip and SMC-loaded state. The inventory now includes
+  separate SMC metadata alongside the original eight microcode/four init objects.
+- [PHY51 callback/registry audit](docs/DRIVER_PHY_INIT_AUDIT.md),
+  [table-write protocol](docs/PHY_TABLE_WRITE_MODEL.md),
+  [PMU/GPIO paths](docs/SI_PMU_GPIO_MODEL.md) and
+  [private-span metadata](findings/PHY_INIT_PAYLOAD_INVENTORY.json) describe the
+  actual composed callback and required runtime bindings. The inventory tool
+  resolves its exact current relocations and exports only to a fresh external
+  private directory when explicitly requested.
+- [DMA formatter](docs/DMA_DESCRIPTOR_MODEL.md),
+  [descriptor-only posting](docs/DMA_TX_POST_MODEL.md),
+  [receive slot take](docs/DMA_RX_TAKE_MODEL.md) and
+  [enclosing RX audit](docs/DRIVER_RX_PATH_AUDIT.md) keep software arithmetic,
+  descriptor publication, packet labels, DMA ownership and delivery distinct.
+- [Radio identity](docs/RADIO_IDENTITY_MODEL.md) implements the actual high-first
+  two-sample query, registered AC context binding and distinct AC/common decode
+  stores. The actual board identity remains unknown; implementing its query
+  contract is not an observation of its radio model.
 
 - [Resource ledger](docs/DRIVER_RESOURCE_AUDIT.md) and
   [40 selected Evidence IDs](findings/DRIVER_RESOURCE_EVIDENCE.json) establish
@@ -170,6 +217,39 @@ checks when code or inputs change; do not imply a new hardware test occurred.
 
 Latest validation (host/build and isolated synthetic ARM execution only):
 
+- New independent literal tests cover object lane/stride/readback ordering,
+  physical initialization completion, all AC table widths/guards, SMC load/skip
+  branches, PMU/GPIO mapping/IRQ restoration, the412-event PHY51 callback and
+  all64 fresh-PHY0/OTP voltage cases. Every selected callback error, cancellation
+  and coincident error preserves actual partial state. Private semantic mutants
+  are rejected; no always-success external operation supplies the chain.
+- Descriptor/TX/RX tests check raw words, current address/parity arithmetic,
+  reserved-slot capacity, fresh parity reads, source-ordered software stores,
+  forced/cached receive status and sentinel chains, including every callback exit.
+- The full private SMC comparison matches1903 rows,5709 data halfwords and11460
+  operations. Its two trailing source bytes are intentionally ignored, as in
+  stock; changing only them leaves the trace unchanged. Pinned-source digest
+  mismatches are rejected. This uses synthetic explicit read replies, not RF.
+- Added strict actual-ARM comparisons match864 descriptor-format cases,
+  456 cases through four real object writers, and1408 descriptor-post cases
+  including240 full-ring returns, plus2304 receive-slot cases including864 empty
+  rings. They reject unknown calls/relocations/memory
+  and missing or unused reads; the object COPY calls bind the real WRITE16
+  function rather than a success stub. Receive comparisons execute379379 actual
+  ARM instructions and match per-callback cursor/availability/cache snapshots.
+- All 38 portable C objects and the combined 39-header probe pass strict
+  freestanding `armv7-none-eabi` compilation. These builds do not link a Linux
+  module or execute code on the router.
+- All 37 synthetic runtime programs pass the shared ASan/UBSan runner, including
+  the added radio-identity package. Optional private comparisons also pass for
+  1404 raw init records,4212 effective records, eight selector cases,104440 upload
+  words and the complete SMC trace. Both public object inventories exactly
+  reproduce the pinned module's current metadata.
+- The radio-identity ARM check additionally matches68 actual query traces and
+  264 distinct AC/common decode cases. Its registered-thunk relocation is
+  excluded from emulator scope and covered by literal C binding tests. No
+  actual board identity is inferred from these synthetic inputs.
+
 
 - New independent reset tests cover source-ordered callbacks and software stores,
   original full fast byte, paired/null DMA rules, RX eligibility, real FIFO-clear
@@ -182,14 +262,15 @@ Latest validation (host/build and isolated synthetic ARM execution only):
   gate tests. These are synthetic trace checks; no whole-reset ARM execution,
   physical reset/readiness, calibration or radio behavior is proved.
 
-- All three retained Unicorn2.1.4 instruction-comparison harnesses were rerun
+- At reset checkpoint `788eee4`, the three retained Unicorn2.1.4 harnesses were rerun
   successfully: 264 primitive cases, 512 TSSI and 270 table/high-selector cases
   plus16 packed fixtures, and373 wake-policy decisions plus139 missing prefixes.
   This does not execute the enclosing core-reset chain as ARM instructions.
-- All twenty-seven synthetic test programs pass under ASan/UBSan; all twenty-eight portable C
+- At reset checkpoint `788eee4`, all twenty-seven synthetic test programs passed
+  under ASan/UBSan; all twenty-eight portable C
   components compile for freestanding ARMv7 with strict warnings.
 - The combined-header probe passes strict host and ARMv7 compilation, covering
-  all 29 current public headers and preserved AI event/phase/error numbers. The
+  all29 then-current public headers and preserved AI event/phase/error numbers. The
   AI namespace migration is a mechanically verified rename; all runtime tests
   and optional private stock comparisons pass after it.
 - SI selection covers literal map/PCI tuples, 64 cache/physical-presence cases,
@@ -347,12 +428,13 @@ Critical distinctions to preserve:
    implementation notes and Git status. Preserve unrelated work; check remote
    main before publication. Reuse closed-session Evidence instead of repeating
    installation/analysis.
-2. Reuse the implemented [enclosing reset](docs/CORE_RESET_MODEL.md) and
-   [lower wrapper](docs/CORE_RESET_LOW_MODEL.md) when following the actual BMAC
-   initialization caller. Recover required context/queue/resource acquisition,
-   upload/start postconditions and reached radio/table/calibration callbacks.
-   Higher optional VASIP/SMC/diagnostic initialization remains separate; no
-   direct VASIP/SMC call occurs in this core-reset body.
+2. Follow the [actual BMAC initialization groups](docs/DRIVER_BMAC_INIT_AUDIT.md)
+   and the earlier lifecycle caller that invokes core reset. Reuse the real
+   reset/upload/start/object/SMC/table-init components. Finish the PHY init
+   registry ordering and remaining actual radio switch/on, channel-manager and
+   calibration children; acquire the observed radio ID/subrevision and reached
+   board inputs. Keep conditional VASIP, BMC, coexistence, offload and diagnostic
+   operations explicit; do not publish a coordinator that skips them as success.
 3. Integrate actual runtime catalog/resource discovery and OS mapping, PCI and
    IRQ adapters. Preserve typed spaces, map ownership/lifetime, current index
    restoration and explicit post-IRQ SI state. SB selection remains a dependency;
@@ -365,15 +447,18 @@ Critical distinctions to preserve:
    unsupported, not no-ops. Analog null checks occur AFTER the chip63178 bandwidth
    store's required PHY dereference. Core130 delay100 is a common post-pulse join.
 
-6. Complete D2 physical init-object writes, addend acquisition and needed SHM
-   ABI; continue D3 radio/channel/calibration, D4 descriptors/IRQ/RX, TX/Linux
-   integration and full features. Separate recovery/RAM-boot/board work remains
+6. Finish D2 runtime addend acquisition and needed SHM ABI. For D4, follow
+   `_dma_getnext_rxlist` and its actual cache/unmap/list ownership, then implement
+   `dma_rx` bounded lengths/continuations/errors and RX fill. Recover the real
+   MAC ISR/deferred-work acknowledgement/masks. Descriptor formatting, descriptor-
+   only posting and slot take do not establish normal packet TX/RX. Continue
+   Linux integration and full features. Separate recovery/RAM-boot/board work remains
    required before exact-board hardware execution and persistent firmware.
 7. Extend the original strict differential harness and common trace adapters:
    independent read queues, bank/core/space/width/barriers/delays, no implicit
    zero/write-echo, missing/exhausted/unconsumed read rejection and consumed-bit
-   checks. ARM execution covers the pure wake predicate, primitives and selected composed
-   table/TSSI inactive-MAC paths; extend to actual PSM/action/clock only with proven caller
+   checks. ARM execution covers the pure wake predicate, primitives, object writers,
+   DMA leaves and selected composed table/TSSI inactive-MAC paths; extend to actual PSM/action/clock only with proven caller
    closure and strict contexts, not successful external stubs. Optional live ARM
    accessor coverage design does not replace implementation.
 8. Add independent traces/boundaries/failure/cancel regressions, run affected
@@ -382,8 +467,10 @@ Critical distinctions to preserve:
 9. Review/scan an exact public allowlist, commit/push and verify remote commit/
    tree. Keep proprietary bytes, calibration, credentials and local paths private.
 
-**D1 remains partial.** Enclosing core-reset composition is implemented offline; actual OS/runtime resources, higher initialization, optional dependencies,
-policy input acquisition/MBSS/fatal recovery and actual resource ownership remain unfinished. Maintain the full
+**D1–D5 remain incomplete.** The named reset, initialization and DMA components
+are implemented offline; actual OS/runtime resources, full initialization,
+radio/channel/calibration, policy acquisition/MBSS/fatal recovery, packet data
+path and Linux integration remain unfinished. Maintain the full
 working-driver and modern-OpenWrt objective; host tests do not meet hardware gates.
 
 ## Input and tool identities
@@ -417,6 +504,11 @@ sh scripts/test_driver.sh /private/path/to/wl.ko
 python3 tests/check_phy_arm.py /private/path/to/wl.ko
 python3 tests/check_phy_composed_arm.py /private/path/to/wl.ko
 python3 tests/check_wake_policy_arm.py /private/path/to/wl.ko
+python3 tests/check_object_memory_arm.py /private/path/to/wl.ko
+python3 tests/check_dma_descriptor_arm.py /private/path/to/wl.ko
+python3 tests/check_dma_tx_post_arm.py /private/path/to/wl.ko
+python3 tests/check_dma_rx_take_arm.py /private/path/to/wl.ko
+python3 tests/check_radio_identity_arm.py /private/path/to/wl.ko
 ```
 
 For a new bounded named-function pass, configure the child process as described
@@ -465,7 +557,8 @@ assembly, typed references and descriptor reads as required by the evidence.
 | `af031a9` | Composed target PHY reset, real core130 BF cleaner and exact analog/bandwidth assembly closure. |
 | `b9b2877` | SI selector, HND resource/IRQ/clock wrapper and complete WL clock-select composition with exact inline cache/reason stores. |
 | `1deea16` | AI/PHY header namespace integration fix and combined-header compile gate. |
-| This checkpoint | Enclosing/lower core reset, generic auxiliary AI reset, selected-wrapper SI helpers, exact mctrl reset and independent trace regressions. |
+| `788eee4` | Enclosing/lower core reset, generic auxiliary AI reset, selected-wrapper SI helpers, exact mctrl reset and independent trace regressions. |
+| This checkpoint | Actual object/init writes, mandatory SMC, PHY51 table initialization and PMU/GPIO, radio-identity query/decode, current DMA formatter/post/take, strict stock ARM comparisons and retained caller audits. |
 
 At each future checkpoint, add a concise milestone entry and replace the active
 next-work package with the actual next task. Keep unresolved defects visible.

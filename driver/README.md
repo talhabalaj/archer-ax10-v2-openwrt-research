@@ -73,6 +73,25 @@ All original code here uses the repository's MIT license.
   core849 path, generic AI reset and real primary/secondary selection.
 - `si_core.c`: actual selected-wrapper core-up and coreflags protocols.
 - `mctrl.c`: exact cached main-control/mirror and reset software-field helpers.
+- `object_memory.c` / `init_io.c`: actual COPY/COPY32/SET32/WRITE16 object ports,
+  discarded selector readbacks, halfword lanes and effective-init lowering with
+  whole-helper record commitment. Own-addend aliases survive restarted begins.
+- `phy_table_write.c`: actual generic AC table-write wrapper for widths8/16/32/
+  42/48/60/64 and direct packed PHY writes, real PSM/PHY guards and flush counters.
+- `si_pmu_gpio.c`: actual PMU vreg/GPIO corereg map/cache, PCI windows, ordinary
+  SI selection and IRQ-state/restore rules; actual resource inputs are explicit.
+- `phy_init.c`: complete registered PHY51 table-init callback, using actual PHY,
+  table and PMU/GPIO children with known OTP and caller-owned private spans.
+- `smc.c`: actual core130/PHY51 mandatory SMC wrapper, reset0/pulse/table47-width48/
+  reset1 and source-ordered loaded stores. Already-loaded still executes reset1.
+- `dma_descriptor.c`: current sixteen-byte formatter/codec, low-address extension,
+  parity and strict ring/status/range arithmetic. Pure values imply no DMA owner.
+- `dma_tx_post.c`: actual descriptor-only posting with fresh parity memory reads,
+  out-before-producer and late available stores. No normal packet TX/completion.
+- `dma_rx_take.c`: actual status/cached-current/force gates, slot read/clear,
+  consumer/availability stores and mode-dependent sentinel skip. Returns labels.
+- `radio_identity.c`: actual high-first radio query, registered AC context->PI
+  binding and separate AC/common decoders. No actual board radio ID is assumed.
 - `effective_init.c`: context-dependent initialization semantics with explicit
   `0x130` addend, width truncation and a separate semantic object-copy operation.
   Whole-table preflight validates caller-supplied bounds before callbacks.
@@ -92,16 +111,19 @@ The raw `init_table.c` recorder remains intentionally limited. Use the separate
 `effective_init.c` model for the recovered runtime adjustment at register
 `0x130` and offsets at or above `0x1000` routed to object memory. These APIs have
 different validation policies; neither callback should be wired directly to
-register writes. The effective model emits helper arguments for object copies,
-not their physical port operations. The caller must explicitly provide the
-runtime addend when used; no active board value is assumed.
+register writes. The effective model emits helper arguments for object copies;
+`init_io.c` now lowers them through the actual `object_memory.c` port operations.
+The caller must explicitly provide the runtime addend when used; no active
+board value is assumed. See [physical lowering](../docs/OBJECT_MEMORY_MODEL.md)
+for resource, source-size and whole-helper completion requirements.
 
 See [effective-init semantics and tests](../docs/EFFECTIVE_INIT_AUDIT.md) for
 exact termination, widths, address units, policies and cancellation behavior.
 
 Hardware microcode upload, higher initialization around the implemented reset lifecycle,
 runtime wake-policy acquisition/fatal/MBSS handling, complete register/SHM typing, resource
-ownership, calibration, AC-PHY 51 initialization and Linux TX/RX integration
+ownership, radio/channel/calibration, remaining PHY initialization callbacks and
+Linux packet TX/RX integration
 remain absent. Offline wrapper reset and startup subsets are described in
 [their implementation boundaries](../docs/LIFECYCLE_MODEL.md). PHY type 11 and
 the name `ax51` do not establish an
@@ -126,7 +148,7 @@ sh scripts/test_driver.sh /private/path/to/wl.ko
 
 The checks passed on 2026-10-15:
 
-- All 29 public headers compile together before runtime tests. AI reset uses
+- All public headers compile together before runtime tests. AI reset uses
   `axd_ai_reset_*` types and `AXD_AI_*` constants to avoid the PHY reset namespace.
   Function names and numeric transport/state values are preserved and checked.
   Add newly introduced public headers to `tests/check_driver_headers.c`.
@@ -192,7 +214,13 @@ The checks passed on 2026-10-15:
 - SI/WL composition tests check map/PCI/IRQ ordering, independent restore guards,
   post-disable index changes, unknown SI freshness, separate software commits and
   partial callback effects; no native kernel/backend behavior is implied.
-- All twenty-eight C files cross-compile with Clang for `armv7-none-eabi` in freestanding
+- New object/table/PMU/SMC/PHY-init/DMA tests use independent literal traces and
+  every callback exit. Full private SMC comparison matches1903rows/5709halves/
+  11460operations and ignores exactly the stock trailing two bytes.
+- Optional strict current ARM comparisons match864 formatter,456 object-writer,
+  1408 descriptor-post and2304 RX slot-take cases. No complete packet path or
+  physical device executes. Exact commands/results are in [PROGRESS.md](../PROGRESS.md).
+- All portable C files cross-compile with Clang for `armv7-none-eabi` in freestanding
   mode with warnings treated as errors. This proves compilation, not linking
   into Linux, execution on ARM or hardware behavior.
 
@@ -247,8 +275,10 @@ firmware/table versions must not be silently mixed.
 
 ## Next implementation boundary
 
-Use the implemented enclosing/lower core-reset jobs when following the actual
-BMAC initialization caller and its upload/start/radio/calibration context. Acquire actual runtime
+Use the implemented reset/object/SMC/PHY-table jobs when following the actual
+[BMAC initialization groups](../docs/DRIVER_BMAC_INIT_AUDIT.md) and earlier reset
+caller. Finish remaining init-registry/radio/channel/calibration callbacks and
+the actual [RX list/ownership path](../docs/DRIVER_RX_PATH_AUDIT.md). Acquire actual runtime
 catalog/queue/resources and implement OS mapping/PCI/IRQ/MMIO adapters. Policy/
 metadata acquisition, synchronization, MBSS/fatal recovery and optional higher
 initialization remain unfinished; reached dependencies stay explicit. See
@@ -276,5 +306,5 @@ initialization remain unfinished; reached dependencies stay explicit. See
 [external research and harness plan](../docs/EXISTING_REVERSE_ENGINEERING.md),
 [PSM control policies](../docs/PSM_CONTROL_MODEL.md),
 [DMA reset policies](../docs/DMA_RESET_MODEL.md) and
-[current checkpoint](../PROGRESS.md). PHY51 radio/channel/calibration, DMA data
-path, kernel integration and hardware execution remain required and untested.
+[current checkpoint](../PROGRESS.md). PHY51 radio/channel/calibration, complete
+packet data path, kernel integration and hardware execution remain required.
