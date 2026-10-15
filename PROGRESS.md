@@ -1,10 +1,33 @@
 # Current progress and continuation checkpoint
 
-Updated 2026-10-15. This checkpoint adds actual SI selection, HND clock
-resource/IRQ composition and the complete WL clock-selection caller.
+Updated 2026-10-15. This checkpoint fixes the AI/PHY reset header namespace
+collision and makes the combined-header compilation check part of the runner.
 Previous implementation:
-[`af031a9`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/af031a90cd8b51a4f4e105d415959aa53720ac7c).
+[`b9b2877`](https://github.com/talhabalaj/archer-ax10-v2-openwrt-research/commit/b9b2877a1f52cae2498737f6e0c4a39aaddcb0d5).
 Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
+
+## Requested T3 handoff
+
+The user requested transfer through T3 MCP. No receiving T3 task was launched:
+T3 tools are not connected to this session, and its local MCP endpoint requires
+authentication. The local transfer briefing is retained outside this public
+checkout at `driver-private/T3_HANDOFF.md`, relative to the parent working
+directory. It lists exact private input/evidence paths, current verified state,
+remaining lower-wrapper dependencies and the next implementation/test package.
+The briefing contains no credential values and is not a public artifact.
+
+The prior open AI namespace fix is now integrated: types use distinct
+`axd_ai_reset_*` names and constants use `AXD_AI_*`, so AI and PHY-reset headers
+can be included together. Function names, numeric values and behavior are
+unchanged; reverse substitution matches the previous source/header/test exactly.
+`tests/check_driver_headers.c` includes all 24 current public headers and checks
+numeric transport/state values. The runner compiles it before the 23 runtime
+test programs. Add future public headers to that probe.
+
+The newly completed core-reset/helper analysis and independent test oracle remain
+private and are linked by the local briefing. All analysis sessions are exported/
+closed. No enclosing core-reset coordinator was started. Keep firmware, raw
+records, calibration, credentials and local paths out of public commits.
 
 ## Resume here
 
@@ -153,6 +176,10 @@ Latest validation (host/build and isolated synthetic ARM execution only):
 
 - All twenty-three synthetic test programs pass under ASan/UBSan; all twenty-three portable C
   components compile for freestanding ARMv7 with strict warnings.
+- The combined-header probe passes strict host and ARMv7 compilation, covering
+  all 24 current public headers and preserved AI event/phase/error numbers. The
+  AI namespace migration is a mechanically verified rename; all runtime tests
+  and optional private stock comparisons pass after it.
 - SI selection covers literal map/PCI tuples, 64 cache/physical-presence cases,
   all eight zero-MAP result patterns, special core mapping size, duplicate IDs,
   actual bus/interconnect paths, aliases and every callback/internal boundary.
@@ -422,7 +449,8 @@ assembly, typed references and descriptor reads as required by the evidence.
 | `69f946b` | Composed table/all-core TSSI and PHY-clock jobs with actual ARM comparisons. |
 | `86ab211` | PHY nesting, complete outer idle-TSSI, actual wake predicate/action and ARM load-trace comparisons; mirror-cache prefix fix and reset/beamforming evidence. |
 | `af031a9` | Composed target PHY reset, real core130 BF cleaner and exact analog/bandwidth assembly closure. |
-| This checkpoint | SI selector, HND resource/IRQ/clock wrapper and complete WL clock-select composition with exact inline cache/reason stores. |
+| `b9b2877` | SI selector, HND resource/IRQ/clock wrapper and complete WL clock-select composition with exact inline cache/reason stores. |
+| This checkpoint | AI/PHY header namespace integration fix, combined-header compile gate and verified T3 handoff checkpoint. |
 
 At each future checkpoint, add a concise milestone entry and replace the active
 next-work package with the actual next task. Keep unresolved defects visible.

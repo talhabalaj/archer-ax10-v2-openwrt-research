@@ -12,6 +12,13 @@ wrapper protocol for interconnect types 1, 3 and 4. It takes resolved `bits`,
 `reset_bits` and secondary-wrapper presence explicitly. It does not discover the
 SI interconnect, adjust caller reset flags, map wrappers or configure clocks.
 
+The AI public types use `axd_ai_reset_*` and constants use `AXD_AI_*` so AI and
+PHY reset headers can be included together. Function names remain
+`axd_ai_reset_begin/step/cancel`; the namespace change preserves numeric event,
+phase and error values and protocol behavior. The compile-only
+`tests/check_driver_headers.c` includes every public driver header and checks
+those numeric values, catching cross-component declaration collisions.
+
 Events identify wrapper 0 (primary) or 1 (secondary) and a wrapper-relative byte
 offset. When present, the secondary completes first. A future exclusive transport
 owner must resolve those handles from actual per-core metadata; they are not

@@ -5,6 +5,8 @@ set -eu
 cd "$(dirname "$0")/.."
 axd_build_dir=$(mktemp -d)
 trap 'rm -rf "$axd_build_dir"' EXIT HUP INT TERM
+cc -std=c11 -Wall -Wextra -Werror -pedantic -fsyntax-only tests/check_driver_headers.c
+printf '%s\n' 'Public driver headers compile together; numeric AI transport/state values preserved.'
 for axd_test in init_table effective_init ucode_upload status_poll psm_start ai_reset psm_control dma_reset clock_control phy_register chipcommon_clock phy_table phy_tssi phy_clock psm_override phy_guard idle_tssi wake_policy bf_clean phy_reset si_select si_clock wl_clock; do
     cc -std=c11 -Wall -Wextra -Werror -pedantic -fsanitize=address,undefined \
         driver/init_table.c driver/effective_init.c driver/ucode_select.c driver/ucode_upload.c driver/status_poll.c \

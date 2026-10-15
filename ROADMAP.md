@@ -160,7 +160,8 @@ state machine; synthetic fixtures/tests; updated progress checkpoint.
 **Acceptance:** each implemented hardware operation is grounded in the exact
 binary/source evidence; main and extended dependencies are distinct; all waits
 are bounded; failure leaves progress/state explicit and invents no cleanup;
-existing tests and strict ARMv7 compilation pass. Hardware readiness remains
+existing tests, combined public-header compilation and strict ARMv7 compilation
+pass. Hardware readiness remains
 unverified until device testing.
 
 ### D2 — Complete the register, object-memory and SHM contracts

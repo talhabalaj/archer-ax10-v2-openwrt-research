@@ -120,6 +120,11 @@ sh scripts/test_driver.sh /private/path/to/wl.ko
 
 The checks passed on 2026-10-15:
 
+- All 24 public headers compile together before runtime tests. AI reset uses
+  `axd_ai_reset_*` types and `AXD_AI_*` constants to avoid the PHY reset namespace.
+  Function names and numeric transport/state values are preserved and checked.
+  Add newly introduced public headers to `tests/check_driver_headers.c`.
+
 - Synthetic malformed/truncated/missing-terminator, width, alignment, bounds,
   duplicate-order, sentinel-only and callback-failure cases under ASan/UBSan.
 - Exact C-versus-Python raw replay equality for 1,404 records across four stock

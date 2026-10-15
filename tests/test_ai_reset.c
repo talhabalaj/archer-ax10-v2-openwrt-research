@@ -9,8 +9,8 @@
  * Synthetic replies deliberately differ from writes. No hardware or vendor
  * payloads: these are protocol events, not a reset-success assertion.
  */
-struct event { enum axd_reset_kind kind; unsigned wrapper; uint32_t offset, value, reply; };
-#define E(k, o, v, r) {AXD_RESET_##k, 0, o, v, r}
+struct event { enum axd_ai_reset_kind kind; unsigned wrapper; uint32_t offset, value, reply; };
+#define E(k, o, v, r) {AXD_AI_##k, 0, o, v, r}
 static const struct event literal[] = {
     E(READ32, 0x804, 0, 0), E(FULL_BARRIER, 0, 0, 0),
     E(STORE_BARRIER, 0, 0, 0), E(WRITE32, 0x800, 1, 0), E(DELAY_US, 0, 10, 0),
@@ -40,9 +40,9 @@ struct recorder {
     uint64_t fake_elapsed_us, delay_us;
 };
 
-static struct axd_reset_context context(unsigned secondary, unsigned interconnect)
+static struct axd_ai_reset_context context(unsigned secondary, unsigned interconnect)
 {
-    const struct axd_reset_context c = {0x812, 130, (uint8_t)interconnect,
+    const struct axd_ai_reset_context c = {0x812, 130, (uint8_t)interconnect,
                                       (uint8_t)secondary, 0x100, 0x20};
     return c;
 }
@@ -52,7 +52,7 @@ static struct recorder recorder(struct axd_ai_reset *job,
     const struct recorder r = {events, count, 0, NEVER, NEVER, job, 0, 0};
     return r;
 }
-static int observe(void *opaque, const struct axd_reset_operation *op, uint32_t *reply)
+static int observe(void *opaque, const struct axd_ai_reset_operation *op, uint32_t *reply)
 {
     struct recorder *r = opaque;
     size_t i = r->calls;
@@ -66,24 +66,24 @@ static int observe(void *opaque, const struct axd_reset_operation *op, uint32_t 
     r->calls++;
     /* Arbitrary elapsed jumps do not consume the counter-based poll budget. */
     r->fake_elapsed_us += 1000000;
-    if (op->kind == AXD_RESET_DELAY_US)
+    if (op->kind == AXD_AI_DELAY_US)
         r->delay_us += op->value;
     if (i == r->cancel_at)
-        assert(axd_ai_reset_cancel(r->job) == AXD_RESET_CANCELLED);
+        assert(axd_ai_reset_cancel(r->job) == AXD_AI_CANCELLED);
     return i == r->fail_at ? -1 : 0;
 }
 static void run(struct axd_ai_reset *job, struct recorder *r)
 {
     size_t limit = r->count * 12 + 100, step;
-    for (step = 0; step < limit && job->phase == AXD_RESET_RUNNING; step++) {
+    for (step = 0; step < limit && job->phase == AXD_AI_RUNNING; step++) {
         size_t before = r->calls;
-        enum axd_reset_phase result = axd_ai_reset_step(job, observe, r);
+        enum axd_ai_reset_phase result = axd_ai_reset_step(job, observe, r);
         assert(result == job->phase && r->calls - before <= 1);
     }
-    assert(job->phase != AXD_RESET_RUNNING);
+    assert(job->phase != AXD_AI_RUNNING);
 }
 static void terminal(struct axd_ai_reset *job, struct recorder *r,
-                     enum axd_reset_phase phase)
+                     enum axd_ai_reset_phase phase)
 {
     uint64_t attempted = job->attempted_ops, completed = job->completed_ops;
     unsigned wrappers = job->completed_wrappers;
@@ -94,7 +94,7 @@ static void terminal(struct axd_ai_reset *job, struct recorder *r,
     assert(r->calls == calls && job->attempted_ops == attempted);
     assert(job->completed_ops == completed && job->completed_wrappers == wrappers);
 }
-static void add(struct script *s, enum axd_reset_kind k, unsigned wrapper,
+static void add(struct script *s, enum axd_ai_reset_kind k, unsigned wrapper,
                 uint32_t offset, uint32_t value, uint32_t reply)
 {
     const struct event e = {k, wrapper, offset, value, reply};
@@ -103,17 +103,17 @@ static void add(struct script *s, enum axd_reset_kind k, unsigned wrapper,
 }
 static void read_event(struct script *s, unsigned w, uint32_t off, uint32_t reply)
 {
-    add(s, AXD_RESET_READ32, w, off, 0, reply);
-    add(s, AXD_RESET_FULL_BARRIER, w, 0, 0, 0);
+    add(s, AXD_AI_READ32, w, off, 0, reply);
+    add(s, AXD_AI_FULL_BARRIER, w, 0, 0, 0);
 }
 static void write_event(struct script *s, unsigned w, uint32_t off, uint32_t value)
 {
-    add(s, AXD_RESET_STORE_BARRIER, w, 0, 0, 0);
-    add(s, AXD_RESET_WRITE32, w, off, value, 0);
+    add(s, AXD_AI_STORE_BARRIER, w, 0, 0, 0);
+    add(s, AXD_AI_WRITE32, w, off, value, 0);
 }
 static void delay_event(struct script *s, unsigned w, uint32_t us)
 {
-    add(s, AXD_RESET_DELAY_US, w, 0, us, 0);
+    add(s, AXD_AI_DELAY_US, w, 0, us, 0);
 }
 /* Literal counter oracle from assembly: one initial read plus at most thirty
  * delay/read pairs. clear_last distinguishes success on the last allowed read
@@ -157,27 +157,27 @@ static void success(const struct event *events, size_t count, unsigned secondary
                     unsigned reset_mask, uint64_t delays)
 {
     struct axd_ai_reset job;
-    struct axd_reset_context c = context(secondary, interconnect);
+    struct axd_ai_reset_context c = context(secondary, interconnect);
     struct recorder r = recorder(&job, events, count);
     assert(axd_ai_reset_begin(&job, &c) == 0);
     c.bits = 0; c.reset_bits = 0; c.secondary_present = 0; c.interconnect = 0;
     assert(job.context.bits == 0x100 && job.context.reset_bits == 0x20);
     run(&job, &r);
-    assert(job.phase == AXD_RESET_TRACE_COMPLETE && job.error == AXD_RESET_NO_ERROR);
+    assert(job.phase == AXD_AI_TRACE_COMPLETE && job.error == AXD_AI_NO_ERROR);
     assert(r.calls == count && job.attempted_ops == count && job.completed_ops == count);
     assert(job.completed_wrappers == secondary + 1);
     assert(job.busy_exhaustions == busy_exhaustions && job.reset_nonzero_mask == reset_mask);
     assert(r.delay_us == delays && r.fake_elapsed_us == count * UINT64_C(1000000));
-    terminal(&job, &r, AXD_RESET_TRACE_COMPLETE);
+    terminal(&job, &r, AXD_AI_TRACE_COMPLETE);
 }
 static void restart_context_alias(void)
 {
     struct axd_ai_reset job;
-    struct axd_reset_context c = context(0, 4);
+    struct axd_ai_reset_context c = context(0, 4);
     struct recorder r = recorder(&job, literal, N(literal));
     assert(axd_ai_reset_begin(&job, &c) == 0);
     run(&job, &r);
-    assert(job.phase == AXD_RESET_TRACE_COMPLETE && r.calls == N(literal));
+    assert(job.phase == AXD_AI_TRACE_COMPLETE && r.calls == N(literal));
     assert(job.completed_wrappers == 1 && job.release_writes == 1);
     assert(axd_ai_reset_begin(&job, &job.context) == 0);
     assert(job.context.core_id == 0x812 && job.context.revision == 130);
@@ -186,11 +186,11 @@ static void restart_context_alias(void)
     assert(job.attempted_ops == 0 && job.completed_ops == 0 && job.completed_wrappers == 0);
     r = recorder(&job, literal, N(literal));
     run(&job, &r);
-    assert(job.phase == AXD_RESET_TRACE_COMPLETE && job.error == AXD_RESET_NO_ERROR);
+    assert(job.phase == AXD_AI_TRACE_COMPLETE && job.error == AXD_AI_NO_ERROR);
     assert(r.calls == N(literal) && job.attempted_ops == N(literal) && job.completed_ops == N(literal));
     assert(job.completed_wrappers == 1 && job.release_writes == 1);
     assert(job.busy_exhaustions == 0 && job.reset_nonzero_mask == 0 && r.delay_us == 13);
-    terminal(&job, &r, AXD_RESET_TRACE_COMPLETE);
+    terminal(&job, &r, AXD_AI_TRACE_COMPLETE);
 }
 
 static void sweep(const struct event *events, size_t count, unsigned secondary)
@@ -200,9 +200,9 @@ static void sweep(const struct event *events, size_t count, unsigned secondary)
     for (mode = 0; mode < 3; mode++) {
         for (i = 0; i < count; i++) {
             struct axd_ai_reset job;
-            struct axd_reset_context c = context(secondary, 1);
+            struct axd_ai_reset_context c = context(secondary, 1);
             struct recorder r = recorder(&job, events, count);
-            enum axd_reset_phase phase = mode == 1 ? AXD_RESET_CANCELLED : AXD_RESET_FAILED;
+            enum axd_ai_reset_phase phase = mode == 1 ? AXD_AI_CANCELLED : AXD_AI_FAILED;
             size_t j, successful_callbacks = i + (mode == 1);
             unsigned successful_releases = 0;
             assert(axd_ai_reset_begin(&job, &c) == 0);
@@ -211,10 +211,10 @@ static void sweep(const struct event *events, size_t count, unsigned secondary)
             run(&job, &r);
             assert(job.phase == phase && r.calls == i + 1);
             assert(job.attempted_ops == i + 1 && job.completed_ops == i + (mode == 1));
-            assert(job.error == (mode == 1 ? AXD_RESET_NO_ERROR : AXD_RESET_IO_ERROR));
+            assert(job.error == (mode == 1 ? AXD_AI_NO_ERROR : AXD_AI_IO_ERROR));
             for (j = 0; j < successful_callbacks; j++) {
                 if (events[j].wrapper == events[i].wrapper &&
-                    events[j].kind == AXD_RESET_WRITE32 &&
+                    events[j].kind == AXD_AI_WRITE32 &&
                     events[j].offset == 0x800 && events[j].value == 0)
                     successful_releases++;
             }
@@ -230,14 +230,14 @@ static void sweep(const struct event *events, size_t count, unsigned secondary)
         }
     }
 }
-static void invalid(const struct axd_reset_context *c, enum axd_reset_error error)
+static void invalid(const struct axd_ai_reset_context *c, enum axd_ai_reset_error error)
 {
     struct axd_ai_reset job;
     struct recorder r = recorder(&job, literal, N(literal));
     assert(axd_ai_reset_begin(&job, c) != 0);
-    assert(job.phase == AXD_RESET_FAILED && job.error == error);
+    assert(job.phase == AXD_AI_FAILED && job.error == error);
     assert(job.attempted_ops == 0 && job.completed_ops == 0 && job.completed_wrappers == 0);
-    terminal(&job, &r, AXD_RESET_FAILED);
+    terminal(&job, &r, AXD_AI_FAILED);
     assert(r.calls == 0);
 }
 static void arguments(void)
@@ -245,33 +245,33 @@ static void arguments(void)
     unsigned i;
     const unsigned bad_interconnect[] = {0, 2, 5, 255};
     const unsigned bad_revision[] = {0, 61, 128, 129, 131, 132};
-    struct axd_reset_context c = context(0, 1);
+    struct axd_ai_reset_context c = context(0, 1);
     struct axd_ai_reset job;
     struct recorder r = recorder(&job, literal, N(literal));
     assert(axd_ai_reset_begin(NULL, &c) != 0);
-    assert(axd_ai_reset_step(NULL, NULL, NULL) == AXD_RESET_INVALID);
-    assert(axd_ai_reset_cancel(NULL) == AXD_RESET_INVALID);
-    invalid(NULL, AXD_RESET_BAD_ARGUMENT);
-    c.secondary_present = 2; invalid(&c, AXD_RESET_BAD_ARGUMENT);
-    c = context(0, 1); c.core_id = 0; invalid(&c, AXD_RESET_UNSUPPORTED);
+    assert(axd_ai_reset_step(NULL, NULL, NULL) == AXD_AI_INVALID);
+    assert(axd_ai_reset_cancel(NULL) == AXD_AI_INVALID);
+    invalid(NULL, AXD_AI_BAD_ARGUMENT);
+    c.secondary_present = 2; invalid(&c, AXD_AI_BAD_ARGUMENT);
+    c = context(0, 1); c.core_id = 0; invalid(&c, AXD_AI_UNSUPPORTED);
     for (i = 0; i < N(bad_revision); i++) {
         c = context(0, 1); c.revision = (uint16_t)bad_revision[i];
-        invalid(&c, AXD_RESET_UNSUPPORTED);
+        invalid(&c, AXD_AI_UNSUPPORTED);
     }
     for (i = 0; i < N(bad_interconnect); i++) {
-        c = context(0, bad_interconnect[i]); invalid(&c, AXD_RESET_UNSUPPORTED);
+        c = context(0, bad_interconnect[i]); invalid(&c, AXD_AI_UNSUPPORTED);
     }
     c = context(0, 1);
     assert(axd_ai_reset_begin(&job, &c) == 0);
-    assert(axd_ai_reset_cancel(&job) == AXD_RESET_CANCELLED);
-    terminal(&job, &r, AXD_RESET_CANCELLED);
+    assert(axd_ai_reset_cancel(&job) == AXD_AI_CANCELLED);
+    terminal(&job, &r, AXD_AI_CANCELLED);
     assert(job.attempted_ops == 0 && job.completed_ops == 0 && r.calls == 0);
     assert(axd_ai_reset_begin(&job, &c) == 0);
-    for (i = 0; i < 10 && job.phase == AXD_RESET_RUNNING; i++)
+    for (i = 0; i < 10 && job.phase == AXD_AI_RUNNING; i++)
         axd_ai_reset_step(&job, NULL, NULL);
-    assert(job.phase == AXD_RESET_FAILED && job.error == AXD_RESET_BAD_ARGUMENT);
+    assert(job.phase == AXD_AI_FAILED && job.error == AXD_AI_BAD_ARGUMENT);
     assert(job.attempted_ops == 0 && job.completed_ops == 0);
-    terminal(&job, &r, AXD_RESET_FAILED);
+    terminal(&job, &r, AXD_AI_FAILED);
 }
 int main(void)
 {

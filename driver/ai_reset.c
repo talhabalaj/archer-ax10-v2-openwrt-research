@@ -7,21 +7,21 @@ enum stage {
     INITIAL_CONTROL, INITIAL_CLEAR, BEFORE_RELEASE, READ_RESET, EVALUATE_RESET,
     RELEASE_RESET, AFTER_RELEASE, FINAL_CONTROL, FINAL_CLEAR, WRAPPER_END
 };
-static void add(struct axd_ai_reset *job, enum axd_reset_kind kind,
+static void add(struct axd_ai_reset *job, enum axd_ai_reset_kind kind,
                 uint32_t offset, uint32_t value)
 {
-    struct axd_reset_operation op = {kind, job->wrapper, offset, value};
+    struct axd_ai_reset_operation op = {kind, job->wrapper, offset, value};
     job->operations[job->queued++] = op;
 }
 static void read32(struct axd_ai_reset *job, uint32_t offset)
 {
-    add(job, AXD_RESET_READ32, offset, 0);
-    add(job, AXD_RESET_FULL_BARRIER, 0, 0);
+    add(job, AXD_AI_READ32, offset, 0);
+    add(job, AXD_AI_FULL_BARRIER, 0, 0);
 }
 static void write32(struct axd_ai_reset *job, uint32_t offset, uint32_t value)
 {
-    add(job, AXD_RESET_STORE_BARRIER, 0, 0);
-    add(job, AXD_RESET_WRITE32, offset, value);
+    add(job, AXD_AI_STORE_BARRIER, 0, 0);
+    add(job, AXD_AI_WRITE32, offset, value);
 }
 static void busy(struct axd_ai_reset *job, unsigned resume)
 {
@@ -29,10 +29,10 @@ static void busy(struct axd_ai_reset *job, unsigned resume)
     job->after_busy = resume;
     job->stage = BUSY_READ;
 }
-static void fail(struct axd_ai_reset *job, enum axd_reset_error error)
+static void fail(struct axd_ai_reset *job, enum axd_ai_reset_error error)
 {
     job->error = error;
-    job->phase = AXD_RESET_FAILED;
+    job->phase = AXD_AI_FAILED;
 }
 static void prepare(struct axd_ai_reset *job)
 {
@@ -52,14 +52,14 @@ static void prepare(struct axd_ai_reset *job)
                 job->busy_exhaustions++;
             job->stage = job->after_busy;
         } else {
-            add(job, AXD_RESET_DELAY_US, 0, 10);
+            add(job, AXD_AI_DELAY_US, 0, 10);
             read32(job, 0x804);
             job->busy_repetitions++;
         }
         break;
     case ASSERT_RESET:
         write32(job, 0x800, 1);
-        add(job, AXD_RESET_DELAY_US, 0, 10);
+        add(job, AXD_AI_DELAY_US, 0, 10);
         job->stage = AFTER_ASSERT;
         break;
     case AFTER_ASSERT:
@@ -71,7 +71,7 @@ static void prepare(struct axd_ai_reset *job)
         job->stage = INITIAL_CLEAR;
         break;
     case INITIAL_CLEAR:
-        add(job, AXD_RESET_DELAY_US, 0, 1);
+        add(job, AXD_AI_DELAY_US, 0, 1);
         write32(job, 0x408, job->last_read & ~2u);
         job->stage = BEFORE_RELEASE;
         break;
@@ -104,9 +104,9 @@ static void prepare(struct axd_ai_reset *job)
         job->stage = FINAL_CLEAR;
         break;
     case FINAL_CLEAR:
-        add(job, AXD_RESET_DELAY_US, 0, 1);
+        add(job, AXD_AI_DELAY_US, 0, 1);
         write32(job, 0x408, job->last_read & ~2u);
-        add(job, AXD_RESET_DELAY_US, 0, 1);
+        add(job, AXD_AI_DELAY_US, 0, 1);
         job->stage = WRAPPER_END;
         break;
     case WRAPPER_END:
@@ -115,19 +115,19 @@ static void prepare(struct axd_ai_reset *job)
             job->wrapper = 0;
             job->stage = WRAPPER_BEGIN;
         } else {
-            job->phase = AXD_RESET_TRACE_COMPLETE;
+            job->phase = AXD_AI_TRACE_COMPLETE;
         }
         break;
     default:
-        fail(job, AXD_RESET_BAD_ARGUMENT);
+        fail(job, AXD_AI_BAD_ARGUMENT);
         break;
     }
 }
 int axd_ai_reset_begin(struct axd_ai_reset *job,
-                        const struct axd_reset_context *context)
+                        const struct axd_ai_reset_context *context)
 {
     const struct axd_ai_reset empty = {0};
-    struct axd_reset_context snapshot;
+    struct axd_ai_reset_context snapshot;
     if (job == NULL)
         return -1;
     if (context != NULL) {
@@ -135,59 +135,59 @@ int axd_ai_reset_begin(struct axd_ai_reset *job,
         context = &snapshot;
     }
     *job = empty;
-    fail(job, AXD_RESET_BAD_ARGUMENT);
+    fail(job, AXD_AI_BAD_ARGUMENT);
     if (context == NULL || context->secondary_present > 1)
         return -1;
     if (context->core_id != 0x812 || context->revision != 130 ||
         (context->interconnect != 1 && context->interconnect != 3 &&
          context->interconnect != 4)) {
-        job->error = AXD_RESET_UNSUPPORTED;
+        job->error = AXD_AI_UNSUPPORTED;
         return -1;
     }
     job->context = *context;
     job->wrapper = context->secondary_present ? 1u : 0u;
     job->stage = WRAPPER_BEGIN;
-    job->error = AXD_RESET_NO_ERROR;
-    job->phase = AXD_RESET_RUNNING;
+    job->error = AXD_AI_NO_ERROR;
+    job->phase = AXD_AI_RUNNING;
     return 0;
 }
-enum axd_reset_phase axd_ai_reset_step(struct axd_ai_reset *job,
-                                        axd_reset_io_fn io, void *context)
+enum axd_ai_reset_phase axd_ai_reset_step(struct axd_ai_reset *job,
+                                        axd_ai_reset_io_fn io, void *context)
 {
-    const struct axd_reset_operation *op;
+    const struct axd_ai_reset_operation *op;
     uint32_t value = 0;
     if (job == NULL)
-        return AXD_RESET_INVALID;
-    if (job->phase != AXD_RESET_RUNNING)
+        return AXD_AI_INVALID;
+    if (job->phase != AXD_AI_RUNNING)
         return job->phase;
     if (job->cursor == job->queued) {
         prepare(job);
-        if (job->phase != AXD_RESET_RUNNING || job->queued == 0)
+        if (job->phase != AXD_AI_RUNNING || job->queued == 0)
             return job->phase;
     }
     if (io == NULL) {
-        fail(job, AXD_RESET_BAD_ARGUMENT);
+        fail(job, AXD_AI_BAD_ARGUMENT);
         return job->phase;
     }
     op = &job->operations[job->cursor];
     job->attempted_ops++;
     if (io(context, op, &value) != 0) {
-        fail(job, AXD_RESET_IO_ERROR);
+        fail(job, AXD_AI_IO_ERROR);
         return job->phase;
     }
     job->completed_ops++;
-    if (op->kind == AXD_RESET_READ32)
+    if (op->kind == AXD_AI_READ32)
         job->last_read = value;
-    if (op->kind == AXD_RESET_WRITE32 && op->offset == 0x800 && op->value == 0)
+    if (op->kind == AXD_AI_WRITE32 && op->offset == 0x800 && op->value == 0)
         job->release_writes++;
     job->cursor++;
     return job->phase;
 }
-enum axd_reset_phase axd_ai_reset_cancel(struct axd_ai_reset *job)
+enum axd_ai_reset_phase axd_ai_reset_cancel(struct axd_ai_reset *job)
 {
     if (job == NULL)
-        return AXD_RESET_INVALID;
-    if (job->phase == AXD_RESET_RUNNING)
-        job->phase = AXD_RESET_CANCELLED;
+        return AXD_AI_INVALID;
+    if (job->phase == AXD_AI_RUNNING)
+        job->phase = AXD_AI_CANCELLED;
     return job->phase;
 }
