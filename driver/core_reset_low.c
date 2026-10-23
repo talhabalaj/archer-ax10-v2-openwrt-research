@@ -91,15 +91,17 @@ static void reset_step(struct axd_core_reset_low *j,struct bridge *b)
 }
 int axd_core_reset_low_begin(struct axd_core_reset_low *j,const struct axd_core_reset_low_context *c)
 {
-    struct axd_core_reset_low_context copy;const struct axd_core_reset_low empty={0};
-    if(!j)return -1;if(c){copy=*c;c=&copy;}*j=empty;j->phase=AXD_LOW_FAILED;j->error=AXD_LOW_BAD_ARGUMENT;
+    struct axd_core_reset_low_context copy;static const struct axd_core_reset_low empty={0};
+    if(!j)return -1;
+    if(c){copy=*c;c=&copy;}*j=empty;j->phase=AXD_LOW_FAILED;j->error=AXD_LOW_BAD_ARGUMENT;
     if(!c || c->hw_present>1 || c->reset_callback_present>1 || c->w_present>1)return -1;
     j->context=*c;j->phase=AXD_LOW_RUNNING;j->error=AXD_LOW_NO_ERROR;return 0;
 }
 enum axd_core_reset_low_phase axd_core_reset_low_step(struct axd_core_reset_low *j,axd_core_reset_low_io_fn io,void *opaque)
 {
     struct bridge b={j,io,opaque};struct axd_si_core_context c={0};struct axd_d11_operation d={AXD_D11_STORE_BARRIER,0,0};uint32_t ignored=0;
-    if(!j)return AXD_LOW_INVALID;if(j->phase!=AXD_LOW_RUNNING)return j->phase;
+    if(!j)return AXD_LOW_INVALID;
+    if(j->phase!=AXD_LOW_RUNNING)return j->phase;
     switch(j->stage) {
     case ENTRY:
         if(!j->context.hw_present || !j->context.reset_callback_present){j->phase=AXD_LOW_DONE;break;}

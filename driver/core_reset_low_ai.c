@@ -123,7 +123,7 @@ static void prepare(struct axd_low_ai *job)
 int axd_low_ai_begin(struct axd_low_ai *job,
                         const struct axd_low_ai_context *context)
 {
-    const struct axd_low_ai empty = {0};
+    static const struct axd_low_ai empty={0};
     struct axd_low_ai_context snapshot;
     if (job == NULL)
         return -1;

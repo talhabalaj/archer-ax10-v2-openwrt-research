@@ -96,7 +96,7 @@ static int os(struct axd_rx_packets *j, struct axd_rx_packets_operation *op,
 int axd_rx_packets_begin(struct axd_rx_packets *j, const struct axd_rx_packets_request *request,
                          const struct axd_rx_packets_context *context)
 {
-    const struct axd_rx_packets empty = {0};
+    static const struct axd_rx_packets empty={0};
     struct axd_rx_packets_request r; struct axd_rx_packets_context c;
     if (j == NULL) return -1;
     if (request != NULL) { r = *request; request = &r; }

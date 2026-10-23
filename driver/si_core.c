@@ -4,7 +4,7 @@
 int axd_si_core_begin(struct axd_si_core_job *j, enum axd_si_core_command command, uint32_t mask, uint32_t value, const struct axd_si_core_context *c)
 {
     struct axd_si_core_context copy;
-    const struct axd_si_core_job empty={0};
+    static const struct axd_si_core_job empty={0};
     if(!j) return -1;
     if(c) {copy=*c;c=&copy;}
     *j=empty;j->phase=AXD_SICO_FAILED;j->error=AXD_SICO_BAD_ARGUMENT;

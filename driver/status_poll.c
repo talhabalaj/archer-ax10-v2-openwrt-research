@@ -6,7 +6,7 @@ int axd_poll_begin(struct axd_status_poll *poll, uint16_t reg, uint32_t mask,
                     uint32_t expected, uint64_t now_us,
                     uint32_t timeout_us, uint32_t interval_us)
 {
-    const struct axd_status_poll empty = {0};
+    static const struct axd_status_poll empty={0};
     if (poll == NULL)
         return -1;
     *poll = empty;

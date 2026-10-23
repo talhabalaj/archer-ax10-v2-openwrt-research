@@ -189,7 +189,7 @@ static void child_step(struct axd_phy_table *job, struct relay *relay)
 int axd_phy_table_begin(struct axd_phy_table *job, uint32_t index,
                         const struct axd_phy_table_context *context)
 {
-    const struct axd_phy_table empty = {0};
+    static const struct axd_phy_table empty={0};
     struct axd_phy_table_context snapshot;
     if (job == NULL)
         return -1;

@@ -17,7 +17,7 @@ int axd_dma_tx_post_begin(struct axd_dma_tx_post *j,
 {
     struct axd_dma_tx_post_request r;
     struct axd_dma_tx_post_context c;
-    const struct axd_dma_tx_post empty={0};
+    static const struct axd_dma_tx_post empty={0};
     if(j==NULL)return -1;
     if(request!=NULL){r=*request;request=&r;}
     if(context!=NULL){c=*context;context=&c;}

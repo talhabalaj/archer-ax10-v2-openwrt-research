@@ -75,7 +75,7 @@ int axd_object_memory_begin(struct axd_object_memory *j,
 {
     struct axd_object_request r;
     struct axd_object_context c;
-    const struct axd_object_memory empty = {0};
+    static const struct axd_object_memory empty={0};
     uint32_t count, alignment;
     if (j == NULL) return -1;
     if (request != NULL) { r = *request; request = &r; }

@@ -143,7 +143,7 @@ static void prepare(struct axd_phy_clock *job)
 int axd_phy_clock_begin(struct axd_phy_clock *job, enum axd_phy_clock_command command,
                         const struct axd_phy_clock_context *context)
 {
-    const struct axd_phy_clock empty = {0};
+    static const struct axd_phy_clock empty={0};
     struct axd_phy_clock_context snapshot;
     if (job == NULL)
         return -1;

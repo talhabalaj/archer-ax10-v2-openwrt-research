@@ -17,7 +17,7 @@ static void prepare(struct axd_effective_init *init)
     const uint8_t *record;
     uint16_t offset, width;
     uint32_t value;
-    const struct axd_init_operation empty = {0};
+    static const struct axd_init_operation empty={0};
     init->operation = empty;
     if (init->record_index == init->record_count) {
         init->phase = AXD_INIT_COMPLETE;
@@ -51,7 +51,7 @@ int axd_effective_init_begin(struct axd_effective_init *init,
                               const uint32_t *offset130_addend,
                               uint32_t mmio_window, uint32_t object_window)
 {
-    const struct axd_effective_init empty = {0};
+    static const struct axd_effective_init empty={0};
     uint32_t addend_snapshot;
     size_t pos;
     if (init == NULL)

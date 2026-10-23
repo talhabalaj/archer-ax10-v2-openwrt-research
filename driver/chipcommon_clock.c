@@ -164,7 +164,7 @@ static void prepare(struct axd_cc_clock *job)
 int axd_cc_clock_begin(struct axd_cc_clock *job, uint32_t mode,
                        const struct axd_cc_clock_context *context)
 {
-    const struct axd_cc_clock empty = {0};
+    static const struct axd_cc_clock empty={0};
     struct axd_cc_clock_context snapshot;
     if (job == NULL)
         return -1;

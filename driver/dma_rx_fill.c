@@ -45,7 +45,7 @@ static unsigned odd(uint32_t value)
 {value^=value>>16;value^=value>>8;value^=value>>4;value^=value>>2;value^=value>>1;return value&1u;}
 int axd_dma_rx_fill_begin(struct axd_dma_rx_fill *j,const struct axd_rx_fill_context *context)
 {
-    struct axd_rx_fill_context c;const struct axd_dma_rx_fill empty={0};
+    struct axd_rx_fill_context c;static const struct axd_dma_rx_fill empty={0};
     if(j==NULL)return -1;
     if(context!=NULL){c=*context;context=&c;}
     *j=empty;fail(j,AXD_RXF_BAD_ARGUMENT);

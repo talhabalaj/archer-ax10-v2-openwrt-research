@@ -18,7 +18,7 @@ static int pointer(struct axd_radio_identity *j,enum axd_radio_identity_field fi
 int axd_radio_identity_begin(struct axd_radio_identity *j,enum axd_radio_identity_command command,
                               uint32_t input_code,const struct axd_radio_identity_context *context)
 {
-    const struct axd_radio_identity empty={0};struct axd_radio_identity_context copy;
+    static const struct axd_radio_identity empty={0};struct axd_radio_identity_context copy;
     if(!j)return -1;
     if(context){copy=*context;context=&copy;}
     *j=empty;fail(j,AXD_RID_BAD_ARGUMENT);

@@ -66,6 +66,9 @@ struct axd_psm_control {
     uint32_t override_reason, wake_control_sample;
     uint32_t mirror_pending;
     enum axd_wake_decision policy_decision;
+    /* Last full policy result, kept in the job rather than on the stack:
+     * its diagnostic trace is too large for a kernel stack frame. */
+    struct axd_wake_result policy_result;
     enum axd_wake_field policy_reason;
     unsigned policy_evaluated, policy_accesses;
     uint8_t policy_slot, policy_pass;

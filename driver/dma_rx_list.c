@@ -13,7 +13,7 @@ int axd_dma_rx_list_begin(struct axd_dma_rx_list *j,uint32_t budget,uint32_t for
                            const struct axd_rx_list_context *context)
 {
     struct axd_rx_list_context c;
-    const struct axd_dma_rx_list empty={0};
+    static const struct axd_dma_rx_list empty={0};
     if(j==NULL)return -1;
     if(context!=NULL){c=*context;context=&c;}
     *j=empty;fail(j,AXD_RX_LIST_BAD_ARGUMENT);

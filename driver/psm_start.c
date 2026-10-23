@@ -135,7 +135,7 @@ static void prepare(struct axd_psm_start *job)
 int axd_psm_start_begin(struct axd_psm_start *job,
                         const struct axd_start_context *context)
 {
-    const struct axd_psm_start empty = {0};
+    static const struct axd_psm_start empty={0};
     struct axd_start_context snapshot;
     if (job == NULL)
         return -1;

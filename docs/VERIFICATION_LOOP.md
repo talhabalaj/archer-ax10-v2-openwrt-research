@@ -90,7 +90,7 @@ The current offline tool always retains unverified kernel/device gates.
 | Enclosing initialization | Actual attach, reset, upload, start and BMAC initialization compose all required children with real runtime bindings and ownership. |
 | Receive delivery | Allocation/fill, DMA completion, status merge, BMAC/header parsing and a valid frame delivered through the chosen kernel networking interface. |
 | Transmit completion | Normal packet transmit, hardware completion and correct reclaim/lifetime, beyond the descriptor-only leaf. |
-| Kernel integration | Reproducible target-kernel build and verified resource acquisition, mapping, DMA/coherency, IRQ, locking, error and teardown behavior. |
+| Kernel integration | Reproducible target-kernel build (now checked: `--kernel-build`, pinned Linux 6.12.114, warning-free) and verified resource acquisition, mapping, DMA/coherency, IRQ, locking, error and teardown behavior (not yet). |
 | Exact-board operation | Actual identity/calibration inputs, physical reset/start, valid RX, calibrated TX/association/security, recovery and stability evidence. |
 
 The existing instruction prohibits router/hardware/RF operations. This loop

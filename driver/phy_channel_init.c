@@ -84,8 +84,9 @@ static void child(struct axd_phy_channel_init *j,struct relay *r)
 int axd_phy_channel_init_begin(struct axd_phy_channel_init *j,enum axd_phy_channel_command command,
                                 unsigned enabled,const struct axd_phy_channel_context *context)
 {
-    const struct axd_phy_channel_init empty={0};struct axd_phy_channel_context copy;
-    if(!j)return -1;if(context){copy=*context;context=&copy;}*j=empty;fail(j,AXD_CHANNEL_BAD_ARGUMENT);
+    static const struct axd_phy_channel_init empty={0};struct axd_phy_channel_context copy;
+    if(!j)return -1;
+    if(context){copy=*context;context=&copy;}*j=empty;fail(j,AXD_CHANNEL_BAD_ARGUMENT);
     if(!context || command<AXD_CHANNEL_RADAR_INIT || command>AXD_CHANNEL_HWOBSS || enabled>255)return -1;
     j->context=*context;j->command=command;j->enabled=enabled!=0;
     if(context->hardware.phy.core!=130 || context->hardware.phy.minor>1 || context->hardware.phy.phy_type!=0xb || context->hardware.phy.phy_revision!=51){fail(j,AXD_CHANNEL_UNSUPPORTED);return -1;}
@@ -94,7 +95,9 @@ int axd_phy_channel_init_begin(struct axd_phy_channel_init *j,enum axd_phy_chann
 enum axd_phy_channel_phase axd_phy_channel_init_step(struct axd_phy_channel_init *j,axd_d11_io_fn io,void *opaque)
 {
     struct relay r={j,io,opaque};struct axd_phy_channel_context *c;uint32_t bw;
-    if(!j)return AXD_CHANNEL_INVALID;if(j->phase!=AXD_CHANNEL_RUNNING)return j->phase;c=&j->context;
+    if(!j)return AXD_CHANNEL_INVALID;
+    if(j->phase!=AXD_CHANNEL_RUNNING)return j->phase;
+    c=&j->context;
     bw=c->chanspec.value&0x3800u;
     switch(j->stage){
     case ENTRY:

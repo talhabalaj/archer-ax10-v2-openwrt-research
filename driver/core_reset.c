@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: MIT */
 #include "core_reset.h"
+#include "job_reset.h"
 
 enum stage {
     ENTRY, DEFAULT_PHY, FAST, INITIAL_UP, DMA_GATE, TX_ENTRY, TX_AFTER_PRIMARY,
@@ -260,14 +261,15 @@ static void child_step(struct axd_core_reset *j, struct relay *r)
 int axd_core_reset_begin(struct axd_core_reset *j, uint32_t flags,
                           const struct axd_core_reset_context *context)
 {
-    const struct axd_core_reset empty = {0};
-    struct axd_core_reset_context snapshot;
     if (j == NULL) return -1;
-    if (context != NULL) { snapshot = *context; context = &snapshot; }
-    *j = empty; fail(j, AXD_CORE_BAD_ARGUMENT);
+    if (axd_job_overlaps(j, sizeof(*j), context, sizeof(*context), &j->context)) context = NULL;
+    else if (context != NULL && context != &j->context) j->context = *context;
+    axd_job_zero_except(j, sizeof(*j), offsetof(struct axd_core_reset, context),
+                        context ? sizeof(j->context) : 0, 0, 0);
+    fail(j, AXD_CORE_BAD_ARGUMENT);
     if (context == NULL) return -1;
-    j->context = *context; j->flags = flags;
-    if (context->clock.d11.core != 130 || context->clock.d11.minor > 1) {
+    j->flags = flags;
+    if (j->context.clock.d11.core != 130 || j->context.clock.d11.minor > 1) {
         fail(j, AXD_CORE_UNSUPPORTED); return -1;
     }
     j->si_state_known = 1; j->stage = ENTRY;

@@ -103,6 +103,7 @@ All original code here uses the repository's MIT license.
 - `phy_chanspec.c`: actual callback13 prologue, radio-set and module0 `chanspec_setup`
   (core-to-core sync, resetcca, phycorestate, BMAC bandwidth), module1's rev guard and
   module2's radio-ID dispatch and the radio20704 5GHz body; `pll_tune` remains a gate.
+- `job_reset.h`: kernel-stack-safe job reset used by large `begin` functions.
 - `hnd_math_fp.c`: HND fixed-point helpers for PLL tuning, matched against the pinned
   hnd.ko instructions (including the vendor divide's carry quirk).
 - `dma_rx_status_fill.c` / `bmac_rx_fill.c`: actual status-pool RX fill with idle

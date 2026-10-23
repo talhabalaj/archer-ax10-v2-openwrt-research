@@ -49,7 +49,7 @@ int axd_init_io_begin(struct axd_init_io *j, const struct axd_init_io_request *r
     struct axd_object_context c;
     uint32_t addend = 0;
     unsigned known_addend = 0;
-    const struct axd_init_io empty = {0};
+    static const struct axd_init_io empty={0};
     if (j == NULL) return -1;
     if (request != NULL) {
         r = *request; request = &r;

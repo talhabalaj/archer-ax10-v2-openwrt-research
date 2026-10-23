@@ -25,7 +25,8 @@ static int fact(struct axd_radio_regtbl *j,enum axd_radio_regtbl_field f,
     else if(v.known!=1)fail(j,AXD_RRT_BAD_ARGUMENT);
     else if(v.value>limit)fail(j,AXD_RRT_BOUNDS);
     else if(pointer && !v.value)fail(j,AXD_RRT_BINDING);
-    else return 1;return 0;
+    else return 1;
+    return 0;
 }
 static int byte(struct axd_radio_regtbl *j,enum axd_radio_regtbl_field f,struct axd_wake_u8 v)
 {const struct axd_wake_u32 w={v.value,v.known};return fact(j,f,w,255,0);}
@@ -71,7 +72,8 @@ static int descriptors(struct axd_radio_regtbl *j,enum axd_radio_regtbl_field fi
     else if(s.known!=1)fail(j,AXD_RRT_BAD_ARGUMENT);
     else if(!s.entries)fail(j,AXD_RRT_BINDING);
     else if(s.count!=count)fail(j,AXD_RRT_BOUNDS);
-    else return 1;return 0;
+    else return 1;
+    return 0;
 }
 static void child(struct axd_radio_regtbl *j,struct relay *r)
 {
@@ -94,9 +96,11 @@ static void child(struct axd_radio_regtbl *j,struct relay *r)
 }
 int axd_radio_regtbl_begin(struct axd_radio_regtbl *j,const struct axd_radio_regtbl_context *context)
 {
-    const struct axd_radio_regtbl empty={0};struct axd_radio_regtbl_context copy;
-    if(!j)return -1;if(context){copy=*context;context=&copy;}*j=empty;fail(j,AXD_RRT_BAD_ARGUMENT);
-    if(!context)return -1;j->context=*context;
+    static const struct axd_radio_regtbl empty={0};struct axd_radio_regtbl_context copy;
+    if(!j)return -1;
+    if(context){copy=*context;context=&copy;}*j=empty;fail(j,AXD_RRT_BAD_ARGUMENT);
+    if(!context)return -1;
+    j->context=*context;
     if(context->hardware.phy.core!=130 || context->hardware.phy.minor>1 ||
        context->hardware.phy.phy_type!=11 || context->hardware.phy.phy_revision!=51 ||
        context->hardware.phy.phy_core_count<1 || context->hardware.phy.phy_core_count>4){fail(j,AXD_RRT_UNSUPPORTED);return -1;}
@@ -105,7 +109,8 @@ int axd_radio_regtbl_begin(struct axd_radio_regtbl *j,const struct axd_radio_reg
 enum axd_radio_regtbl_phase axd_radio_regtbl_step(struct axd_radio_regtbl *j,axd_d11_io_fn fn,void *opaque)
 {
     struct relay r={j,fn,opaque};struct axd_radio_regtbl_context *c;uint32_t band;
-    if(!j)return AXD_RRT_INVALID;if(j->phase!=AXD_RRT_RUNNING)return j->phase;
+    if(!j)return AXD_RRT_INVALID;
+    if(j->phase!=AXD_RRT_RUNNING)return j->phase;
     c=&j->context;band=c->chanspec.value&0xc000u;
     switch(j->stage){
     case ENTRY:
@@ -136,16 +141,19 @@ enum axd_radio_regtbl_phase axd_radio_regtbl_step(struct axd_radio_regtbl *j,axd
         else{j->index=0;phy(j,AXD_PHY_MODIFY,0x408,0x800,0,CORE_MOD);}break;
     case CORE_MOD:
         if(j->core_index<c->hardware.phy.phy_core_count)phy(j,AXD_PHY_MODIFY,(uint16_t)(0x747+j->core_index*0x200),0xf,0xf,CORE_NEXT);
-        else j->stage=BEFORE_GUARD;break;
+        else j->stage=BEFORE_GUARD;
+        break;
     case CORE_NEXT:j->core_index++;j->stage=CORE_MOD;break;
     case BEFORE_GUARD:packed(j,j->index?0x4721:0x4729,j->index?0x5000:0,BEFORE_NEXT);break;
     case BEFORE_NEXT:if(++j->index<2)j->stage=BEFORE_GUARD;else {j->index=0;j->stage=GUARD_READ;}break;
     case GUARD_READ:phy(j,AXD_PHY_READ,0x19e,0,0,GUARD_SET);break;
     case GUARD_SET:phy(j,AXD_PHY_MODIFY,0x19e,2,2,LOAD_STATIC);break;
     case LOAD_STATIC:
-        if(byte(j,AXD_RRT_LOAD_STATIC,c->load_static))j->stage=c->load_static.value?STATIC_ENTRY:GUARD_RESTORE;break;
+        if(byte(j,AXD_RRT_LOAD_STATIC,c->load_static))j->stage=c->load_static.value?STATIC_ENTRY:GUARD_RESTORE;
+        break;
     case STATIC_ENTRY:
-        if(descriptors(j,AXD_RRT_TABLES,c->tables,9))table(j,&c->tables.entries[j->index],1,STATIC_NEXT);break;
+        if(descriptors(j,AXD_RRT_TABLES,c->tables,9))table(j,&c->tables.entries[j->index],1,STATIC_NEXT);
+        break;
     case STATIC_NEXT:if(++j->index<9)j->stage=STATIC_ENTRY;else{j->index=0;j->zero_index=0;j->stage=ZERO_ENTRY;}break;
     case ZERO_ENTRY:
         if(descriptors(j,AXD_RRT_ZEROS,c->zeros,8)){

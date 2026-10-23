@@ -90,7 +90,7 @@ static void child_step(struct axd_phy_tssi *job, struct relay *relay)
 int axd_phy_tssi_begin(struct axd_phy_tssi *job, enum axd_tssi_command command,
                        const struct axd_tssi_context *context)
 {
-    const struct axd_phy_tssi empty = {0};
+    static const struct axd_phy_tssi empty={0};
     struct axd_tssi_context snapshot;
     unsigned count, active;
     if (job == NULL)

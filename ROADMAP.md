@@ -270,6 +270,9 @@ actual receive success is recorded separately from host-test success.
 
 - Choose and document the Linux integration architecture from recovered MAC
   responsibilities. mac80211 is a candidate, not a decision justified by a PCI ID.
+- Started: a [kernel transport layer](docs/KERNEL_INTEGRATION.md) (MMIO/barrier
+  backend, platform driver, hardware access off by default) builds warning-free
+  for ARM32 Linux 6.12; it is not loaded and registers no interface.
 - Implement capability reporting, interface lifecycle, channel configuration,
   TX queues/completions, RX delivery, station state, keys and beacon handling.
 - Validate baseline unaggregated traffic before aggregation and advanced features.

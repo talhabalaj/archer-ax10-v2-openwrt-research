@@ -41,7 +41,7 @@ enum axd_wake_decision axd_wake_policy_evaluate(
     const struct axd_wake_inputs *s, struct axd_wake_u32 current_override,
     struct axd_wake_result *r)
 {
-    const struct axd_wake_result empty = {0};
+    static const struct axd_wake_result empty={0};
     unsigned i, pass;
     if (r == NULL)
         return AXD_WAKE_INVALID;

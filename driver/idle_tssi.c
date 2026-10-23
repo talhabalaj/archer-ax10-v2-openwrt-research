@@ -117,7 +117,7 @@ static void child_step(struct axd_idle_tssi *job, struct relay *relay)
 int axd_idle_tssi_begin(struct axd_idle_tssi *job, enum axd_tssi_command command,
                         const struct axd_idle_tssi_context *context)
 {
-    const struct axd_idle_tssi empty = {0};
+    static const struct axd_idle_tssi empty={0};
     struct axd_idle_tssi_context snapshot;
     if (job == NULL)
         return -1;

@@ -22,7 +22,8 @@ static int fact(struct axd_phy_noise *j,enum axd_phy_noise_field field,struct ax
     else if(f.known!=1)fail(j,AXD_NOISE_BAD_ARGUMENT);
     else if(f.value>limit)fail(j,AXD_NOISE_BOUNDS);
     else if(nonnull && !f.value)fail(j,AXD_NOISE_BINDING);
-    else return 1;return 0;
+    else return 1;
+    return 0;
 }
 static int byte(struct axd_phy_noise *j,enum axd_phy_noise_field field,struct axd_wake_u8 f)
 {const struct axd_wake_u32 w={f.value,f.known};return fact(j,field,w,255,0);}
@@ -96,8 +97,9 @@ static void filter(struct axd_phy_noise *j,unsigned after)
 {j->stage=FILTER;j->index=0;j->after_filter=after;}
 int axd_phy_noise_begin(struct axd_phy_noise *j,enum axd_phy_noise_command command,uint32_t mode,const struct axd_phy_noise_context *context)
 {
-    const struct axd_phy_noise empty={0};struct axd_phy_noise_context c;
-    if(!j)return -1;if(context){c=*context;context=&c;}*j=empty;fail(j,AXD_NOISE_BAD_ARGUMENT);
+    static const struct axd_phy_noise empty={0};struct axd_phy_noise_context c;
+    if(!j)return -1;
+    if(context){c=*context;context=&c;}*j=empty;fail(j,AXD_NOISE_BAD_ARGUMENT);
     if(!context || command<AXD_NOISE_INIT_MODE || command>AXD_NOISE_HWACI_ON ||
        (command!=AXD_NOISE_INIT_MODE && mode>1) || (command==AXD_NOISE_HWACI_OFF && mode!=0) ||
        (command==AXD_NOISE_HWACI_ON && mode!=1))return -1;
@@ -109,7 +111,9 @@ int axd_phy_noise_begin(struct axd_phy_noise *j,enum axd_phy_noise_command comma
 enum axd_phy_noise_phase axd_phy_noise_step(struct axd_phy_noise *j,axd_d11_io_fn io,void *opaque)
 {
     struct relay r={j,io,opaque};struct axd_phy_noise_context *c;
-    if(!j)return AXD_NOISE_INVALID;if(j->phase!=AXD_NOISE_RUNNING)return j->phase;c=&j->context;
+    if(!j)return AXD_NOISE_INVALID;
+    if(j->phase!=AXD_NOISE_RUNNING)return j->phase;
+    c=&j->context;
     switch(j->stage){
     case ENTRY:
         if(!fact(j,AXD_NOISE_PHY,c->phy_pointer,UINT32_MAX,1))break;
@@ -138,7 +142,8 @@ enum axd_phy_noise_phase axd_phy_noise_step(struct axd_phy_noise *j,axd_d11_io_f
         static const uint16_t selectors[]={0x5a1,0x5a0,0x5ab},masks[]={0x8000,1,6};
         if(j->enabled){j->stage=HWACI_ON_GATE;break;}
         if(j->index<3)phy(j,AXD_PHY_MODIFY,selectors[j->index],masks[j->index],0,HWACI);
-        else j->stage=HWACI_2G;j->index++;break;}
+        else j->stage=HWACI_2G;
+        j->index++;break;}
     case HWACI_ON_GATE:
         if(fact(j,AXD_NOISE_CHANSPEC,c->chanspec,65535,0) && fact(j,AXD_NOISE_AC,c->ac_pointer,UINT32_MAX,1) && byte(j,AXD_NOISE_HWACI_ADC_FLAG,c->hwaci_adc_flag)){
             j->index=0;j->stage=c->hwaci_adc_flag.value==1?HWACI_SHM_READ:HWACI_ON_BODY;
@@ -208,7 +213,8 @@ enum axd_phy_noise_phase axd_phy_noise_step(struct axd_phy_noise *j,axd_d11_io_f
             if(j->core_index<c->hardware.phy.phy_core_count)phy(j,AXD_PHY_MODIFY,(uint16_t)(0x6f8+j->core_index*0x200),0x3ff,0x1df,PREEMPT_NEXT);
             else {j->index++;j->stage=PREEMPT_HW;}
         }else if(j->index<6){static const uint16_t s[]={0x141,0x1041,0x15e,0x1043},v[]={0xa00,0x2fff,0x3840,0x18};packed(j,s[j->index-2],v[j->index-2],PREEMPT_NEXT);}
-        else j->stage=PREEMPT_GUARD;break;
+        else j->stage=PREEMPT_GUARD;
+        break;
     case PREEMPT_NEXT:if(j->enabled && j->index==1)j->core_index++;else j->index++;j->stage=PREEMPT_HW;break;
     case PREEMPT_GUARD:phy(j,AXD_PHY_READ,0x19e,0,0,PREEMPT_SET);break;
     case PREEMPT_SET:j->preempt_guard=j->phy_job.result;phy(j,AXD_PHY_MODIFY,0x19e,2,2,PREEMPT_FILTER);break;
@@ -239,7 +245,8 @@ enum axd_phy_noise_phase axd_phy_noise_step(struct axd_phy_noise *j,axd_d11_io_f
         }break;
     case FILTER_DONE:j->stage=j->after_filter;break;
     case ELNA:
-        if(fact(j,AXD_NOISE_CHANSPEC,c->chanspec,65535,0) && fact(j,AXD_NOISE_RADIO_ID,c->radio.radio_id,65535,0))j->stage=c->radio.radio_id.value==0x50e0?ELNA_CORE:ELNA_DONE;break;
+        if(fact(j,AXD_NOISE_CHANSPEC,c->chanspec,65535,0) && fact(j,AXD_NOISE_RADIO_ID,c->radio.radio_id,65535,0))j->stage=c->radio.radio_id.value==0x50e0?ELNA_CORE:ELNA_DONE;
+        break;
     case ELNA_CORE:
         if(j->core_index>=c->hardware.phy.phy_core_count)j->stage=ELNA_DONE;
         else if(j->index<5 || (j->index==5 && j->enabled)){

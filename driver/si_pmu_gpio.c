@@ -164,8 +164,9 @@ int axd_si_pmu_gpio_begin(struct axd_si_pmu_gpio *j,enum axd_si_pmu_gpio_command
                            uint32_t register_index,uint32_t mask,uint32_t value,
                            const struct axd_si_pmu_gpio_context *context)
 {
-    const struct axd_si_pmu_gpio empty={0};struct axd_si_pmu_gpio_context copy;
-    if(!j)return -1;if(context){copy=*context;context=&copy;}*j=empty;fail(j,AXD_SPG_BAD_ARGUMENT);
+    static const struct axd_si_pmu_gpio empty={0};struct axd_si_pmu_gpio_context copy;
+    if(!j)return -1;
+    if(context){copy=*context;context=&copy;}*j=empty;fail(j,AXD_SPG_BAD_ARGUMENT);
     if(!context || command<AXD_SPG_VREG || command>AXD_SPG_GPIO)return -1;
     j->context=*context;j->command=command;j->register_index=register_index;j->mask=mask;j->value=value;
     j->state_valid=1;j->phase=AXD_SPG_RUNNING;j->error=AXD_SPG_NO_ERROR;return 0;
@@ -173,7 +174,8 @@ int axd_si_pmu_gpio_begin(struct axd_si_pmu_gpio *j,enum axd_si_pmu_gpio_command
 enum axd_si_pmu_gpio_phase axd_si_pmu_gpio_step(struct axd_si_pmu_gpio *j,axd_si_pmu_gpio_io_fn transport,void *opaque)
 {
     struct relay r={j,transport,opaque};
-    if(!j)return AXD_SPG_INVALID;if(j->phase!=AXD_SPG_RUNNING)return j->phase;
+    if(!j)return AXD_SPG_INVALID;
+    if(j->phase!=AXD_SPG_RUNNING)return j->phase;
     switch(j->stage) {
     case ENTRY:
         if(j->command==AXD_SPG_VREG){j->search_index=0;j->stage=FIND_PMU;}

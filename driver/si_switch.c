@@ -62,7 +62,7 @@ int axd_si_switch_begin(struct axd_si_switch *j,enum axd_si_switch_command comma
                           uint32_t requested,uint32_t saved_index,uint32_t irq_token,
                           const struct axd_si_switch_context *context)
 {
-    const struct axd_si_switch empty={0};struct axd_si_switch_context snapshot;
+    static const struct axd_si_switch empty={0};struct axd_si_switch_context snapshot;
     if(j==NULL)return -1;
     if(context!=NULL){snapshot=*context;context=&snapshot;}
     *j=empty;fail(j,AXD_SIS_BAD_ARGUMENT);

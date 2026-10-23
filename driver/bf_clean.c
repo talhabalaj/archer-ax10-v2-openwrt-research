@@ -87,7 +87,7 @@ static int bounded_access(struct axd_bf_clean *j, enum axd_bf_field field,
 }
 int axd_bf_clean_begin(struct axd_bf_clean *j, const struct axd_bf_clean_context *context)
 {
-    const struct axd_bf_clean empty = {0};
+    static const struct axd_bf_clean empty={0};
     struct axd_bf_clean_context snapshot;
     if (j == NULL) return -1;
     if (context != NULL) { snapshot = *context; context = &snapshot; }

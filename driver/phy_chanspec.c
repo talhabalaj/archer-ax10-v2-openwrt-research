@@ -22,7 +22,8 @@ static int fact(struct axd_phy_chanspec *j,enum axd_phy_chanspec_field field,str
     else if(f.known!=1)fail(j,AXD_CS_BAD_ARGUMENT);
     else if(f.value>limit)fail(j,AXD_CS_BOUNDS);
     else if(nonnull && !f.value)fail(j,AXD_CS_BINDING);
-    else return 1;return 0;
+    else return 1;
+    return 0;
 }
 /* A canonical alias must be known, nonnull and equal to its owner. */
 static int alias(struct axd_phy_chanspec *j,enum axd_phy_chanspec_field field,struct axd_wake_u32 f,uint32_t owner)
@@ -349,8 +350,9 @@ static void radio_step(struct axd_phy_chanspec *j)
 }
 int axd_phy_chanspec_begin(struct axd_phy_chanspec *j,const struct axd_phy_chanspec_context *context)
 {
-    const struct axd_phy_chanspec empty={0};struct axd_phy_chanspec_context c;
-    if(!j)return -1;if(context){c=*context;context=&c;}*j=empty;fail(j,AXD_CS_BAD_ARGUMENT);
+    static const struct axd_phy_chanspec empty={0};struct axd_phy_chanspec_context c;
+    if(!j)return -1;
+    if(context){c=*context;context=&c;}*j=empty;fail(j,AXD_CS_BAD_ARGUMENT);
     if(!context)return -1;
     j->context=c;
     if(c.hardware.phy.core!=130 || c.hardware.phy.minor>1 || c.hardware.phy.phy_type!=0xb || c.hardware.phy.phy_revision!=51){fail(j,AXD_CS_UNSUPPORTED);return -1;}
@@ -360,7 +362,8 @@ int axd_phy_chanspec_begin(struct axd_phy_chanspec *j,const struct axd_phy_chans
 enum axd_phy_chanspec_phase axd_phy_chanspec_step(struct axd_phy_chanspec *j,axd_phy_chanspec_io_fn io,void *opaque)
 {
     struct relay r;struct axd_phy_chanspec_context *c;
-    if(!j)return AXD_CS_INVALID;if(j->phase!=AXD_CS_RUNNING)return j->phase;
+    if(!j)return AXD_CS_INVALID;
+    if(j->phase!=AXD_CS_RUNNING)return j->phase;
     r.j=j;r.io=io;r.opaque=opaque;c=&j->context;
     if(j->stage>=RUN_PHY){child(j,&r);return j->phase;}
     if(j->stage>=SYNC_READ && j->stage<=SYNC_ENABLE){sync_step(j);return j->phase;}

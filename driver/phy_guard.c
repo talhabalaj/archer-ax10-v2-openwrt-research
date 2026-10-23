@@ -26,7 +26,7 @@ static int perform(void *opaque, const struct axd_d11_operation *operation, uint
 int axd_phy_guard_begin(struct axd_phy_guard *job, enum axd_phy_guard_command command,
                         const struct axd_phy_guard_context *context)
 {
-    const struct axd_phy_guard empty = {0};
+    static const struct axd_phy_guard empty={0};
     struct axd_phy_guard_context snapshot;
     if (job == NULL)
         return -1;

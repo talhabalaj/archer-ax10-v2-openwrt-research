@@ -75,7 +75,7 @@ int axd_si_select_begin_wrapper(struct axd_si_select *j, enum axd_si_command com
                         const struct axd_si_context *context,
                         const struct axd_si_state *state)
 {
-    const struct axd_si_select empty = {0};
+    static const struct axd_si_select empty={0};
     struct axd_si_context context_copy;
     struct axd_si_state state_copy;
     if (j == NULL) return -1;

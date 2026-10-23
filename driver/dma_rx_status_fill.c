@@ -31,8 +31,9 @@ static unsigned odd(uint32_t v)
 {v^=v>>16;v^=v>>8;v^=v>>4;v^=v>>2;v^=v>>1;return v&1u;}
 int axd_dma_rx_status_fill_begin(struct axd_dma_rx_status_fill *j,const struct axd_rx_status_fill_context *context)
 {
-    struct axd_rx_status_fill_context c;const struct axd_dma_rx_status_fill empty={0};
-    if(j==NULL)return -1;if(context!=NULL){c=*context;context=&c;}
+    struct axd_rx_status_fill_context c;static const struct axd_dma_rx_status_fill empty={0};
+    if(j==NULL)return -1;
+    if(context!=NULL){c=*context;context=&c;}
     *j=empty;fail(j,AXD_RSF_BAD_ARGUMENT);
     if(context==NULL || c.pool_owned>1 || c.data_owned>1 || c.os_owned>1 || c.rx.node_owned>1 || c.rx.descriptor_owned>1 || c.rx.status_owned>1)return -1;
     j->context=c;j->phase=AXD_RSF_RUNNING;j->error=AXD_RSF_NO_ERROR;return 0;
@@ -41,13 +42,15 @@ enum axd_rx_status_fill_phase axd_dma_rx_status_fill_step(struct axd_dma_rx_stat
 {
     static const uint32_t offsets[]={8,12,0,4};
     struct axd_rx_status_fill_operation op={0};uint32_t reply=0;unsigned emit=0,before;
-    if(j==NULL)return AXD_RSF_INVALID;if(j->phase!=AXD_RSF_RUNNING)return j->phase;
+    if(j==NULL)return AXD_RSF_INVALID;
+    if(j->phase!=AXD_RSF_RUNNING)return j->phase;
     switch(j->stage){
     case ENTRY:
         if(j->context.disabled)done(j,0);
         else if(j->context.rx.core!=130 || j->context.rx.minor>1)fail(j,AXD_RSF_UNSUPPORTED);
         else if(j->context.rx.ring.count==0?(j->context.rx.ring.in || j->context.rx.ring.out):axd_dma64_ring_check(&j->context.rx.ring)!=AXD_DMA64_OK)fail(j,AXD_RSF_BOUNDS);
-        else j->stage=PLAN;break;
+        else j->stage=PLAN;
+        break;
     case PLAN:{
         uint32_t used=j->context.rx.ring.count?(j->context.rx.ring.out-j->context.rx.ring.in)&(j->context.rx.ring.count-1u):0;
         j->target=j->context.receive_posts<j->context.rx.ring.count?j->context.receive_posts:j->context.rx.ring.count;
@@ -59,7 +62,8 @@ enum axd_rx_status_fill_phase axd_dma_rx_status_fill_step(struct axd_dma_rx_stat
         if(!j->context.pool.known){j->phase=AXD_RSF_DEPENDENCY;j->dependency=AXD_RSF_POOL_BINDING;}
         else if(j->context.pool.known!=1)fail(j,AXD_RSF_BAD_ARGUMENT);
         else if(!j->context.pool.value)fail(j,AXD_RSF_BINDING);
-        else j->stage=POOL_HEAD;break;
+        else j->stage=POOL_HEAD;
+        break;
     case POOL_HEAD:emit=pool(j,&op,0,0,0);break;
     case HEAD_TEST:if(j->node)j->stage=NEXT_READ;else j->stage=FAILURE_READ;break;
     case NEXT_READ:emit=node(j,&op,AXD_RSF_READ32,j->node,0x1c,0);break;

@@ -51,7 +51,7 @@ static void prepare(struct axd_mctrl *job)
 int axd_mctrl_begin(struct axd_mctrl *job, uint32_t mask, uint32_t value,
                     const struct axd_mctrl_context *context)
 {
-    const struct axd_mctrl empty = {0};
+    static const struct axd_mctrl empty={0};
     struct axd_mctrl_context snapshot;
     if (job == NULL)
         return -1;

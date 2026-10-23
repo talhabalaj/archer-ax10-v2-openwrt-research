@@ -146,7 +146,7 @@ static void child_step(struct axd_si_clock *j, struct relay *r)
 int axd_si_clock_begin(struct axd_si_clock *j, uint32_t mode,
                         const struct axd_si_clock_context *context)
 {
-    const struct axd_si_clock empty = {0};
+    static const struct axd_si_clock empty={0};
     struct axd_si_clock_context snapshot;
     if (j == NULL) return -1;
     if (context != NULL) { snapshot = *context; context = &snapshot; }

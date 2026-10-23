@@ -139,8 +139,9 @@ static void child(struct axd_radio_power *j,struct relay *r)
 }
 int axd_radio_power_begin(struct axd_radio_power *j,enum axd_radio_power_command command,unsigned mode,const struct axd_radio_power_context *context)
 {
-    struct axd_radio_power_context copy;const struct axd_radio_power empty={0};
-    if(!j)return -1;if(context){copy=*context;context=&copy;}*j=empty;fail(j,AXD_RPOWER_BAD_ARGUMENT);
+    struct axd_radio_power_context copy;static const struct axd_radio_power empty={0};
+    if(!j)return -1;
+    if(context){copy=*context;context=&copy;}*j=empty;fail(j,AXD_RPOWER_BAD_ARGUMENT);
     if(!context || command<AXD_RPOWER_LOGEN || command>AXD_RPOWER_ON_REGISTERED || mode>2 || (command!=AXD_RPOWER_LOGEN && mode))return -1;
     j->context=*context;j->command=command;j->mode=mode;
     if(context->radio.hardware.phy.core!=130 || context->radio.hardware.phy.minor>1 || context->radio.hardware.phy.phy_type!=0xb || context->radio.hardware.phy.phy_revision!=51 || context->radio.hardware.phy.phy_core_count>4){fail(j,AXD_RPOWER_BOUNDS);return -1;}
@@ -149,7 +150,9 @@ int axd_radio_power_begin(struct axd_radio_power *j,enum axd_radio_power_command
 enum axd_radio_power_phase axd_radio_power_step(struct axd_radio_power *j,axd_d11_io_fn transport,void *opaque)
 {
     struct relay r={j,transport,opaque};struct axd_radio_power_context *c;
-    if(!j)return AXD_RPOWER_INVALID;if(j->phase!=AXD_RPOWER_RUNNING)return j->phase;c=&j->context;
+    if(!j)return AXD_RPOWER_INVALID;
+    if(j->phase!=AXD_RPOWER_RUNNING)return j->phase;
+    c=&j->context;
     switch(j->stage){
     case ENTRY:
         if(j->command==AXD_RPOWER_LOGEN)j->stage=MODE_SPAN;
@@ -248,7 +251,8 @@ enum axd_radio_power_phase axd_radio_power_step(struct axd_radio_power *j,axd_d1
     case RCCAL_SECOND:j->rccal_first=j->sample;read_radio(j,0x2f2,RCCAL_DIFFERENCE);break;
     case RCCAL_DIFFERENCE:{
         int32_t a=(int32_t)(j->rccal_first&0x1fff),b=(int32_t)(j->sample&0x1fff);
-        if(a&0x1000)a-=0x2000;if(b&0x1000)b-=0x2000;
+        if(a&0x1000)a-=0x2000;
+        if(b&0x1000)b-=0x2000;
         j->difference=(uint32_t)(b-a);j->stage=RCCAL_CALCULATE;break;
     }
     case RCCAL_CALCULATE:
@@ -291,7 +295,8 @@ enum axd_radio_power_phase axd_radio_power_step(struct axd_radio_power *j,axd_d1
     case REGTBL_BEGIN:
         j->context.regtbl.hardware=j->context.radio.hardware;
         if(axd_radio_regtbl_begin(&j->regtbl_job,&j->context.regtbl))fail(j,AXD_RPOWER_CHILD_ERROR);
-        else j->stage=RUN_REGTBL;break;
+        else j->stage=RUN_REGTBL;
+        break;
     case RUN_REGTBL:{
         enum axd_radio_regtbl_phase p=axd_radio_regtbl_step(&j->regtbl_job,io,&r);
         j->context.regtbl=j->regtbl_job.context;j->context.radio.hardware=j->regtbl_job.context.hardware;

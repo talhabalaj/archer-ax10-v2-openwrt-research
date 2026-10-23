@@ -51,7 +51,7 @@ static int si_io(void *opaque, const struct axd_si_clock_operation *operation,
 int axd_wl_clock_begin(struct axd_wl_clock *job, uint32_t mode,
                         const struct axd_wl_clock_context *context)
 {
-    const struct axd_wl_clock empty = {0};
+    static const struct axd_wl_clock empty={0};
     struct axd_wl_clock_context snapshot;
     if (job == NULL)
         return -1;

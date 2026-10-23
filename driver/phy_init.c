@@ -109,7 +109,7 @@ static void child_step(struct axd_phy_init *j,struct relay *r)
 }
 int axd_phy_init_begin(struct axd_phy_init *j,const struct axd_phy_init_context *context)
 {
-    const struct axd_phy_init empty={0};struct axd_phy_init_context snapshot;
+    static const struct axd_phy_init empty={0};struct axd_phy_init_context snapshot;
     if(j==NULL)return -1;
     if(context!=NULL){snapshot=*context;context=&snapshot;}
     *j=empty;fail(j,AXD_PI_BAD_ARGUMENT);

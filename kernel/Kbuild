@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0 OR MIT
+# Built from a staged copy (see scripts/build_kernel_module.sh): kernel glue
+# here, the portable components under portable/.
+obj-m := axd_wl.o
+axd_portable := $(patsubst $(src)/%.c,%.o,$(wildcard $(src)/portable/*.c))
+axd_wl-y := axd_main.o axd_kio.o $(axd_portable)
+ccflags-y := -I$(src)/compat -I$(src)/portable

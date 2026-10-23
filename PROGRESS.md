@@ -53,8 +53,9 @@ its actual failure diagnostics even when it exits nonzero.
 
 The checkpoint scope also runs the sanitizer suite, ARMv7 builds and explicit
 private-input/Unicorn checks when supplied. The exact staged checkpoint passed
-all76 executed checks: target build/run, the55-program sanitizer/private-comparison
-suite,56 C ARMv7 objects plus the combined-header probe, and all16 pinned ARM
+all77 executed checks: target build/run, the56-program sanitizer/private-comparison
+suite,56 C ARMv7 objects plus the combined-header probe, the warning-free Linux
+6.12 kernel module build (`--kernel-build`), and all16 pinned ARM
 comparison programs. The new status-fill checker executes the real wrapper,
 status fill, idle child and, with an optional pinned `--hnd` module, the actual
 HND address converter for432 positive-pool cases (1603 total, zero stubs).
@@ -147,7 +148,7 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | D2 complete register/SHM/context contracts | Partial implementation, host-tested | Effective-init now lowers through real physical object writers; addend acquisition, complete register map and SHM ABI remain. |
 | D3 PHY 51/radio/channel/calibration | Partial implementation, host-tested | Full16 init order, table/SMC, radio OFF/register, explicit50e0 switch-on with regtbl, radar/HWOBSS and noise mode child implemented; eleven callbacks complete. Priority13 channel set/tune, callbacks16-21, calibration and runtime board inputs remain. |
 | D4 DMA/interrupt/RX | Partial offline implementation | Current descriptors, slot/bulk/status-list/packet bodies, normal and status-pool RX fill, BMAC fill wrapper and identified status-release child implemented; native OS/coherency, BMAC parsing/IRQ and kernel resources remain. |
-| D5 TX/Linux WLAN integration | Descriptor-only TX leaf implemented offline | Actual descriptor posting is implemented; normal packet TX/completion and Linux WLAN architecture/integration remain. |
+| D5 TX/Linux WLAN integration | Transport layer started; descriptor-only TX leaf | [Kernel transport layer](docs/KERNEL_INTEGRATION.md): relaxed-MMIO/barrier backend, platform driver with hardware access off by default, pinned warning-free ARM32 module build. Not loaded anywhere. IRQ handling, DMA rings, firmware delivery, mac80211, normal TX/completion remain. |
 | D6 HE/features/stability | Not implemented | Requires validated baseline driver and hardware tests. |
 | B0 flash/boot investigation | Partial | 21 vendor-declared regions and NOR rootfs corroboration; physical geometry/authentication/calibration coverage unresolved. |
 | B1 console/recovery | Pending hardware evidence | Exact-board pins/voltage, console/command policy and return to stock not demonstrated. |

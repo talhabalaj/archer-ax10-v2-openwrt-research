@@ -57,7 +57,7 @@ static int pool(struct axd_rx_status *j,struct axd_rx_status_operation *op,
 int axd_rx_status_begin(struct axd_rx_status *j,const struct axd_rx_status_output *output,
                          const struct axd_rx_status_context *context)
 {
-    const struct axd_rx_status empty={0};struct axd_rx_status_output out;struct axd_rx_status_context c;
+    static const struct axd_rx_status empty={0};struct axd_rx_status_output out;struct axd_rx_status_context c;
     if(j==NULL)return -1;
     if(output!=NULL){out=*output;output=&out;}if(context!=NULL){c=*context;context=&c;}
     *j=empty;fail(j,AXD_RS_BAD_ARGUMENT);

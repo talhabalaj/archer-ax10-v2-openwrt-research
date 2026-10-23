@@ -129,7 +129,7 @@ int axd_phy_register_begin(struct axd_phy_register *job,
                            uint16_t mask, uint16_t value,
                            const struct axd_phy_context *context)
 {
-    const struct axd_phy_register empty = {0};
+    static const struct axd_phy_register empty={0};
     struct axd_phy_context snapshot;
     if (job == NULL)
         return -1;

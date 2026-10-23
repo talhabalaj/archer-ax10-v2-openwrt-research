@@ -19,7 +19,7 @@ int axd_upload_begin(struct axd_ucode_upload *upload,
                       const uint8_t *primary, size_t primary_length,
                       const uint8_t *extended, size_t extended_length)
 {
-    const struct axd_ucode_upload empty = {0};
+    static const struct axd_ucode_upload empty={0};
     struct axd_ucode_selection selected;
     if (upload == NULL)
         return -1;

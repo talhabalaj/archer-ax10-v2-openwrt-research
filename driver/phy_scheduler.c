@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: MIT */
 #include "phy_scheduler.h"
+#include "job_reset.h"
 #include <stddef.h>
 enum stage { ENTRY, DISPATCH, CALLBACK, RETURN_CALLBACK, NEXT,
     RUN_PHY, RUN_TABLE, RUN_RADIO, RUN_MAC, RUN_SI, RUN_CHANNEL, RUN_NOISE, RUN_CHANSPEC, BW_RESULT,
@@ -23,7 +24,7 @@ static int registry_valid(const struct axd_phy_registry *r)
     return 1;
 }
 void axd_phy_registry_clear(struct axd_phy_registry *r)
-{if(r){const struct axd_phy_registry empty={0};*r=empty;}}
+{if(r){static const struct axd_phy_registry empty={0};*r=empty;}}
 int axd_phy_registry_add(struct axd_phy_registry *r,enum axd_phy_init_callback callback,
                            const struct axd_wake_u32 *context,uint32_t priority)
 {
@@ -172,7 +173,7 @@ static void mac(struct axd_phy_scheduler *j,enum axd_psm_command command,unsigne
 /* Current selected SI core mapping, as used by the actual core-flags helpers. */
 static int si_mapping(struct axd_phy_scheduler *j,struct axd_si_core_context *c)
 {
-    struct axd_si_pmu_gpio_context *s=&j->context.table.control;const struct axd_si_core_context empty={0};
+    struct axd_si_pmu_gpio_context *s=&j->context.table.control;static const struct axd_si_core_context empty={0};
     *c=empty;
     if(j->context.table.control_state_known==0){dependency(j,AXD_PS_SI_CHILD);return 0;}
     if(j->context.table.control_state_known!=1){fail(j,AXD_PS_BAD_ARGUMENT);return 0;}
@@ -276,14 +277,19 @@ static void callback(struct axd_phy_scheduler *j)
 }
 int axd_phy_scheduler_begin(struct axd_phy_scheduler *j,const struct axd_phy_registry *registry,const struct axd_phy_scheduler_context *context)
 {
-    struct axd_phy_registry r;struct axd_phy_scheduler_context c;const struct axd_phy_scheduler empty={0};
+    const struct axd_phy_scheduler_context *c;
     if(!j)return -1;
-    if(registry){r=*registry;registry=&r;}if(context){c=*context;context=&c;}
-    *j=empty;fail(j,AXD_PS_BAD_ARGUMENT);
-    if(!registry || !context || !registry_valid(registry))return -1;
-    j->registry=r;j->context=c;
-    if(c.table.hardware.phy.core!=130 || c.table.hardware.phy.minor>1 ||
-        c.table.hardware.phy.phy_type!=0xb || c.table.hardware.phy.phy_revision!=51 || c.table.chip_id!=0xf6ca){fail(j,AXD_PS_UNSUPPORTED);return -1;}
+    if(axd_job_overlaps(j,sizeof(*j),registry,sizeof(*registry),&j->registry))registry=NULL;
+    else if(registry && registry!=&j->registry)j->registry=*registry;
+    if(axd_job_overlaps(j,sizeof(*j),context,sizeof(*context),&j->context))context=NULL;
+    else if(context && context!=&j->context)j->context=*context;
+    axd_job_zero_except(j,sizeof(*j),offsetof(struct axd_phy_scheduler,registry),registry?sizeof(j->registry):0,
+        offsetof(struct axd_phy_scheduler,context),context?sizeof(j->context):0);
+    fail(j,AXD_PS_BAD_ARGUMENT);
+    if(!registry || !context || !registry_valid(&j->registry))return -1;
+    c=&j->context;
+    if(c->table.hardware.phy.core!=130 || c->table.hardware.phy.minor>1 ||
+        c->table.hardware.phy.phy_type!=0xb || c->table.hardware.phy.phy_revision!=51 || c->table.chip_id!=0xf6ca){fail(j,AXD_PS_UNSUPPORTED);return -1;}
     j->phase=AXD_PS_RUNNING;j->error=AXD_PS_NO_ERROR;return 0;
 }
 static void allocate(struct axd_phy_scheduler *j,struct relay *r,uint32_t bytes,unsigned next)
@@ -297,7 +303,9 @@ static void allocate(struct axd_phy_scheduler *j,struct relay *r,uint32_t bytes,
 enum axd_phy_scheduler_phase axd_phy_scheduler_step(struct axd_phy_scheduler *j,axd_phy_scheduler_io_fn io,void *opaque)
 {
     struct relay r={j,io,opaque};struct axd_phy_scheduler_context *c;
-    if(!j)return AXD_PS_INVALID;if(j->phase!=AXD_PS_RUNNING)return j->phase;c=&j->context;
+    if(!j)return AXD_PS_INVALID;
+    if(j->phase!=AXD_PS_RUNNING)return j->phase;
+    c=&j->context;
     switch(j->stage){
     case ENTRY:j->stage=j->registry.init_count?DISPATCH:SLICE;break;
     case DISPATCH:
@@ -363,7 +371,8 @@ enum axd_phy_scheduler_phase axd_phy_scheduler_step(struct axd_phy_scheduler *j,
     case HIRSSI_THIRD:c->hirssi_byte16=0;j->stage=HIRSSI_FOURTH;break;
     case HIRSSI_FOURTH:c->hirssi_byte17=0;complete(j);break;
     case SLICE:
-        if(known(j,c->slice_unit,UINT32_MAX,0) && known(j,c->slice_up,UINT32_MAX,0))j->stage=SLICE_STORE;break;
+        if(known(j,c->slice_unit,UINT32_MAX,0) && known(j,c->slice_up,UINT32_MAX,0))j->stage=SLICE_STORE;
+        break;
     case SLICE_STORE:{unsigned shift=(uint8_t)c->slice_unit.value;c->slice_up.value|=shift<32?UINT32_C(1)<<shift:0;j->slice_up_stored=1;j->stage=FINISH;break;}
     case FINISH:j->return_value=0;j->return_valid=1;j->phase=AXD_PS_TRACE_COMPLETE;break;
     default:fail(j,AXD_PS_BAD_ARGUMENT);break;

@@ -137,7 +137,7 @@ static void prepare(struct axd_dma_reset *job)
 int axd_dma_reset_begin(struct axd_dma_reset *job, enum axd_dma_direction direction,
                         const struct axd_dma_reset_context *context)
 {
-    const struct axd_dma_reset empty = {0};
+    static const struct axd_dma_reset empty={0};
     struct axd_dma_reset_context snapshot;
     if (job == NULL)
         return -1;

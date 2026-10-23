@@ -126,7 +126,7 @@ static void prepare(struct axd_ai_reset *job)
 int axd_ai_reset_begin(struct axd_ai_reset *job,
                         const struct axd_ai_reset_context *context)
 {
-    const struct axd_ai_reset empty = {0};
+    static const struct axd_ai_reset empty={0};
     struct axd_ai_reset_context snapshot;
     if (job == NULL)
         return -1;

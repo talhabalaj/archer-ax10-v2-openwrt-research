@@ -143,7 +143,7 @@ int axd_phy_table_write_begin(struct axd_phy_table_write *j,
                                const struct axd_phy_table_write_request *request,
                                const struct axd_phy_table_context *context)
 {
-    const struct axd_phy_table_write empty = {0};
+    static const struct axd_phy_table_write empty={0};
     struct axd_phy_table_context c;
     struct axd_phy_table_write_request q;
     unsigned stride, parts;

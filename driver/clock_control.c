@@ -188,7 +188,7 @@ int axd_clock_control_begin(struct axd_clock_control *job,
                             enum axd_clock_command command, uint32_t argument,
                             const struct axd_clock_context *context)
 {
-    const struct axd_clock_control empty = {0};
+    static const struct axd_clock_control empty={0};
     struct axd_clock_context snapshot;
     if (job == NULL)
         return -1;

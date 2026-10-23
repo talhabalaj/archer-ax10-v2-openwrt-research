@@ -188,7 +188,7 @@ static void child_step(struct axd_phy_reset *job, struct relay *relay)
 int axd_phy_reset_begin(struct axd_phy_reset *job,
                          const struct axd_phy_reset_context *context)
 {
-    const struct axd_phy_reset empty = {0};
+    static const struct axd_phy_reset empty={0};
     struct axd_phy_reset_context snapshot;
     if (job == NULL)
         return -1;

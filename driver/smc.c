@@ -82,7 +82,7 @@ int axd_smc_begin(struct axd_smc *j,enum axd_smc_command command,
                    const struct axd_smc_image *image,const struct axd_smc_context *context)
 {
     struct axd_smc_context copy;struct axd_smc_image image_copy;
-    const struct axd_smc empty={0};
+    static const struct axd_smc empty={0};
     if(!j)return -1;
     if(context){copy=*context;context=&copy;}
     if(image){image_copy=*image;image=&image_copy;}

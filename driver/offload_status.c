@@ -46,7 +46,7 @@ static int si_known(struct axd_offload_status *j)
 }
 int axd_offload_status_begin(struct axd_offload_status *j,int32_t index,const struct axd_offload_status_context *context)
 {
-    const struct axd_offload_status empty={0};struct axd_offload_status_context c;
+    static const struct axd_offload_status empty={0};struct axd_offload_status_context c;
     if(j==NULL)return -1;
     if(context!=NULL){c=*context;context=&c;}
     *j=empty;fail(j,AXD_OS_BAD_ARGUMENT);

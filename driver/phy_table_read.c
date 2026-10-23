@@ -60,7 +60,7 @@ static void child(struct axd_phy_table_read *j,struct relay *r)
 }
 int axd_phy_table_read_begin(struct axd_phy_table_read *j,const struct axd_phy_table_read_request *request,const struct axd_phy_table_context *context)
 {
-    const struct axd_phy_table_read empty={0};struct axd_phy_table_read_request q;struct axd_phy_table_context c;
+    static const struct axd_phy_table_read empty={0};struct axd_phy_table_read_request q;struct axd_phy_table_context c;
     uintptr_t start=(uintptr_t)j,end;
     if(!j)return -1;
     if(request){q=*request;request=&q;}if(context){c=*context;context=&c;}
@@ -77,7 +77,8 @@ int axd_phy_table_read_begin(struct axd_phy_table_read *j,const struct axd_phy_t
 enum axd_phy_table_read_phase axd_phy_table_read_step(struct axd_phy_table_read *j,axd_d11_io_fn io,void *opaque)
 {
     struct relay r={j,io,opaque};struct axd_d11_operation op={0};uint32_t reply=0;unsigned s;
-    if(!j)return AXD_TR_INVALID;if(j->phase!=AXD_TR_RUNNING)return j->phase;
+    if(!j)return AXD_TR_INVALID;
+    if(j->phase!=AXD_TR_RUNNING)return j->phase;
     switch(j->stage){
     case ENTRY:case SY:
         s=j->stage;op.kind=s==ENTRY?AXD_D11_READ32:AXD_D11_FULL_BARRIER;op.offset=s==ENTRY?0x120:0;

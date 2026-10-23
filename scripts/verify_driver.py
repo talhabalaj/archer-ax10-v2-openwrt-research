@@ -106,6 +106,7 @@ def main():
     parser.add_argument('--module',type=Path,help='Optional caller-supplied pinned wl.ko')
     parser.add_argument('--unicorn-python',type=Path,help='Python containing pinned Unicorn2.1.4; requires --module')
     parser.add_argument('--hnd',type=Path,help='Optional pinned hnd.ko; closes actual positive status-pool ARM translation; requires --module')
+    parser.add_argument('--kernel-build',action='store_true',help='Also cross-build the kernel module (container; pinned Linux tree); warnings fail the check')
     parser.add_argument('--report-dir',type=Path,help='NEW directory outside checkout; default external temporary directory')
     parser.add_argument('--previous-report',type=Path,help='Prior report.json for same-fixture gate comparison')
     args=parser.parse_args()
@@ -123,7 +124,7 @@ def main():
         except (OSError,ValueError):parser.error('Previous report is unreadable or invalid JSON')
     revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
     dirty=bool(subprocess.check_output(['git','status','--porcelain'],cwd=ROOT,text=True))
-    def source_paths():return list((ROOT/'driver').glob('*.[ch]'))
+    def source_paths():return list((ROOT/'driver').glob('*.[ch]'))+[p for p in (ROOT/'kernel').rglob('*') if p.suffix in('.c','.h') or p.name=='Kbuild']
     def fixture_paths():return [p for p in (ROOT/'tests').rglob('*') if p.suffix in('.c','.h')]
     def checker_paths():return [p for folder in ('scripts','tests') for p in (ROOT/folder).glob('*') if p.suffix in('.py','.sh')]
     report={'schema_version':1,'scope':args.scope,'revision':revision,'dirty':dirty,
@@ -188,6 +189,14 @@ def main():
                 report['checks'].append({'id':'status_fill_positive_pool_arm','state':'not_run','reason':'Pinned hnd.ko required for actual positive-pool address translation'})
                 report['checks'].append({'id':'check_hnd_math_arm','state':'not_run','reason':'Pinned hnd.ko required for the fixed-point helper comparison'})
         else:report['checks'].append({'id':'stock_arm_comparisons','state':'not_run','reason':'Pinned input and Unicorn interpreter required, or an earlier check failed'})
+    if args.scope=='checkpoint' and args.kernel_build and not check_failed:
+        result=execute(['sh','scripts/build_kernel_module.sh',str(folder/'kbuild')],folder,'kernel_module_build',3600)
+        log=(folder/result['log']).read_text(errors='replace')
+        if result['state']=='passed' and ('warning:' in log or 'axd_wl.ko' not in log and 'vermagic' not in log):
+            result['state']='failed';result['reason']='Kernel build emitted warnings or no module metadata'
+        report['checks'].append(result);check_failed=result['state']!='passed'
+    elif args.scope=='checkpoint' and not check_failed:
+        report['checks'].append({'id':'kernel_module_build','state':'not_run','reason':'Pass --kernel-build to cross-build the kernel module'})
     report['target_initialization']={'state':target_state,'scope':'Complete16-stage synthetic PHY vector only; not enclosing BMAC initialization or device readiness'}
     report['functional_gates']=[
         {'id':'phy_vector','state':target_state,'proof':'Actual full16-vector probe with independent synthetic trace'},

@@ -106,15 +106,15 @@ static void policy_dependency(struct axd_psm_control *job)
 static int stay_awake(struct axd_psm_control *job, unsigned *stay)
 {
     if (job->policy.inputs != NULL) {
-        struct axd_wake_result result;
+        struct axd_wake_result *result = &job->policy_result;
         const struct axd_wake_u32 override = {job->context.wake_reasons, 1};
-        enum axd_wake_decision decision = axd_wake_policy_evaluate(job->policy.inputs, override, &result);
+        enum axd_wake_decision decision = axd_wake_policy_evaluate(job->policy.inputs, override, result);
         job->policy_evaluated = 1;
         job->policy_decision = decision;
-        job->policy_reason = result.reason;
-        job->policy_slot = result.slot;
-        job->policy_pass = result.pass;
-        job->policy_accesses = result.accesses;
+        job->policy_reason = result->reason;
+        job->policy_slot = result->slot;
+        job->policy_pass = result->pass;
+        job->policy_accesses = result->accesses;
         if (decision == AXD_WAKE_DEPENDENCY) {
             policy_dependency(job);
             return 0;
@@ -426,7 +426,7 @@ int axd_psm_control_begin(struct axd_psm_control *job,
                           enum axd_psm_command command,
                           const struct axd_psm_context *context)
 {
-    const struct axd_psm_control empty = {0};
+    static const struct axd_psm_control empty={0};
     struct axd_psm_context snapshot;
     if (job == NULL)
         return -1;

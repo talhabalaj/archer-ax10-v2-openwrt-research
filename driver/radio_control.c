@@ -115,8 +115,9 @@ static void radio_step(struct axd_radio_control *j,struct relay *r)
 }
 int axd_radio_control_begin(struct axd_radio_control *j,enum axd_radio_control_command command,const struct axd_radio_control_context *context)
 {
-    struct axd_radio_control_context copy;const struct axd_radio_control empty={0};
-    if(!j)return -1;if(context){copy=*context;context=&copy;}*j=empty;fail(j,AXD_RADIO_CTL_BAD_ARGUMENT);
+    struct axd_radio_control_context copy;static const struct axd_radio_control empty={0};
+    if(!j)return -1;
+    if(context){copy=*context;context=&copy;}*j=empty;fail(j,AXD_RADIO_CTL_BAD_ARGUMENT);
     if(!context || command<AXD_RADIO_CTL_AC_SWITCH_OFF || command>AXD_RADIO_CTL_COMMON_INIT)return -1;
     j->context=*context;j->command=command;
     if(context->hardware.phy.core!=130 || context->hardware.phy.minor>1 || context->hardware.phy.phy_type!=0xb || context->hardware.phy.phy_revision!=51 || context->hardware.phy.phy_core_count>4){fail(j,AXD_RADIO_CTL_UNSUPPORTED);return -1;}
@@ -131,7 +132,8 @@ int axd_radio_register_begin(struct axd_radio_control *j,enum axd_radio_control_
 enum axd_radio_control_phase axd_radio_control_step(struct axd_radio_control *j,axd_d11_io_fn transport,void *opaque)
 {
     struct relay r={j,transport,opaque};
-    if(!j)return AXD_RADIO_CTL_INVALID;if(j->phase!=AXD_RADIO_CTL_RUNNING)return j->phase;
+    if(!j)return AXD_RADIO_CTL_INVALID;
+    if(j->phase!=AXD_RADIO_CTL_RUNNING)return j->phase;
     switch(j->stage) {
     case ENTRY:
         if(j->command==AXD_RADIO_CTL_READ && j->selector==0xffff)radio(j,j->command,j->selector,0,0,FINISH);
@@ -211,7 +213,8 @@ enum axd_radio_control_phase axd_radio_control_step(struct axd_radio_control *j,
     }
     case ON_DELAY: {
         struct axd_d11_operation op={AXD_D11_DELAY_US,0,1000};uint32_t ignored=0;
-        if(!perform(&r,op,&ignored))j->stage=ON_LAST_WRITE;break;
+        if(!perform(&r,op,&ignored))j->stage=ON_LAST_WRITE;
+        break;
     }
     case ON_LAST_WRITE:packed(j,0x408,6,ON_REV);break;
     case ON_REV:
@@ -222,7 +225,8 @@ enum axd_radio_control_phase axd_radio_control_step(struct axd_radio_control *j,
     case ON_SPAN:
         j->last_field=AXD_RADIO_CTL_PREFREGS;j->metadata_accesses++;
         if(!j->context.prefregs)dependency(j,AXD_RADIO_CTL_METADATA);
-        else j->stage=ON_RECORD;break;
+        else j->stage=ON_RECORD;
+        break;
     case ON_RECORD: {
         const uint8_t *p;uint16_t selector,value;
         if(j->prefreg_cursor>j->context.prefregs_length || j->context.prefregs_length-j->prefreg_cursor<2){fail(j,AXD_RADIO_CTL_BOUNDS);break;}
