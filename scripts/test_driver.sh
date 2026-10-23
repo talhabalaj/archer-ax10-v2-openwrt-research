@@ -28,6 +28,11 @@ for axd_test in init_table effective_init ucode_upload status_poll psm_start ai_
     "$axd_build_dir/test_$axd_test"
 done
 python3 tests/check_radio20704_pll.py
+# Kernel glue (kernel/) against the recording host shim in tests/kernel_shim.
+cc -std=c11 -Wall -Wextra -Werror -pedantic -fsanitize=address,undefined \
+    -Itests/kernel_shim -Idriver -Ikernel kernel/axd_kio.c kernel/axd_ring.c driver/dma_descriptor.c \
+    tests/test_kernel_glue.c -o "$axd_build_dir/test_kernel_glue"
+"$axd_build_dir/test_kernel_glue"
 if [ "$#" -gt 0 ]; then
     case $(uname -s) in
         Darwin) axd_library="$axd_build_dir/libaxd_offline.dylib"; axd_shared_flag=-dynamiclib ;;

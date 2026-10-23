@@ -38,22 +38,22 @@ int axd_kio_d11(void *context, const struct axd_d11_operation *op, uint32_t *val
 	case AXD_D11_READ16:
 		if (!axd_kio_window(kio->d11_len, op->offset, 2))
 			return axd_kio_reject(kio, -EFAULT);
-		*value = readw_relaxed(kio->d11 + op->offset);
+		*value = readw_relaxed((u8 __iomem *)kio->d11 + op->offset);
 		break;
 	case AXD_D11_WRITE16:
 		if (!axd_kio_window(kio->d11_len, op->offset, 2) || op->value > 0xffff)
 			return axd_kio_reject(kio, -EFAULT);
-		writew_relaxed((u16)op->value, kio->d11 + op->offset);
+		writew_relaxed((u16)op->value, (u8 __iomem *)kio->d11 + op->offset);
 		break;
 	case AXD_D11_READ32:
 		if (!axd_kio_window(kio->d11_len, op->offset, 4))
 			return axd_kio_reject(kio, -EFAULT);
-		*value = readl_relaxed(kio->d11 + op->offset);
+		*value = readl_relaxed((u8 __iomem *)kio->d11 + op->offset);
 		break;
 	case AXD_D11_WRITE32:
 		if (!axd_kio_window(kio->d11_len, op->offset, 4))
 			return axd_kio_reject(kio, -EFAULT);
-		writel_relaxed(op->value, kio->d11 + op->offset);
+		writel_relaxed(op->value, (u8 __iomem *)kio->d11 + op->offset);
 		break;
 	default:
 		return axd_kio_reject(kio, -EINVAL);
@@ -84,10 +84,10 @@ int axd_kio_si(void *context, const struct axd_si_core_operation *op, uint32_t *
 		mb();
 		break;
 	case AXD_SICO_READ32:
-		*value = readl_relaxed(kio->wrapper + op->offset);
+		*value = readl_relaxed((u8 __iomem *)kio->wrapper + op->offset);
 		break;
 	case AXD_SICO_WRITE32:
-		writel_relaxed(op->value, kio->wrapper + op->offset);
+		writel_relaxed(op->value, (u8 __iomem *)kio->wrapper + op->offset);
 		break;
 	default:
 		return axd_kio_reject(kio, -EINVAL);

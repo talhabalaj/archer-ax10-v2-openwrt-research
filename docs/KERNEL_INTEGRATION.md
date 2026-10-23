@@ -40,6 +40,15 @@ offline gates it depends on exist. Nothing here has been loaded on a device.
   `limits.h` use to the kernel's own types; the components call no library
   functions.
 
+Host tests: [test_kernel_glue.c](../tests/test_kernel_glue.c) runs both files
+against a recording shim of the few kernel APIs they use
+([tests/kernel_shim](../tests/kernel_shim)): every access refused with
+`-EPERM` while disabled, exact widths/offsets, `wmb`/`mb`/`udelay` mapping, the
+20 ms delay cap, window-end/misalignment/wide-u16/unknown-kind refusals with no
+access, wrapper identity, ring count validation, allocation failure, the
+32-bit mask, `dma_wmb`/`dma_rmb` around descriptor access and release of a ring
+whose bus address exceeds 4 GiB. This tests the glue's logic, not the kernel.
+
 ## Provisional device-tree binding
 
 There is no upstream binding for this core. The driver matches a local,
