@@ -8,6 +8,7 @@
 #include "fixtures/radio_regtbl_trace.h"
 #include "fixtures/phy_init_trace.h"
 #include "fixtures/phy_noise_trace.h"
+#include "fixtures/phy_chanspec_trace.h"
 
 /* This is an executable functional observation, not a regression assertion
  * that an incomplete child must stay incomplete. Every required registration
@@ -138,6 +139,17 @@ static const char *radio_symbol(const struct axd_radio_power *j)
     case AXD_RPOWER_METADATA:return "required_radio_runtime_metadata";
     default:return "radio_power";}
 }
+static const char *chanspec_symbol(const struct axd_phy_chanspec *j)
+{
+    switch(j->dependency){
+    case AXD_CS_MODULE_SETUP_TPC:return "chanspec_setup_tpc";
+    case AXD_CS_MAC_CHILD:return "wlc_bmac_suspend_mac_and_wait";
+    case AXD_CS_BMAC_PHY_RESET:return "wlc_bmac_phy_reset";
+    case AXD_CS_PHY_INIT_FALLBACK:return "phy_init";
+    case AXD_CS_CHIP4335_BRANCH:return "chanspec_setup_chip4335";
+    case AXD_CS_METADATA:return "required_chanspec_runtime_metadata";
+    default:return "phy_ac_chanmgr_init_chanspec";}
+}
 static const char *scheduler_symbol(enum axd_phy_scheduler_dependency d)
 {
     switch(d){case AXD_PS_NOISE_MODE:return "phy_ac_noise_set_mode";
@@ -157,6 +169,9 @@ int main(void)
     struct axd_noise_fixture_script noise_expected=axd_noise_fixture_full(2,1,0);
     struct prefix_event *expected;size_t capacity=110000;
     if(c.chanspec.known!=1 || c.chanspec.value>65535)return 1;
+    /* Explicit synthetic callback13 inputs; canonical pointers are rebound. */
+    c.chanspec_init=cs_context();c.chanspec_init.band_phy_pointer=c.radio.phy_pointer;
+    c.chanspec_init.shared_current_pi=c.radio.phy_pointer;c.chanspec_init.bmac_chanspec.known=0;
     switch(c.chanspec.value&0x3800u){case 0x1000:bw=20;break;case 0x1800:bw=40;break;
     case 0x2000:bw=80;break;case 0x2800:bw=160;break;default:bw=0;break;}
     s.capacity=100000;s.events=malloc(s.capacity*sizeof(*s.events));
@@ -203,6 +218,13 @@ int main(void)
         const struct axd_noise_fixture_event *e=&noise_expected.events[i];
         expected[total++]=(struct prefix_event){AXD_PS_D11,e->kind,e->offset,e->value,e->reply};
     }
+    /* Callback13 module0 for the same2-core5GHz20MHz scenario, MAC inactive. */
+    {static struct cs_event events[1024];struct cs_script cs={events,0,1024};
+        const struct cs_options o={2,0,0x11,0x1232,1,2,0};cs_module0(&cs,&o);
+        assert(total+cs.count<capacity);
+        for(i=0;i<cs.count;i++)expected[total++]=(struct prefix_event){cs.events[i].path==AXD_CS_SI?AXD_PS_SI:AXD_PS_D11,
+            cs.events[i].kind,cs.events[i].offset,cs.events[i].value,cs.events[i].reply};
+    }
     f=(struct observation){&job,expected,total,0,0};
     /* Synthetic labels/allocations sit apart from the regtbl fixture's synthetic
      * pointer bindings (0x10000..0x19000); distinct objects never alias. */
@@ -231,6 +253,9 @@ int main(void)
     else if(job.phase!=AXD_PS_TRACE_COMPLETE){
         if(job.current==AXD_INIT_RADIO)printf(",\"failure\":{\"layer\":\"radio_power\",\"dependency\":%u,\"field\":%u,\"symbol\":\"%s\",\"parent_dependency\":%u,\"error\":%u,\"switch_completed\":%s}",
             job.radio_job.dependency,job.radio_job.last_field,radio_symbol(&job.radio_job),job.dependency,job.radio_job.error,job.radio_job.switch_completed?"true":"false");
+        else if(job.current==AXD_INIT_CHANSPEC && job.dependency==AXD_PS_CHANSPEC_CHILD)
+            printf(",\"failure\":{\"layer\":\"phy_chanspec\",\"dependency\":%u,\"field\":%u,\"symbol\":\"%s\",\"parent_dependency\":%u,\"error\":%u,\"modules_completed\":%u}",
+                job.chanspec_job.dependency,job.chanspec_job.last_field,chanspec_symbol(&job.chanspec_job),job.dependency,job.chanspec_job.error,job.chanspec_job.modules_completed);
         else printf(",\"failure\":{\"layer\":\"phy_scheduler\",\"dependency\":%u,\"field\":0,\"symbol\":\"%s\",\"error\":%u}",job.dependency,scheduler_symbol(job.dependency),job.error);
     }
     puts("}");free(s.events);free(expected);

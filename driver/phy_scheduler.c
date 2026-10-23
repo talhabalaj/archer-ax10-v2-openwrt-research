@@ -2,7 +2,7 @@
 #include "phy_scheduler.h"
 #include <stddef.h>
 enum stage { ENTRY, DISPATCH, CALLBACK, RETURN_CALLBACK, NEXT,
-    RUN_PHY, RUN_TABLE, RUN_RADIO, RUN_MAC, RUN_SI, RUN_CHANNEL, RUN_NOISE, BW_RESULT,
+    RUN_PHY, RUN_TABLE, RUN_RADIO, RUN_MAC, RUN_SI, RUN_CHANNEL, RUN_NOISE, RUN_CHANSPEC, BW_RESULT,
     ANT_READ, ANT_SY, ANT_CHOOSE, ANT_SETTER, ANT_ENABLE,
     CACHE_ALLOC_REUSE, CACHE_REUSE_FLAG, CACHE_REUSE_POINTER,
     CACHE_TABLE, CACHE_TABLE_BYTES, CACHE_ALLOC_TABLE, CACHE_USED, CACHE_POINTER,
@@ -102,11 +102,26 @@ static int si_io(void *opaque,const struct axd_si_core_operation *s,uint32_t *va
     struct relay *r=opaque;struct axd_phy_scheduler_operation o={0};struct axd_phy_scheduler_reply reply={0};int result;
     o.path=AXD_PS_SI;o.si=*s;result=perform(r,&o,&reply);*value=reply.value;return result;
 }
+static void chanspec_publish(struct axd_phy_scheduler *j)
+{
+    struct axd_phy_scheduler_context *c=&j->context;
+    c->chanspec_init=j->chanspec_job.context;c->table.hardware=j->chanspec_job.context.hardware;
+    c->radio=j->chanspec_job.context.radio;c->radio.hardware=c->table.hardware;
+    /* PI396 is one word: callback4 read it, callback13's bandwidth set writes it. */
+    if(j->chanspec_job.bwstate_stored)c->bandwidth_state=(struct axd_wake_u32){j->chanspec_job.context.bwstate396,1};
+}
+static int chanspec_io(void *opaque,const struct axd_phy_chanspec_operation *a,uint32_t *value)
+{
+    struct relay *r=opaque;struct axd_phy_scheduler_operation o={0};struct axd_phy_scheduler_reply reply={0};int result;
+    chanspec_publish(r->j);
+    o.path=a->path==AXD_CS_D11?AXD_PS_D11:AXD_PS_SI;o.d11=a->d11;o.si=a->si;
+    result=perform(r,&o,&reply);*value=reply.value;return result;
+}
 static void finish_child(struct axd_phy_scheduler *j,unsigned done,unsigned missing,unsigned cancelled)
 {
     if(j->phase!=AXD_PS_RUNNING)return;
     if(done)j->stage=j->after_child;
-    else if(missing)dependency(j,j->stage==RUN_NOISE?AXD_PS_NOISE_MODE:j->stage==RUN_CHANNEL?AXD_PS_RADAR_CHILD:j->stage==RUN_RADIO?AXD_PS_RADIO_CHILD:
+    else if(missing)dependency(j,j->stage==RUN_CHANSPEC?AXD_PS_CHANSPEC_CHILD:j->stage==RUN_NOISE?AXD_PS_NOISE_MODE:j->stage==RUN_CHANNEL?AXD_PS_RADAR_CHILD:j->stage==RUN_RADIO?AXD_PS_RADIO_CHILD:
         j->stage==RUN_TABLE?AXD_PS_TABLE_CHILD:j->stage==RUN_MAC?AXD_PS_MAC_CHILD:AXD_PS_SI_CHILD);
     else if(cancelled)j->phase=AXD_PS_CANCELLED;
     else fail(j,AXD_PS_CHILD_ERROR);
@@ -133,6 +148,10 @@ static void run_child(struct axd_phy_scheduler *j,struct relay *r)
         enum axd_phy_noise_phase p=axd_phy_noise_step(&j->noise_job,d11_io,r);
         j->context.noise=j->noise_job.context;j->context.channel=j->noise_job.context.channel;j->context.radio=j->noise_job.context.radio;j->context.table.hardware=j->noise_job.context.hardware;
         if(p!=AXD_NOISE_RUNNING)finish_child(j,p==AXD_NOISE_TRACE_COMPLETE,p==AXD_NOISE_DEPENDENCY,p==AXD_NOISE_CANCELLED);
+    }else if(j->stage==RUN_CHANSPEC){
+        enum axd_phy_chanspec_phase p=axd_phy_chanspec_step(&j->chanspec_job,chanspec_io,r);
+        chanspec_publish(j);
+        if(p!=AXD_CS_RUNNING)finish_child(j,p==AXD_CS_TRACE_COMPLETE,p==AXD_CS_DEPENDENCY,p==AXD_CS_CANCELLED);
     }else if(j->stage==RUN_MAC){
         enum axd_psm_phase p=axd_psm_control_step(&j->mac_job,d11_io,r);
         j->context.table.hardware.mac=j->mac_job.context;
@@ -150,17 +169,25 @@ static void mac(struct axd_phy_scheduler *j,enum axd_psm_command command,unsigne
     if(axd_psm_control_begin_policy(&j->mac_job,command,&h->mac,&h->policy)){fail(j,AXD_PS_CHILD_ERROR);return;}
     j->after_child=next;j->stage=RUN_MAC;
 }
+/* Current selected SI core mapping, as used by the actual core-flags helpers. */
+static int si_mapping(struct axd_phy_scheduler *j,struct axd_si_core_context *c)
+{
+    struct axd_si_pmu_gpio_context *s=&j->context.table.control;const struct axd_si_core_context empty={0};
+    *c=empty;
+    if(j->context.table.control_state_known==0){dependency(j,AXD_PS_SI_CHILD);return 0;}
+    if(j->context.table.control_state_known!=1){fail(j,AXD_PS_BAD_ARGUMENT);return 0;}
+    c->interconnect=s->si.interconnect;c->chip_id=j->context.table.chip_id;
+    c->primary_wrapper=s->state.primary_wrapper;c->wrapper_known=1;
+    if(c->interconnect==1 || c->interconnect==3 || c->interconnect==4){
+        if(!s->si.catalog || s->state.current_index>=s->si.core_count || s->state.current_index>=s->si.catalog_length){dependency(j,AXD_PS_SI_CHILD);return 0;}
+        c->core_id=s->si.catalog[s->state.current_index].core_id;
+    }
+    return 1;
+}
 static void bandwidth_check(struct axd_phy_scheduler *j)
 {
-    struct axd_si_pmu_gpio_context *s=&j->context.table.control;struct axd_si_core_context c={0};
-    if(j->context.table.control_state_known==0){dependency(j,AXD_PS_SI_CHILD);return;}
-    if(j->context.table.control_state_known!=1){fail(j,AXD_PS_BAD_ARGUMENT);return;}
-    c.interconnect=s->si.interconnect;c.chip_id=j->context.table.chip_id;
-    c.primary_wrapper=s->state.primary_wrapper;c.wrapper_known=1;
-    if(c.interconnect==1 || c.interconnect==3 || c.interconnect==4){
-        if(!s->si.catalog || s->state.current_index>=s->si.core_count || s->state.current_index>=s->si.catalog_length){dependency(j,AXD_PS_SI_CHILD);return;}
-        c.core_id=s->si.catalog[s->state.current_index].core_id;
-    }
+    struct axd_si_core_context c;
+    if(!si_mapping(j,&c))return;
     if(axd_si_core_begin(&j->si_job,AXD_SICO_FLAGS,0,0,&c)){fail(j,AXD_PS_CHILD_ERROR);return;}
     j->after_child=BW_RESULT;j->stage=RUN_SI;
 }
@@ -233,7 +260,13 @@ static void callback(struct axd_phy_scheduler *j)
                 }
             }
         }break;
-    case AXD_INIT_CHANSPEC:dependency(j,AXD_PS_CHANSPEC_CHILD);break;
+    case AXD_INIT_CHANSPEC:{
+        struct axd_phy_chanspec_context *k=&c->chanspec_init;
+        if(!si_mapping(j,&k->si))break;
+        k->si_known=1;k->hardware=c->table.hardware;k->radio=c->radio;k->radio.hardware=c->table.hardware;k->chanspec=c->chanspec;k->bmac_chanspec=c->hardware_chanspec;
+        if(axd_phy_chanspec_begin(&j->chanspec_job,k))fail(j,AXD_PS_CHILD_ERROR);
+        else {j->stage=RUN_CHANSPEC;j->after_child=RETURN_CALLBACK;}
+        break;}
     case AXD_INIT_RXGCRS:
         if(byte(j,c->rxgcrs_enabled)){if(c->rxgcrs_enabled.value)j->stage=RX_CLEAR;else complete(j);}break;
     case AXD_INIT_BTCX:c->btcx_byte18=255;j->stage=RETURN_CALLBACK;break;
@@ -277,7 +310,7 @@ enum axd_phy_scheduler_phase axd_phy_scheduler_step(struct axd_phy_scheduler *j,
         if(j->callback_result){j->return_value=j->callback_result;j->return_valid=1;j->phase=AXD_PS_TRACE_COMPLETE;}
         else {j->callbacks_completed++;j->stage=NEXT;}break;
     case NEXT:j->index++;j->stage=j->index<j->registry.init_count?DISPATCH:SLICE;break;
-    case RUN_PHY:case RUN_TABLE:case RUN_RADIO:case RUN_MAC:case RUN_SI:case RUN_CHANNEL:case RUN_NOISE:run_child(j,&r);break;
+    case RUN_PHY:case RUN_TABLE:case RUN_RADIO:case RUN_MAC:case RUN_SI:case RUN_CHANNEL:case RUN_NOISE:case RUN_CHANSPEC:run_child(j,&r);break;
     case BW_RESULT:
         if(known(j,c->hardware_chanspec,65535,0)){
             uint32_t flags=0;
@@ -345,6 +378,7 @@ enum axd_phy_scheduler_phase axd_phy_scheduler_cancel(struct axd_phy_scheduler *
         axd_psm_control_cancel(&j->mac_job);axd_radio_power_cancel(&j->radio_job);axd_si_core_cancel(&j->si_job);
         axd_phy_channel_init_cancel(&j->channel_job);
         axd_phy_noise_cancel(&j->noise_job);
+        axd_phy_chanspec_cancel(&j->chanspec_job);
     }
     return j->phase;
 }

@@ -1,0 +1,616 @@
+{
+  "schema_version": 1,
+  "scope": "Original PHY51/core130 callback13 prologue, radio-set and module0 chanspec_setup with reached children; portable metadata only",
+  "artifacts": [
+    {
+      "name": "wl.ko",
+      "bytes": 5803056,
+      "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+    }
+  ],
+  "tool": {
+    "provider": "ghidra",
+    "version": "12.1.4",
+    "rea_agents": "6.5.0",
+    "sessions": 2,
+    "records": 62,
+    "sessions_closed": true
+  },
+  "records": [
+    {
+      "record": "assembly-chanspec_setup",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "chanspec_setup"
+      },
+      "evidence_id": "ev_cb00440963cbef3a2e76351b3de157fbbe2451231db6c18938f803e3396cb3e3"
+    },
+    {
+      "record": "assembly-phy_ac_chanmgr_bwinit",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_bwinit"
+      },
+      "evidence_id": "ev_419f5f10862750c56c11980a1a88364714f64591feac960e12761607607f1584"
+    },
+    {
+      "record": "assembly-phy_ac_chanmgr_core2core_sync_dac_clks",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_core2core_sync_dac_clks"
+      },
+      "evidence_id": "ev_47e6a9dad43cbcaf6734ae568655887745793e06432b2cbdca1a9b2485193df2"
+    },
+    {
+      "record": "assembly-phy_ac_chanmgr_core2core_sync_setup",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_core2core_sync_setup"
+      },
+      "evidence_id": "ev_1b075d890bb73d119011ecc9cc3f4848bdb1269e23d209c638e836eb2ec1d6b7"
+    },
+    {
+      "record": "assembly-phy_ac_chanmgr_init_chanspec",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_init_chanspec"
+      },
+      "evidence_id": "ev_a6614ce36d382b84f02b5996bf6c0e6fdda10473e9bb3c73d6c57191ae24d7bc"
+    },
+    {
+      "record": "assembly-phy_ac_update_phycorestate",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_update_phycorestate"
+      },
+      "evidence_id": "ev_6669fedc99a42663504e786121c97ad2e1c23b478092c86c4ba66440bbf715aa"
+    },
+    {
+      "record": "assembly-phy_ac_update_tempsense_bitmap",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_update_tempsense_bitmap"
+      },
+      "evidence_id": "ev_acebd6ec801b7c9e4ad5e84b040ba98d6dade31be621fa50c9179d10d0eb3466"
+    },
+    {
+      "record": "assembly-phy_chanmgr_bwinit",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_chanmgr_bwinit"
+      },
+      "evidence_id": "ev_ee70786315b67fb51aac8ea068baf89effeba377f89293b4d43fcff87318b2c1"
+    },
+    {
+      "record": "assembly-phy_get_current_core",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_get_current_core"
+      },
+      "evidence_id": "ev_1193fa1a55cc0ac6b5189d767354616888cf846085b58836611cb431b2ad6c74"
+    },
+    {
+      "record": "assembly-phy_get_other_pi",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_get_other_pi"
+      },
+      "evidence_id": "ev_9f33072c72634078837103a4af8fee00fb17efcd901aa3211e524f2b818399e6"
+    },
+    {
+      "record": "assembly-phy_get_phymode",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_get_phymode"
+      },
+      "evidence_id": "ev_042266e4c7247353c03ea37b0f3164d56207ad127bb3d9fe82a39990b00f2c83"
+    },
+    {
+      "record": "assembly-phy_radar_first_indicator_set",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_radar_first_indicator_set"
+      },
+      "evidence_id": "ev_6c5b694e2f464a7e1cf98a390cab56fc26a74a225bdfb6cdfc3e6e53f2874744"
+    },
+    {
+      "record": "assembly-phy_utils_get_chanspec",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_utils_get_chanspec"
+      },
+      "evidence_id": "ev_34804c95c35d4247659304c5bd3e671ea319ec9a8eef7eaf7db15177cca4a646"
+    },
+    {
+      "record": "assembly-phy_utils_or_phyreg",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_utils_or_phyreg"
+      },
+      "evidence_id": "ev_391e2f6a647fdb67342ab751d4a65e88e7dadbeb905e2d7007c1f177d761c4c8"
+    },
+    {
+      "record": "assembly-phy_utils_set_bwstate",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_utils_set_bwstate"
+      },
+      "evidence_id": "ev_75077cfc6247e6509fca8a700c5ce699319ca8b96a46efd8a7b10921f0779acd"
+    },
+    {
+      "record": "assembly-wlapi_bmac_bw_set",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlapi_bmac_bw_set"
+      },
+      "evidence_id": "ev_bca4937980d63197e622d1ec8d06dcba385d12f7e1d0fe0efd053947561d1790"
+    },
+    {
+      "record": "assembly-wlapi_bmac_phyclk_fgc",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlapi_bmac_phyclk_fgc"
+      },
+      "evidence_id": "ev_0f61e7809a44f006b1fe3c1dee380f30515464cee7b18e72aa5f28726b2dcbe4"
+    },
+    {
+      "record": "assembly-wlapi_enable_mac",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlapi_enable_mac"
+      },
+      "evidence_id": "ev_a27374c08e2100330a94c209caa0dfacf0c0bec53ce5aa6bfddd7f789b7f3ce3"
+    },
+    {
+      "record": "assembly-wlapi_suspend_mac_and_wait",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlapi_suspend_mac_and_wait"
+      },
+      "evidence_id": "ev_2f1b2df3d701dd367dc60097a053fb90858ddebf3328c276ceaf34204c280843"
+    },
+    {
+      "record": "assembly-wlc_bmac_bw_reset",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_bmac_bw_reset"
+      },
+      "evidence_id": "ev_e16a7ac8dbb6a3a4bbe90eb21025f86e764b8c3d479bb99195d6962569793578"
+    },
+    {
+      "record": "assembly-wlc_bmac_bw_set",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_bmac_bw_set"
+      },
+      "evidence_id": "ev_ee419d7122e562caf02e241dfe2dc61bc5135ffeecef7b1f0297cc51158e5839"
+    },
+    {
+      "record": "assembly-wlc_bmac_phyclk_fgc",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_bmac_phyclk_fgc"
+      },
+      "evidence_id": "ev_348d6803f491f9815d85e8ad68b69c75a3b3c93f934d8f60c7275b5f5dedcdd4"
+    },
+    {
+      "record": "assembly-wlc_phy_chanspec_radio_set",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_phy_chanspec_radio_set"
+      },
+      "evidence_id": "ev_c04c9e8eaac31cc2fd134e6cc70625f2543f277ea6e6ae5e13ae6e62faa11734"
+    },
+    {
+      "record": "assembly-wlc_phy_chanspec_set_acphy",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_phy_chanspec_set_acphy"
+      },
+      "evidence_id": "ev_af123019b59129d36b32f37ada91c57e66ab4d661ff834554aaeb23a37728823"
+    },
+    {
+      "record": "assembly-wlc_phy_force_rfseq_acphy",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_phy_force_rfseq_acphy"
+      },
+      "evidence_id": "ev_58351de3bbe52f96bb3fb153c63c008cb15964666e4ef8d877b9ffc4bf85f4a5"
+    },
+    {
+      "record": "assembly-wlc_phy_resetcca_acphy",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_phy_resetcca_acphy"
+      },
+      "evidence_id": "ev_ee95b7a58205949af3c71cbd2352fa87d71efaf0fb90dc193748cade1afe3d3e"
+    },
+    {
+      "record": "assembly-wlc_phy_toggle_resetcca_hwbit_acphy",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_phy_toggle_resetcca_hwbit_acphy"
+      },
+      "evidence_id": "ev_204907d65d5124a68bf0c03248af4b9186218cf7339316d8d31f78194baadf13"
+    },
+    {
+      "record": "pseudo-chanspec_setup",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "chanspec_setup"
+      },
+      "evidence_id": "ev_6a87f6d970d4e602a9e475e1d59b2c3ced27d59df869a3cc183207713fb57fc6"
+    },
+    {
+      "record": "pseudo-phy_ac_chanmgr_bwinit",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_bwinit"
+      },
+      "evidence_id": "ev_36ab0efe96c6a7709a45dc337a76028d8ff1c1b1d66b1a953dcc6acfbcde152c"
+    },
+    {
+      "record": "pseudo-phy_ac_chanmgr_core2core_sync_dac_clks",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_core2core_sync_dac_clks"
+      },
+      "evidence_id": "ev_8b20b038ae76efd4c8a0178fabff162d48b44c3331df68e2599fbb285a00a362"
+    },
+    {
+      "record": "pseudo-phy_ac_chanmgr_core2core_sync_setup",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_core2core_sync_setup"
+      },
+      "evidence_id": "ev_2be28b36bdc12bdb2913e55ab5d60632513733c61d1a7fe86f36af0e30ad809c"
+    },
+    {
+      "record": "pseudo-phy_ac_chanmgr_init_chanspec",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_init_chanspec"
+      },
+      "evidence_id": "ev_b2b1c455ed68de2e3bc906495969442b3d06a90462868c9e61ab14a6aeb5137d"
+    },
+    {
+      "record": "pseudo-phy_ac_update_phycorestate",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_update_phycorestate"
+      },
+      "evidence_id": "ev_ed1a59b74085be44af0ee05be4c971dd3b0ac8a9ff8a0da7df7be24bc79a6323"
+    },
+    {
+      "record": "pseudo-phy_ac_update_tempsense_bitmap",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_update_tempsense_bitmap"
+      },
+      "evidence_id": "ev_b61c2a90f5342dfc4da478471a38a2db538883baa595c591df584b1960732af2"
+    },
+    {
+      "record": "pseudo-phy_chanmgr_bwinit",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_chanmgr_bwinit"
+      },
+      "evidence_id": "ev_91813c63c1a45df6d7405999aa948c48d52d2813146527e18269c6a40c561510"
+    },
+    {
+      "record": "pseudo-phy_get_current_core",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_get_current_core"
+      },
+      "evidence_id": "ev_d27f6deb97424cc6b83d6f570e6a414d4aec05f8894bd80b41d985da5d407db9"
+    },
+    {
+      "record": "pseudo-phy_get_other_pi",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_get_other_pi"
+      },
+      "evidence_id": "ev_0f8c6981e87be010c10728af7314c8d76545f5ee9fd94e748a650872118cfcf2"
+    },
+    {
+      "record": "pseudo-phy_get_phymode",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_get_phymode"
+      },
+      "evidence_id": "ev_179e9dfac65bfc4701172da8e15f5e488b3406646fb5e3b46c6083ab44a4aeb3"
+    },
+    {
+      "record": "pseudo-phy_radar_first_indicator_set",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_radar_first_indicator_set"
+      },
+      "evidence_id": "ev_b6b03666b2ef22c1bb865678153d8678c9d8d3b955b029bd14f332427187431f"
+    },
+    {
+      "record": "pseudo-phy_utils_get_chanspec",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_utils_get_chanspec"
+      },
+      "evidence_id": "ev_a717f63c936173c0e9a1e1835dda3922a3484c0dbeb5c163e27dd3b1a1919c47"
+    },
+    {
+      "record": "pseudo-phy_utils_or_phyreg",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_utils_or_phyreg"
+      },
+      "evidence_id": "ev_e69632a5cc763a8d411944765c859057580363fe6824a253b40039e46302c361"
+    },
+    {
+      "record": "pseudo-phy_utils_set_bwstate",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_utils_set_bwstate"
+      },
+      "evidence_id": "ev_9792bbad4205651fedd1a219f8cfe47f5f4e4d0c47fac3499e3dbcced930c855"
+    },
+    {
+      "record": "pseudo-wlapi_bmac_bw_set",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlapi_bmac_bw_set"
+      },
+      "evidence_id": "ev_e15e4f117c7fe686c57094a8aeee738ba82f9b32bc590b9a65cb1bdef7a5754c"
+    },
+    {
+      "record": "pseudo-wlapi_bmac_phyclk_fgc",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlapi_bmac_phyclk_fgc"
+      },
+      "evidence_id": "ev_511c6c18aac8ef905e65f95a24e494f357a8b9b9ea352ab326cd81af9b72f929"
+    },
+    {
+      "record": "pseudo-wlapi_enable_mac",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlapi_enable_mac"
+      },
+      "evidence_id": "ev_42719d1588fa0061b3f8ec74b5c6f5ff483119aff913e42eb36325c20256c72c"
+    },
+    {
+      "record": "pseudo-wlapi_suspend_mac_and_wait",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlapi_suspend_mac_and_wait"
+      },
+      "evidence_id": "ev_90845222fbd4ca69217669f5cfc34376716167d8b938393157c9b609463bc670"
+    },
+    {
+      "record": "pseudo-wlc_bmac_bw_reset",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_bmac_bw_reset"
+      },
+      "evidence_id": "ev_eb0724de9bb06b182c47823cbf2e901fc0ad82033691f7e7ed9e0f4290cb6840"
+    },
+    {
+      "record": "pseudo-wlc_bmac_bw_set",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_bmac_bw_set"
+      },
+      "evidence_id": "ev_82d81264fc083dadf961e3e4cee2d39a527b8ec3a2126c36f3a4be5d7deaa7ab"
+    },
+    {
+      "record": "pseudo-wlc_bmac_phyclk_fgc",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_bmac_phyclk_fgc"
+      },
+      "evidence_id": "ev_91e367e181fb6f7a6161e0806d9c7f59a85ed473fc053bfe56b73be0d089e4e8"
+    },
+    {
+      "record": "pseudo-wlc_phy_chanspec_radio_set",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_phy_chanspec_radio_set"
+      },
+      "evidence_id": "ev_798ecbd25dbe572ccf5750bf4635874f483ae673b5e6dd22b66167a31ac3865e"
+    },
+    {
+      "record": "pseudo-wlc_phy_chanspec_set_acphy",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_phy_chanspec_set_acphy"
+      },
+      "evidence_id": "ev_21fa7e21b9f9d4a901ca082a95dfe409040e51ef81d2c089db89fb02e6550980"
+    },
+    {
+      "record": "pseudo-wlc_phy_force_rfseq_acphy",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_phy_force_rfseq_acphy"
+      },
+      "evidence_id": "ev_b00ba16285b08d6adfc062dbf2dc360a305b32a0812861bbcc3ab31be715c8b2"
+    },
+    {
+      "record": "pseudo-wlc_phy_resetcca_acphy",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_phy_resetcca_acphy"
+      },
+      "evidence_id": "ev_ca5ac0a6bf57279fc28c60ca87512fa267997731276545e1873d949a268e5878"
+    },
+    {
+      "record": "pseudo-wlc_phy_toggle_resetcca_hwbit_acphy",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_phy_toggle_resetcca_hwbit_acphy"
+      },
+      "evidence_id": "ev_fc2a418dd46ceb0c9ee3b93c59383d5253312b9f874e79dbfd3687125cd1d645"
+    },
+    {
+      "record": "assembly-d11regs_select_offsets_tbl",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "d11regs_select_offsets_tbl"
+      },
+      "evidence_id": "ev_9dbe57e9a416183dae3bc38ee22556593edd481aab909f720000b0c0246db4bb"
+    },
+    {
+      "record": "assembly-phy_chanmgr_init_chanspec",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_chanmgr_init_chanspec"
+      },
+      "evidence_id": "ev_0db92fe9545ecdbf295a31d490a193b490e13c0a9b7c06b532a8e038a8dd7bff"
+    },
+    {
+      "record": "assembly-phy_get_other_pi",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_get_other_pi"
+      },
+      "evidence_id": "ev_9f33072c72634078837103a4af8fee00fb17efcd901aa3211e524f2b818399e6"
+    },
+    {
+      "record": "assembly-phy_temp_get_st",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_temp_get_st"
+      },
+      "evidence_id": "ev_877e918b0b69033f1c7e6173321bec0cac91cc9ee8147feb47b83feaf1ba4b92"
+    },
+    {
+      "record": "pseudo-d11regs_select_offsets_tbl",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "d11regs_select_offsets_tbl"
+      },
+      "evidence_id": "ev_eb39047223e4c5c6c3885948ef64887d11a5b53da88c25a43298c285f37d23c6"
+    },
+    {
+      "record": "pseudo-phy_chanmgr_init_chanspec",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_chanmgr_init_chanspec"
+      },
+      "evidence_id": "ev_08ba00d8401e7629b6868de8677f3504d3447905cc08fef3baed8bfbd6c80b38"
+    },
+    {
+      "record": "pseudo-phy_get_other_pi",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_get_other_pi"
+      },
+      "evidence_id": "ev_0f8c6981e87be010c10728af7314c8d76545f5ee9fd94e748a650872118cfcf2"
+    },
+    {
+      "record": "pseudo-phy_temp_get_st",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_temp_get_st"
+      },
+      "evidence_id": "ev_e7cae3f5f4f41fe3eb6cfb831814baa82638d8c3b64834a87c6cc54954501f86"
+    }
+  ],
+  "derived_facts": {
+    "chanspec_module_list": {
+      "section": ".data",
+      "entries": 14,
+      "null_terminated": true,
+      "order": [
+        "chanspec_setup",
+        "chanspec_setup_tpc",
+        "chanspec_setup_radio",
+        "chanspec_setup_phy",
+        "chanspec_setup_cmn",
+        "chanspec_noise",
+        "chanspec_setup_rxgcrs",
+        "chanspec_tune_radio",
+        "chanspec_tune_phy",
+        "chanspec_tune_txpath",
+        "chanspec_tune_rxpath",
+        "chanspec_fw_enab",
+        "chanspec_cleanup",
+        "chanspec_btcx"
+      ],
+      "method": "ABS32 relocations of the module-list object; implemented: entry0 only"
+    },
+    "d11_offset_table_core130": {
+      "selector": "d11regs_select_offsets_tbl core130 branch",
+      "entry_0x1a": "0x120 (main control, cross-check)",
+      "entry_0xf6": "0x7c0 (resetcca register)"
+    },
+    "chanmgr_context_alias": "phy_ac_register_impl stores the chanmgr context at AC+0x14; phy_ac_attach passes AC as the registration context word, so CM[1] and *(PI+0x10) are one object",
+    "bwinit": "AC registers phy_ac_chanmgr_bwinit (returns -22); phy_chanmgr_bwinit falls back to phy_init only for a null slot"
+  },
+  "not_claimed": [
+    "executed stock ARM comparison of module0",
+    "modules1-13",
+    "callback13 return",
+    "radio readiness"
+  ]
+}

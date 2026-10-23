@@ -5,6 +5,7 @@
 #include "radio_power.h"
 #include "phy_channel_init.h"
 #include "phy_noise.h"
+#include "phy_chanspec.h"
 #include "si_core.h"
 
 #define AXD_PHY_REGISTRY_CAPACITY 23u
@@ -58,6 +59,8 @@ struct axd_phy_scheduler_context {
     struct axd_radio_power_context radio_power;
     struct axd_phy_channel_context channel;
     struct axd_phy_noise_context noise;
+    /* Callback13 inputs; hardware/radio/chanspec/SI are rebound from canonical state. */
+    struct axd_phy_chanspec_context chanspec_init;
     struct axd_phy_scheduler_cache cache;
     struct axd_wake_u32 allocator, flags3b0, chanspec, bandwidth_state;
     struct axd_wake_u32 hardware_chanspec, interference2g, interference5g;
@@ -107,6 +110,7 @@ struct axd_phy_scheduler {
     struct axd_radio_power radio_job;
     struct axd_phy_channel_init channel_job;
     struct axd_phy_noise noise_job;
+    struct axd_phy_chanspec chanspec_job;
     struct axd_phy_register phy_job;
     struct axd_psm_control mac_job;
     struct axd_si_core_job si_job;

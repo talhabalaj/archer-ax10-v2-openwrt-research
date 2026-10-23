@@ -6,6 +6,8 @@ the registered [radio-on register table](docs/RADIO_REGTBL_MODEL.md), the PHY51
 [noise mode child](docs/PHY_NOISE_MODEL.md) with a generic width8
 [table reader](docs/PHY_TABLE_READ_MODEL.md), and
 [status-pool RX fill](docs/DMA_RX_STATUS_FILL_MODEL.md) with its BMAC wrapper.
+Callback13 now executes its real module0 and
+[stops at module1](docs/PHY_CHANSPEC_MODEL.md) `chanspec_setup_tpc`.
 These are offline components, not a working radio driver.
 Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
 
@@ -34,7 +36,9 @@ inputs and consumes a joined independent28039-event oracle (the count derives
 from original synthetic table fixtures, so it is not itself a progress metric).
 
 The current observation is: **eleven callbacks completed (priorities1-12),
-current priority13, required `phy_ac_chanmgr_init_chanspec` unresolved**.
+current priority13 executing its real module0, required module1
+`chanspec_setup_tpc` unresolved** (28374 trace events consumed). Completed
+callbacks stay at eleven until callback13 returns after all fourteen modules.
 The published predecessor stopped after five callbacks at the radio7 regtbl
 tail. Because the fixture changed, the verifier reports
 `fixture_changed_requires_review`. An independent review compared the regtbl,
@@ -49,8 +53,8 @@ its actual failure diagnostics even when it exits nonzero.
 
 The checkpoint scope also runs the sanitizer suite, ARMv7 builds and explicit
 private-input/Unicorn checks when supplied. The exact staged checkpoint passed
-all73 executed checks: target build/run, the53-program sanitizer/private-comparison
-suite,54 C ARMv7 objects plus the combined-header probe, and all15 pinned ARM
+all74 executed checks: target build/run, the54-program sanitizer/private-comparison
+suite,55 C ARMv7 objects plus the combined-header probe, and all15 pinned ARM
 comparison programs. The new status-fill checker executes the real wrapper,
 status fill, idle child and, with an optional pinned `--hnd` module, the actual
 HND address converter for432 positive-pool cases (1603 total, zero stubs).
@@ -85,9 +89,10 @@ remaining callbacks16-21, then BMAC/IRQ integration.** The
 indicator, then `wlc_phy_chanspec_set_acphy`: a chanspec store followed by a
 fourteen-entry module table (setup, TPC, radio, PHY, common, noise, RXGCRS,
 radio/PHY/TX/RX tuning, firmware enable, cleanup, BT coexistence), then idle-TSSI
-measurement and PHY51 ADC/AFE/core-to-core branches. The radio and common setup
-modules are large; implement them in execution order so the terminal child
-advances observably. Noise mode-bit0-clear desense and disabled-preempt branches
+measurement and PHY51 ADC/AFE/core-to-core branches. Module0 is implemented
+([model](docs/PHY_CHANSPEC_MODEL.md)); next is module1 `chanspec_setup_tpc`,
+then the large radio and common setup modules, in execution order so the
+reported terminal child keeps advancing. Noise mode-bit0-clear desense and disabled-preempt branches
 also remain. Actual board ID/subrevision stays unknown.
 
 The [packet/status bodies](docs/RX_PROCESSING_MODEL.md) now compose the identified
@@ -600,8 +605,9 @@ Critical distinctions to preserve:
 2. Follow the [actual BMAC initialization groups](docs/DRIVER_BMAC_INIT_AUDIT.md)
    and the earlier lifecycle caller that invokes core reset. Reuse the real
    reset/upload/start/object/SMC/table-init and full16 scheduler components.
-   Radio-on with regtbl and the noise mode child now execute. Implement the
-   required priority13 `wlc_phy_chanspec_set_acphy` module table, remaining
+   Radio-on with regtbl, the noise mode child and callback13 module0 now
+   execute. Implement the remaining thirteen `wlc_phy_chanspec_set_acphy` modules
+   from module1 `chanspec_setup_tpc`, remaining
    noise desense branches, callbacks16-21 and reached other-radio dispatches.
    Implement actual common BT/switch and channel-manager operations; acquire
    observed radio ID/subrevision and reached board inputs. Keep conditional

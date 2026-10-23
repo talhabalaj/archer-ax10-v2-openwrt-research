@@ -100,6 +100,8 @@ All original code here uses the repository's MIT license.
   coreunit leaf, guard, cold EXT static/zero tables and mandatory clears.
 - `phy_table_read.c` / `phy_noise.c`: generic width8 AC table reader and the actual
   PHY51 noise mode child (HWACI, preempt/postfilter, HWOBSS, ELNA, MCLIP).
+- `phy_chanspec.c`: actual callback13 prologue, radio-set and module0 `chanspec_setup`
+  (core-to-core sync, resetcca, phycorestate, BMAC bandwidth); module1 remains a gate.
 - `dma_rx_status_fill.c` / `bmac_rx_fill.c`: actual status-pool RX fill with idle
   child and the BMAC wrapper selecting status or normal fill per FIFO.
 - `phy_channel_init.c`: actual PHY51 radar-init/MHF0-band0 and HWOBSS bodies
@@ -110,7 +112,7 @@ All original code here uses the repository's MIT license.
   registered bitmap/cursor release, composed into status timeout pool returns.
 - `phy_scheduler.c`: capacity23 registry insertion, full16 ordered init vector
   and real closed software/PHY/radio/table/PSM/SI children. Full target stops at
-  required priority13 channel init after eleven callbacks; isolated shorter vectors do not establish target initialization.
+  required priority13 module1 `chanspec_setup_tpc` after eleven callbacks; isolated shorter vectors do not establish target initialization.
 - `dma_rx_list.c` / `dma_rx_status_list.c`: current closed bulk leaves, fresh
   discarded descriptor reads, distinct NEXT store widths and commit ordering.
 - `rx_packets.c` / `rx_status.c`: real bulk/status children, packet length/trim/

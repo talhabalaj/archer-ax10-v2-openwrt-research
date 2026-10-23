@@ -85,8 +85,9 @@ mutating bring-up must follow the dependencies actually recovered from stock.
    [switch-on](docs/RADIO_POWER_MODEL.md) with its
    [register-table child](docs/RADIO_REGTBL_MODEL.md),
    [radar/HWOBSS](docs/PHY_CHANNEL_INIT_MODEL.md) and the
-   [noise mode child](docs/PHY_NOISE_MODEL.md) complete offline; channel
-   set/tuning, later callbacks and calibration remain required.
+   [noise mode child](docs/PHY_NOISE_MODEL.md) complete offline. Callback13
+   executes its real [module0](docs/PHY_CHANSPEC_MODEL.md); thirteen further
+   channel modules, later callbacks and calibration remain required.
 5. **Build the data path:** DMA rings and interrupts, receive parsing, transmit,
    then the selected Linux WLAN integration. Current descriptor formatting,
    descriptor-only posting and RX slot take are implemented offline. Packet
