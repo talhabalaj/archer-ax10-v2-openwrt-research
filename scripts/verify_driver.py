@@ -10,6 +10,7 @@ honestly incomplete or missing proof. Hardware/kernel readiness stays unverified
 import argparse
 import hashlib
 import json
+import re
 import os
 from pathlib import Path
 import signal
@@ -192,7 +193,10 @@ def main():
     if args.scope=='checkpoint' and args.kernel_build and not check_failed:
         result=execute(['sh','scripts/build_kernel_module.sh',str(folder/'kbuild')],folder,'kernel_module_build',3600)
         log=(folder/result['log']).read_text(errors='replace')
-        if result['state']=='passed' and ('warning:' in log or 'axd_wl.ko' not in log and 'vermagic' not in log):
+        # Compiler (file:line:col) and modpost diagnostics fail the gate; make's
+        # bind-mount clock-skew notes are not code warnings.
+        code_warnings=re.findall(r'^\S+:\d+:\d+: warning:|^WARNING: modpost',log,re.M)
+        if result['state']=='passed' and (code_warnings or 'vermagic' not in log):
             result['state']='failed';result['reason']='Kernel build emitted warnings or no module metadata'
         report['checks'].append(result);check_failed=result['state']!='passed'
     elif args.scope=='checkpoint' and not check_failed:

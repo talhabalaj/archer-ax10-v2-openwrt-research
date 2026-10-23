@@ -165,6 +165,8 @@ static struct axd_phy_chanspec_context cs_context(void)
     c.temp_pointer=(struct axd_wake_u32){0xf200,1};c.temp_state=(struct axd_wake_u32){0xf300,1};
     cs_tune_build();c.sih_package=(struct axd_wake_u32){0x84000000u,1};
     c.tune_rows=cs_tune_rows;c.tune_count=0x56;c.tune_table=AXD_CS_TUNE_REV0_63178;c.tune_known=1;
+    c.stf_data=(struct axd_wake_u32){0xf400,1};c.antdiv_pointer=(struct axd_wake_u32){0xf500,1};
+    c.antdiv_5g=(struct axd_wake_u32){0x5a,1};c.antdiv_2g_enable=(struct axd_wake_u32){1,1};c.antdiv_2g_mask=(struct axd_wake_u32){0x2a5,1};
     cs_pll_build();c.pll_config=(struct axd_radio20704_pll_config){54000000u,0,0};c.pll_known=1;
     c.pll_selectors=cs_pll_selectors;c.pll_masks=cs_pll_masks;c.pll_shifts=cs_pll_shifts;c.pll_values=cs_pll_values;
     return c;

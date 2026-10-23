@@ -31,7 +31,7 @@ sites. Successful common-module attachment registers these16 init functions:
 | 10 | `_phy_radar_init` | Non-5GHz guard returns0; 5GHz composes the real target51 radar/MHF child with explicit runtime enable/threshold facts. |
 | 11 | `phy_antdiv_init` | Real clock/MAC guard and PSM children around actual AC setter, whose body is `bx lr`. |
 | 12 | `phy_noise_init` | Real guards, mode selection/clamping and shared store, the actual [AC mode child](PHY_NOISE_MODEL.md), then a separate PI378 store after it returns. |
-| 13 | `phy_chanmgr_init_chanspec` | Registered AC channel initialization: the actual [modules0-2](PHY_CHANSPEC_MODEL.md) execute; modules0-3 complete (radio50e0 path incl. PLL/VCO); module4 `chanspec_setup_cmn` is the first unresolved required child. |
+| 13 | `phy_chanmgr_init_chanspec` | Registered AC channel initialization: the actual [modules0-2](PHY_CHANSPEC_MODEL.md) execute; modules0-3 complete (radio50e0 path incl. PLL/VCO); module4 `chanspec_setup_cmn` has begun; its `wlc_phy_set_reg_on_reset_acphy` is the first unresolved required child. |
 | 16 | `phy_papdcal_init_cb` | Actual `mov0;return` leaf. This does not implement PAPD calibration. |
 | 19 | `phy_rxgcrs_init` | Registered AC conditional clear and channel-state chanspec store. |
 | 20 | `phy_btcx_init` | Registered AC byte18=FF store. |

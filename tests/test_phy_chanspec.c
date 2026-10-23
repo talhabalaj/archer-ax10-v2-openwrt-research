@@ -40,7 +40,7 @@ int main(void)
     s.capacity=4096;s.events=malloc(s.capacity*sizeof(*s.events));assert(s.events);
     n=expect(&s,&o);
     assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n);
-    assert(j.phase==AXD_CS_DEPENDENCY && j.dependency==AXD_CS_MODULE_SETUP_CMN && j.modules_completed==4);
+    assert(j.phase==AXD_CS_DEPENDENCY && j.dependency==AXD_CS_REG_ON_RESET && j.modules_completed==4);
     assert(j.cca_completed==2 && j.radio20704_argument==1);
     assert(j.sync_completed && j.corestate_completed && j.bandwidth_completed);
     assert(j.context.chanmgr_data11==0 && j.context.ac_flags_be==7 && j.context.radar_indicator==1);
@@ -55,7 +55,7 @@ int main(void)
     }
     /* cca sample with bit1 set omits the conditional 1us delay. */
     o=base;o.cca_sample=0x13;n=expect(&s,&o);assert(!axd_phy_chanspec_begin(&j,&c));
-    assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_MODULE_SETUP_CMN);
+    assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_REG_ON_RESET);
     /* Fresh PHY0b sample drives the stored count: 7>>1 under nonzero phymode. */
     o=base;o.core_reply=0xff;o.phymode=1;n=expect(&s,&o);c=cs_context();c.phymode.value=1;
     assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n);
@@ -64,7 +64,7 @@ int main(void)
     o=base;o.phymode=7;n=expect(&s,&o);c=cs_context();c.phymode.value=7;c.shared_current_pi.value=0x1111;
     assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n);
     /* A null current-PI word is only compared, never dereferenced. */
-    c.shared_current_pi.value=0;assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_MODULE_SETUP_CMN);
+    c.shared_current_pi.value=0;assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_REG_ON_RESET);
     {unsigned stores=j.software_stores;c.shared_current_pi=c.radio.phy_pointer;
         assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.software_stores==stores-1);}
     /* Corestate runs after sync: a one-core sample updates the count without
@@ -99,7 +99,7 @@ int main(void)
     /* Other radio IDs return from module2 and continue into module3. */
     s.count=n0;cs_module3(&s,0xd024);
     c=cs_context();c.radio.radio_id.value=0x1234;assert(!axd_phy_chanspec_begin(&j,&c));
-    assert(run(&j,&s,0,0)==s.count && j.dependency==AXD_CS_MODULE_SETUP_CMN && j.modules_completed==4);
+    assert(run(&j,&s,0,0)==s.count && j.dependency==AXD_CS_REG_ON_RESET && j.modules_completed==4);
     n=expect(&s,&o);
     c=cs_context();c.radio.radio_id.known=0;assert(!axd_phy_chanspec_begin(&j,&c));
     assert(run(&j,&s,0,0)==n0 && j.dependency==AXD_CS_METADATA && j.last_field==AXD_CS_RADIO_ID);
@@ -117,26 +117,26 @@ int main(void)
         /* Missing table or row: the setup returns and module3 follows. */
         s.count=nr;cs_module3(&s,0xd028);
         c=cs_context();c.chanspec.value=0xd028;c.bmac_chanspec=c.chanspec;assert(!axd_phy_chanspec_begin(&j,&c));
-        assert(run(&j,&s,0,0)==s.count && j.dependency==AXD_CS_MODULE_SETUP_CMN && j.modules_completed==4 && !j.tune_row);
+        assert(run(&j,&s,0,0)==s.count && j.dependency==AXD_CS_REG_ON_RESET && j.modules_completed==4 && !j.tune_row);
         s.count=nr;cs_module3(&s,0xd024);
         c=cs_context();c.sih_package.value=0x87000000u;assert(!axd_phy_chanspec_begin(&j,&c));
-        assert(run(&j,&s,0,0)==s.count && j.dependency==AXD_CS_MODULE_SETUP_CMN);
+        assert(run(&j,&s,0,0)==s.count && j.dependency==AXD_CS_REG_ON_RESET);
         c=cs_context();c.radio.radio_revision.value=4;assert(!axd_phy_chanspec_begin(&j,&c));
-        assert(run(&j,&s,0,0)==s.count && j.dependency==AXD_CS_MODULE_SETUP_CMN);
+        assert(run(&j,&s,0,0)==s.count && j.dependency==AXD_CS_REG_ON_RESET);
         /* Revisions above3 return before the selector reads the SI package word. */
         c.sih_package.known=0;assert(!axd_phy_chanspec_begin(&j,&c));
-        assert(run(&j,&s,0,0)==s.count && j.dependency==AXD_CS_MODULE_SETUP_CMN);
+        assert(run(&j,&s,0,0)==s.count && j.dependency==AXD_CS_REG_ON_RESET);
         n=expect(&s,&o);
         c=cs_context();c.radio.radio_revision.value=3;c.tune_table=AXD_CS_TUNE_REV3_63178_5G;c.tune_count=0x48;
-        assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_MODULE_SETUP_CMN);
+        assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_REG_ON_RESET);
         /* 47622 slice A package: same bit13 set for5580MHz, other table identity. */
         c=cs_context();cs_tune_frequency(0x15cc);c.sih_package.value=0x85000000u;c.tune_table=AXD_CS_TUNE_REV0_47622A;
-        o=base;n=expect(&s,&o);assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_MODULE_SETUP_CMN);
+        o=base;n=expect(&s,&o);assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_REG_ON_RESET);
         /* 47622 slice B package with a bitmap frequency (0x15ae): bit13 set. */
         c=cs_context();cs_tune_frequency(0x15ae);c.sih_package.value=0x86000000u;c.tune_table=AXD_CS_TUNE_REV0_47622B;
-        o=base;n=expect(&s,&o);assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_MODULE_SETUP_CMN);
+        o=base;n=expect(&s,&o);assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_REG_ON_RESET);
         c=cs_context();cs_tune_frequency(0x15cc);o=base;o.bit13_clear=1;n=expect(&s,&o);assert(!axd_phy_chanspec_begin(&j,&c));
-        assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_MODULE_SETUP_CMN);
+        assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_REG_ON_RESET);
         c=cs_context();cs_tune_frequency(6000);o=base;o.bit13_clear=1;o.twod_clear=1;n=expect(&s,&o);
         assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.tune_frequency==6000);
         c=cs_context();cs_tune_frequency(2412);assert(!axd_phy_chanspec_begin(&j,&c));
@@ -155,15 +155,21 @@ int main(void)
         /* Mode3: the same trace with exactly the75 PLL radio writes removed. */
         memmove(s.events+npre,s.events+npre+600,(s.count-npre-600)*sizeof(*s.events));s.count-=600;
         c=cs_context();c.pll_config.mode=3;assert(!axd_phy_chanspec_begin(&j,&c));
-        assert(run(&j,&s,0,0)==n-600 && j.dependency==AXD_CS_MODULE_SETUP_CMN && j.pll_result==1 && !j.pll_writes);
+        assert(run(&j,&s,0,0)==n-600 && j.dependency==AXD_CS_REG_ON_RESET && j.pll_result==1 && !j.pll_writes);
         n=expect(&s,&o);
         for(k=0;k<73;k++)assert(cs_pll_values[k]==(uint16_t)(0x1111u*(k+3)));
         c=cs_context();c.pll_config.reference=1;assert(!axd_phy_chanspec_begin(&j,&c));
         assert(run(&j,&s,0,0)==npre && j.phase==AXD_CS_FAILED && j.error==AXD_CS_BINDING);
         c=cs_context();assert(!axd_phy_chanspec_begin(&j,&c));
-        assert(run(&j,&s,0,0)==n && j.pll_writes==73 && j.dependency==AXD_CS_MODULE_SETUP_CMN);
+        assert(run(&j,&s,0,0)==n && j.pll_writes==73 && j.dependency==AXD_CS_REG_ON_RESET);
         for(k=0;k<73;k++)assert(cs_pll_values[k]==cs_pll_expected[0].values[k]);
     }
+    /* Module4 entry: required STF/antdiv objects and the antdiv board byte. */
+    o=base;n=expect(&s,&o);
+    c=cs_context();assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.context.antdiv_byte18==0x5a);
+    c=cs_context();c.antdiv_5g.known=0;assert(!axd_phy_chanspec_begin(&j,&c));
+    assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_METADATA && j.last_field==AXD_CS_ANTDIV_CONFIG);
+    c=cs_context();c.stf_data.value=0;assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.error==AXD_CS_BINDING);
     /* Unknown SI mapping stops at the first actual cflags (inside resetcca). */
     c=cs_context();c.si_known=0;assert(!axd_phy_chanspec_begin(&j,&c));run(&j,&s,0,0);
     assert(j.phase==AXD_CS_DEPENDENCY && j.dependency==AXD_CS_METADATA && j.last_field==AXD_CS_SI_MAPPING);

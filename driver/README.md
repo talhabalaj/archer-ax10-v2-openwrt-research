@@ -118,7 +118,7 @@ All original code here uses the repository's MIT license.
   registered bitmap/cursor release, composed into status timeout pool returns.
 - `phy_scheduler.c`: capacity23 registry insertion, full16 ordered init vector
   and real closed software/PHY/radio/table/PSM/SI children. Full target stops at
-  required priority13 module4 `chanspec_setup_cmn` after eleven callbacks; isolated shorter vectors do not establish target initialization.
+  required priority13 `wlc_phy_set_reg_on_reset_acphy` (module4) after eleven callbacks; isolated shorter vectors do not establish target initialization.
 - `dma_rx_list.c` / `dma_rx_status_list.c`: current closed bulk leaves, fresh
   discarded descriptor reads, distinct NEXT store widths and commit ordering.
 - `rx_packets.c` / `rx_status.c`: real bulk/status children, packet length/trim/

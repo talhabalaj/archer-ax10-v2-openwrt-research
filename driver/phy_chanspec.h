@@ -40,9 +40,13 @@ struct axd_phy_chanspec_context {
     const uint8_t *pll_shifts;
     uint16_t *pll_values;
     uint8_t pll_known;
+    /* Module4 entry: STF data object, antenna-diversity object (AC+58) and
+     * its board configuration: 5GHz byte (+88), 2.4GHz enable (+84, signed)
+     * and per-channel mask (+86). Runtime board data, never defaulted. */
+    struct axd_wake_u32 stf_data, antdiv_pointer, antdiv_5g, antdiv_2g_enable, antdiv_2g_mask;
     /* Software results, all stored in source order. */
     uint8_t chanmgr_data11, ac_flags_be, radar_indicator, chanmgr_byte29;
-    uint8_t band_byte9, core_bitmap18, tempsense_byte5;
+    uint8_t band_byte9, core_bitmap18, tempsense_byte5, antdiv_byte18;
     uint16_t common_previous_chanspec, bwstate396;
     uint32_t ac_bw_b8;
 };
@@ -63,13 +67,14 @@ enum axd_phy_chanspec_dependency { AXD_CS_NO_DEPENDENCY=0, AXD_CS_METADATA,
     AXD_CS_PHY_INIT_FALLBACK, AXD_CS_CHIP4335_BRANCH,
     AXD_CS_RADIO2069_SETUP, AXD_CS_RADIO20704_SETUP, AXD_CS_MODULE_SETUP_PHY,
     AXD_CS_RADIO20704_2G, AXD_CS_RADIO20704_6G, AXD_CS_PLL_TUNE, AXD_CS_VCOCAL,
-    AXD_CS_MODULE_SETUP_CMN };
+    AXD_CS_MODULE_SETUP_CMN, AXD_CS_REG_ON_RESET };
 enum axd_phy_chanspec_field { AXD_CS_NO_FIELD=0, AXD_CS_CHANSPEC, AXD_CS_COMMON,
     AXD_CS_RADAR, AXD_CS_RADAR_INFO, AXD_CS_PHY, AXD_CS_AC, AXD_CS_CHANMGR,
     AXD_CS_CHANMGR_DATA, AXD_CS_CHIP, AXD_CS_BAND_PHY, AXD_CS_BAND_TYPE,
     AXD_CS_BMAC_CHANSPEC, AXD_CS_BWINIT, AXD_CS_AC_BWINIT, AXD_CS_PHYMODE,
     AXD_CS_SHARED_PI, AXD_CS_TEMP, AXD_CS_TEMP_STATE, AXD_CS_SI_MAPPING, AXD_CS_RADIO_ID,
-    AXD_CS_RADIO_REVISION, AXD_CS_SIH_PACKAGE, AXD_CS_TUNE_TABLE, AXD_CS_PLL };
+    AXD_CS_RADIO_REVISION, AXD_CS_SIH_PACKAGE, AXD_CS_TUNE_TABLE, AXD_CS_PLL,
+    AXD_CS_STF, AXD_CS_ANTDIV, AXD_CS_ANTDIV_CONFIG };
 /* Actual radio20704 tune tables (rev0: one table; rev3: per band). */
 enum axd_phy_chanspec_tune { AXD_CS_TUNE_NONE=0, AXD_CS_TUNE_REV0_63178, AXD_CS_TUNE_REV0_47622A,
     AXD_CS_TUNE_REV0_47622B, AXD_CS_TUNE_REV3_63178_6G, AXD_CS_TUNE_REV3_63178_5G,

@@ -37,8 +37,9 @@ inputs and consumes a joined independent28039-event oracle (the count derives
 from original synthetic table fixtures, so it is not itself a progress metric).
 
 The current observation is: **eleven callbacks completed (priorities1-12),
-current priority13 having completed its real modules0-3, required module4
-`chanspec_setup_cmn` unresolved** (29695 trace events consumed). Completed
+current priority13 having completed its real modules0-3 and module4's entry,
+required `wlc_phy_set_reg_on_reset_acphy` unresolved** (29695 trace events
+consumed). Completed
 callbacks stay at eleven until callback13 returns after all fourteen modules.
 The published predecessor stopped after five callbacks at the radio7 regtbl
 tail. Because the fixture changed, the verifier reports
@@ -95,7 +96,8 @@ measurement and PHY51 ADC/AFE/core-to-core branches. Modules0-2 are implemented
 ([model](docs/PHY_CHANSPEC_MODEL.md)) up to module2's radio50e0 child. The radio20704 5GHz body
 runs (channel tune-table rows are a private caller-supplied span). Its HND fixed-point helpers match the pinned hnd.ko
 instructions; `pll_tune` (double-entry checked, not instruction-executed) and VCO
-calibration now run, and module3. Next is module4 `chanspec_setup_cmn` and VCO calibration, then modules3-13 in execution order so the reported terminal child keeps advancing. Noise mode-bit0-clear desense and disabled-preempt branches
+calibration now run, module3 and module4's antdiv entry. Next is module4's
+`wlc_phy_set_reg_on_reset_acphy` and VCO calibration, then modules3-13 in execution order so the reported terminal child keeps advancing. Noise mode-bit0-clear desense and disabled-preempt branches
 also remain. Actual board ID/subrevision stays unknown.
 
 The [packet/status bodies](docs/RX_PROCESSING_MODEL.md) now compose the identified

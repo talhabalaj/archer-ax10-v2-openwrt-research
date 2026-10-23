@@ -31,7 +31,12 @@ LESI and smoothing block runs only when the revision is not0x33, so PHY51
 executes the PHY70 bit12 pulse around a 10us delay and the actual
 `phy_utils_write_phyreg(107d, chanspec low byte)`. Paths where module2 returns
 early (other radio IDs, no table or row) continue into module3, as in the
-actual code. Module4 `chanspec_setup_cmn` is the reported gate. Nothing
+actual code. Module4 `chanspec_setup_cmn` has begun: with AC flag bit0 set (the
+initialization path) it binds the STF data and antenna-diversity objects and
+runs `phy_ac_antdiv_chanspec` (5GHz: the board configuration byte; 2.4GHz: 0
+when disabled, else bit channel-1 of the per-channel mask; all explicit runtime
+inputs). The next required child, `wlc_phy_set_reg_on_reset_acphy`, is the
+reported gate. Nothing
 after it is claimed; no radio ID or revision is inferred from the board.
 
 ## radio20704 5GHz body

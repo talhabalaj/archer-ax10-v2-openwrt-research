@@ -9,7 +9,7 @@ enum stage { P_DATA, P_AC, P_RADAR, P_RADAR_INFO, RADIO_SET, MODULE0,
     AC_BWINIT, CHIP, SETUP_DELAY, SETUP_TAIL, MODULE1, MODULE2, RADIO20704,
     R_TABLE, R_LOGEN, R_LOGEN_DELAY, R_LOGEN_CLEAR, R_BAND, R_88A, R_9F6, R_FREQ,
     R_CORE, R_TAIL, R_2D, R_PLL, R_PLL_WRITE, R_PLL_TAIL, R_VCO, R_VCO_DELAY, MODULE3,
-    M3_DELAY, M3_CLEAR, M3_WRITE, MODULE4,
+    M3_DELAY, M3_CLEAR, M3_WRITE, MODULE4, C_ANTDIV, C_REG_ON_RESET,
     CCA_READ, CCA_SY, CCA_SHORT, CCA_FGC_ON, CCA_D1, CCA_ST6, CCA_W6, CCA_D2,
     CCA_TOGGLE_SET, CCA_D3, CCA_TOGGLE_CLEAR, CCA_D10, CCA_ST2, CCA_W2,
     CCA_FGC_OFF, CCA_D4, CCA_ST_RESTORE, CCA_W_RESTORE, CCA_TAIL,
@@ -388,7 +388,26 @@ static void radio_step(struct axd_phy_chanspec *j)
         if(axd_phy_packed_write_begin(&j->packed_job,0x107d,(uint16_t)(c->chanspec.value&0xffu),&c->hardware))fail(j,AXD_CS_CHILD_ERROR);
         else {j->stage=RUN_PACKED;j->after_child=MODULE4;}
         break;
-    case MODULE4:j->modules_completed=4;dependency(j,AXD_CS_MODULE_SETUP_CMN);break;
+    /* Module4 chanspec_setup_cmn. AC flag bit0 (set by the prologue) selects
+     * the reset path: STF data, antdiv channel byte, then register reset. */
+    case MODULE4:
+        j->modules_completed=4;
+        if(!(c->ac_flags_be&1u)){dependency(j,AXD_CS_MODULE_SETUP_CMN);break;}
+        if(fact(j,AXD_CS_STF,c->stf_data,UINT32_MAX,1) && fact(j,AXD_CS_ANTDIV,c->antdiv_pointer,UINT32_MAX,1))j->stage=C_ANTDIV;
+        break;
+    case C_ANTDIV:
+        /* phy_ac_antdiv_chanspec: 5GHz stores the board byte; 2.4GHz stores 0
+         * when disabled, else bit (channel-1) of the per-channel mask. */
+        if(c->chanspec.value&0xc000u){
+            if(fact(j,AXD_CS_ANTDIV_CONFIG,c->antdiv_5g,255,0)){c->antdiv_byte18=(uint8_t)c->antdiv_5g.value;j->software_stores++;j->stage=C_REG_ON_RESET;}
+        }else if(fact(j,AXD_CS_ANTDIV_CONFIG,c->antdiv_2g_enable,255,0)){
+            if(!c->antdiv_2g_enable.value){c->antdiv_byte18=0;j->software_stores++;j->stage=C_REG_ON_RESET;}
+            else if(fact(j,AXD_CS_ANTDIV_CONFIG,c->antdiv_2g_mask,0xffff,0)){
+                uint32_t shift=((c->chanspec.value&0xffu)-1u)&0xffu;
+                c->antdiv_byte18=(uint8_t)(shift>=32?0:(c->antdiv_2g_mask.value>>shift)&1u);j->software_stores++;j->stage=C_REG_ON_RESET;
+            }
+        }break;
+    case C_REG_ON_RESET:dependency(j,AXD_CS_REG_ON_RESET);break;
     default:fail(j,AXD_CS_BAD_ARGUMENT);break;
     }
 }
@@ -412,7 +431,7 @@ enum axd_phy_chanspec_phase axd_phy_chanspec_step(struct axd_phy_chanspec *j,axd
     if(j->stage>=RUN_PHY){child(j,&r);return j->phase;}
     if(j->stage>=SYNC_READ && j->stage<=SYNC_ENABLE){sync_step(j);return j->phase;}
     if(j->stage>=SETUP_READ && j->stage<=RADIO20704){setup_step(j);return j->phase;}
-    if(j->stage>=R_TABLE && j->stage<=MODULE4){radio_step(j);return j->phase;}
+    if(j->stage>=R_TABLE && j->stage<=C_REG_ON_RESET){radio_step(j);return j->phase;}
     if(j->stage>=CCA_READ && j->stage<=CCA_TAIL){cca_step(j);return j->phase;}
     switch(j->stage){
     case P_DATA:
