@@ -25,6 +25,14 @@ offline gates it depends on exist. Nothing here has been loaded on a device.
   with it disabled every backend operation fails with `-EPERM` before any
   access. A mutex is reserved for serializing jobs, because indirect register
   pairs (PHY address/data, radio address/data) must never interleave.
+- [axd_ring.c](../kernel/axd_ring.c) owns DMA64 descriptor-ring memory:
+  coherent allocation of `count*16` bytes (power-of-two count; the DMA API's
+  page-order alignment keeps the ring inside its pointer-mask window), a
+  32-bit DMA mask set at probe (descriptors carry a 32-bit low address with no
+  carry), validation through the portable `axd_dma64_ring_check`, and
+  descriptor encode/decode through the existing codec ordered with
+  `dma_wmb()`/`dma_rmb()`. It programs no engine and maps no packet buffers;
+  rings are not allocated until a start path exists.
 - The interrupt is deliberately not requested: interrupt status and
   acknowledge handling is not implemented, and an unacknowledged level
   interrupt could storm.

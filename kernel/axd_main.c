@@ -16,6 +16,7 @@
 #include <linux/platform_device.h>
 #include <linux/seq_file.h>
 #include "axd_kio.h"
+#include "axd_ring.h"
 
 static bool hw_access;
 module_param(hw_access, bool, 0444);
@@ -73,6 +74,10 @@ static int axd_probe(struct platform_device *pdev)
 	ad->kio.wrapper_phys = lower_32_bits(res->start);
 
 	ad->irq = platform_get_irq_optional(pdev, 0);
+	/* Software-only: descriptors carry 32-bit addresses. Rings are allocated
+	 * by a future start path, never at probe. */
+	if (axd_ring_dma_mask(dev))
+		return dev_err_probe(dev, -EIO, "32-bit DMA mask unavailable\n");
 	ad->kio.hw_enabled = hw_access;
 	platform_set_drvdata(pdev, ad);
 

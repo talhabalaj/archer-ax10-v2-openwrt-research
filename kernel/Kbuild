@@ -3,5 +3,5 @@
 # here, the portable components under portable/.
 obj-m := axd_wl.o
 axd_portable := $(patsubst $(src)/%.c,%.o,$(wildcard $(src)/portable/*.c))
-axd_wl-y := axd_main.o axd_kio.o $(axd_portable)
+axd_wl-y := axd_main.o axd_kio.o axd_ring.o $(axd_portable)
 ccflags-y := -I$(src)/compat -I$(src)/portable
