@@ -30,7 +30,7 @@ static size_t run(struct axd_phy_chanspec *j,const struct cs_script *s,size_t fa
     assert(j->attempted_ops==f.cursor && j->completed_ops==f.cursor-(fail && f.cursor==fail));
     return f.cursor;
 }
-static const struct cs_options base={2,0,0x11,0x1232,1,2,0,0x12};
+static const struct cs_options base={2,0,0x11,0x1232,1,2,0,0x12,0,0};
 static size_t n0;
 static size_t expect(struct cs_script *s,const struct cs_options *o){s->count=0;cs_module0(s,o);n0=s->count;cs_module2(s,o);return s->count;}
 int main(void)
@@ -40,7 +40,7 @@ int main(void)
     s.capacity=4096;s.events=malloc(s.capacity*sizeof(*s.events));assert(s.events);
     n=expect(&s,&o);
     assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n);
-    assert(j.phase==AXD_CS_DEPENDENCY && j.dependency==AXD_CS_RADIO20704_SETUP && j.modules_completed==2);
+    assert(j.phase==AXD_CS_DEPENDENCY && j.dependency==AXD_CS_PLL_TUNE && j.modules_completed==2);
     assert(j.cca_completed==2 && j.radio20704_argument==1);
     assert(j.sync_completed && j.corestate_completed && j.bandwidth_completed);
     assert(j.context.chanmgr_data11==0 && j.context.ac_flags_be==7 && j.context.radar_indicator==1);
@@ -55,16 +55,16 @@ int main(void)
     }
     /* cca sample with bit1 set omits the conditional 1us delay. */
     o=base;o.cca_sample=0x13;n=expect(&s,&o);assert(!axd_phy_chanspec_begin(&j,&c));
-    assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_RADIO20704_SETUP);
+    assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_PLL_TUNE);
     /* Fresh PHY0b sample drives the stored count: 7>>1 under nonzero phymode. */
-    o=base;o.core_reply=0xff;n=expect(&s,&o);c=cs_context();c.phymode.value=1;
+    o=base;o.core_reply=0xff;o.phymode=1;n=expect(&s,&o);c=cs_context();c.phymode.value=1;
     assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n);
     assert(j.context.hardware.phy.phy_core_count==3 && j.context.core_bitmap18==7 && j.context.tempsense_byte5==0x77);
     /* phymode7 with another current PI repeats the identity-PI stores. */
-    o=base;n=expect(&s,&o);c=cs_context();c.phymode.value=7;c.shared_current_pi.value=0x1111;
+    o=base;o.phymode=7;n=expect(&s,&o);c=cs_context();c.phymode.value=7;c.shared_current_pi.value=0x1111;
     assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n);
     /* A null current-PI word is only compared, never dereferenced. */
-    c.shared_current_pi.value=0;assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_RADIO20704_SETUP);
+    c.shared_current_pi.value=0;assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_PLL_TUNE);
     {unsigned stores=j.software_stores;c.shared_current_pi=c.radio.phy_pointer;
         assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.software_stores==stores-1);}
     /* Corestate runs after sync: a one-core sample updates the count without
@@ -100,6 +100,44 @@ int main(void)
     assert(run(&j,&s,0,0)==n0 && j.dependency==AXD_CS_MODULE_SETUP_PHY && j.modules_completed==3);
     c=cs_context();c.radio.radio_id.known=0;assert(!axd_phy_chanspec_begin(&j,&c));
     assert(run(&j,&s,0,0)==n0 && j.dependency==AXD_CS_METADATA && j.last_field==AXD_CS_RADIO_ID);
+    /* radio20704 tune-table binding, selection and frequency branches. The
+     * prefix through module2's resetcca is n0 plus one resetcca trace. */
+    {struct cs_script r={0};size_t nr,ncommon;r.capacity=512;r.events=malloc(r.capacity*sizeof(*r.events));assert(r.events);
+        cs_resetcca(&r,0x12);nr=n0+r.count;free(r.events);ncommon=nr+13+13*8;
+        o=base;n=expect(&s,&o);
+        c=cs_context();c.tune_known=0;assert(!axd_phy_chanspec_begin(&j,&c));
+        assert(run(&j,&s,0,0)==nr && j.dependency==AXD_CS_METADATA && j.last_field==AXD_CS_TUNE_TABLE);
+        c=cs_context();c.tune_table=AXD_CS_TUNE_REV3_63178_5G;assert(!axd_phy_chanspec_begin(&j,&c));
+        assert(run(&j,&s,0,0)==nr && j.error==AXD_CS_BINDING);
+        c=cs_context();c.tune_count=0x48;assert(!axd_phy_chanspec_begin(&j,&c));
+        assert(run(&j,&s,0,0)==nr && j.error==AXD_CS_BINDING);
+        c=cs_context();c.chanspec.value=0xd028;c.bmac_chanspec=c.chanspec;assert(!axd_phy_chanspec_begin(&j,&c));
+        assert(run(&j,&s,0,0)==nr && j.dependency==AXD_CS_MODULE_SETUP_PHY && j.modules_completed==3 && !j.tune_row);
+        c=cs_context();c.sih_package.value=0x87000000u;assert(!axd_phy_chanspec_begin(&j,&c));
+        assert(run(&j,&s,0,0)==nr && j.dependency==AXD_CS_MODULE_SETUP_PHY);
+        c=cs_context();c.radio.radio_revision.value=4;assert(!axd_phy_chanspec_begin(&j,&c));
+        assert(run(&j,&s,0,0)==nr && j.dependency==AXD_CS_MODULE_SETUP_PHY);
+        /* Revisions above3 return before the selector reads the SI package word. */
+        c.sih_package.known=0;assert(!axd_phy_chanspec_begin(&j,&c));
+        assert(run(&j,&s,0,0)==nr && j.dependency==AXD_CS_MODULE_SETUP_PHY);
+        c=cs_context();c.radio.radio_revision.value=3;c.tune_table=AXD_CS_TUNE_REV3_63178_5G;c.tune_count=0x48;
+        assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_PLL_TUNE);
+        /* 47622 slice A package: same bit13 set for5580MHz, other table identity. */
+        c=cs_context();cs_tune_frequency(0x15cc);c.sih_package.value=0x85000000u;c.tune_table=AXD_CS_TUNE_REV0_47622A;
+        assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_PLL_TUNE);
+        /* 47622 slice B package with a bitmap frequency (0x15ae): bit13 set. */
+        c=cs_context();cs_tune_frequency(0x15ae);c.sih_package.value=0x86000000u;c.tune_table=AXD_CS_TUNE_REV0_47622B;
+        assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_PLL_TUNE);
+        o=base;o.bit13_clear=1;n=expect(&s,&o);c=cs_context();cs_tune_frequency(0x15cc);assert(!axd_phy_chanspec_begin(&j,&c));
+        assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_PLL_TUNE);
+        o=base;o.bit13_clear=1;o.twod_clear=1;n=expect(&s,&o);c=cs_context();cs_tune_frequency(6000);
+        assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.tune_frequency==6000);
+        o=base;n=expect(&s,&o);c=cs_context();cs_tune_frequency(2412);assert(!axd_phy_chanspec_begin(&j,&c));
+        assert(run(&j,&s,0,0)==ncommon && j.dependency==AXD_CS_RADIO20704_2G);
+        c=cs_context();cs_tune_frequency(6300);assert(!axd_phy_chanspec_begin(&j,&c));
+        assert(run(&j,&s,0,0)==ncommon && j.dependency==AXD_CS_RADIO20704_6G);
+        cs_tune_frequency(5180);
+    }
     /* Unknown SI mapping stops at the first actual cflags (inside resetcca). */
     c=cs_context();c.si_known=0;assert(!axd_phy_chanspec_begin(&j,&c));run(&j,&s,0,0);
     assert(j.phase==AXD_CS_DEPENDENCY && j.dependency==AXD_CS_METADATA && j.last_field==AXD_CS_SI_MAPPING);

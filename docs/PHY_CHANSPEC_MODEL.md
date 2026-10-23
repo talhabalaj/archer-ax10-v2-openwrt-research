@@ -23,9 +23,29 @@ cleanup and btcx. Idle-TSSI measurement and PHY51 ADC/AFE/core-to-core branches
 follow. Module0 `chanspec_setup` is implemented. Module1 `chanspec_setup_tpc` is
 its actual `rev>46` return for PHY51. Module2 `chanspec_setup_radio` dispatches on
 the explicit radio ID at public+0xa: 2069 is an explicit gate, other IDs return,
-and 50e0 runs the real resetcca then reaches
-`wlc_phy_chanspec_radio20704_setup(PI, chanspec, AC flags bits1/2)`, the reported
-gate. Nothing after it is claimed; no radio ID is inferred from the board.
+and 50e0 runs the real resetcca then
+`wlc_phy_chanspec_radio20704_setup(PI, chanspec, AC flags bits1/2)`. Its5GHz body
+is implemented up to `wlc_phy_radio20704_pll_tune`, the reported gate. Nothing
+after it is claimed; no radio ID or revision is inferred from the board.
+
+## radio20704 5GHz body
+
+The channel row comes from the actual tune-table selector: radio revision
+(public+0xc) below3 uses one table for every band, revision3 one table per band,
+and the SI package word (sih+0x64: 0x84/0x85/0x86000000) picks the 63178 or 47622
+slice variant; other values or revisions select no table, so the setup returns
+and module3 is the gate. The tables are PRIVATE vendor data: callers bind a
+borrowed span whose identity and native row count (0x56, 0x7f, 0x48 or 0xe) must
+match the selection, and the job linearly searches 16-byte rows for the channel.
+Tests use an original synthetic 86-row table, never the vendor rows.
+
+With argument1 the real LOGEN pulse (PHY728 bit8, 1us) runs. For5/6GHz chanspecs
+eleven radio writes take per-channel bytes4..14 with their masks/shifts, then
+88a bit7 and 9f6 bit0. Frequencies at or below3000MHz and above6289MHz are
+explicit2.4GHz/6GHz gates. The5GHz branch sets or clears 9f6 bit13 by the
+actual package/frequency predicate, runs a25-write per-core block (core1 at
++0x200, other cores the actual ffff selector) ending with the 1f3/3f3 loop tail,
+four tail writes, and per-core 2d bit4 (set at or below5999MHz).
 
 ## Module0 order
 
@@ -93,6 +113,10 @@ bandwidth state are rebound from and published to the scheduler's canonical
 values, so callback4's bandwidth check and callback13's set share one state.
 
 The full-vector probe executes modules0-2 inside callback13 and consumes its
-joined independent trace (28417 events); its reported terminal child moved from
-the opaque callback name to `wlc_phy_chanspec_radio20704_setup`. Completed callbacks remain eleven:
+joined independent trace (28990 events); its reported terminal child is now
+`wlc_phy_radio20704_pll_tune`. The radio20704 tests cover table identity/count
+binding, missing channel, unselected package and revision (including that
+revisions above3 never read the package word), the revision3 per-band table,
+the47622 package, both bit13 outcomes, the2d frequency threshold, and the2.4/6GHz
+gates; thirteen further compiling mutants of this section are rejected. Completed callbacks remain eleven:
 callback13 returns only after all fourteen modules and its epilogue exist.

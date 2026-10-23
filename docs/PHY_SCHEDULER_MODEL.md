@@ -31,7 +31,7 @@ sites. Successful common-module attachment registers these16 init functions:
 | 10 | `_phy_radar_init` | Non-5GHz guard returns0; 5GHz composes the real target51 radar/MHF child with explicit runtime enable/threshold facts. |
 | 11 | `phy_antdiv_init` | Real clock/MAC guard and PSM children around actual AC setter, whose body is `bx lr`. |
 | 12 | `phy_noise_init` | Real guards, mode selection/clamping and shared store, the actual [AC mode child](PHY_NOISE_MODEL.md), then a separate PI378 store after it returns. |
-| 13 | `phy_chanmgr_init_chanspec` | Registered AC channel initialization: the actual [modules0-2](PHY_CHANSPEC_MODEL.md) execute; module2's radio50e0 `wlc_phy_chanspec_radio20704_setup` is the first unresolved required child. |
+| 13 | `phy_chanmgr_init_chanspec` | Registered AC channel initialization: the actual [modules0-2](PHY_CHANSPEC_MODEL.md) execute; the radio50e0 `wlc_phy_radio20704_pll_tune` inside module2 is the first unresolved required child. |
 | 16 | `phy_papdcal_init_cb` | Actual `mov0;return` leaf. This does not implement PAPD calibration. |
 | 19 | `phy_rxgcrs_init` | Registered AC conditional clear and channel-state chanspec store. |
 | 20 | `phy_btcx_init` | Registered AC byte18=FF store. |
@@ -156,7 +156,7 @@ TPC, the real [radar child](PHY_CHANNEL_INIT_MODEL.md), antdiv and the noise mod
 child now execute. An earlier differing-bandwidth branch and the noise mode-bit0
 clear desense branch remain explicitly unimplemented. Callback13 executes its real module0
 (core-to-core sync, resetcca, phycorestate, BMAC bandwidth) and then stops inside
-module2 at `wlc_phy_chanspec_radio20704_setup`. Remaining channel set/tuning and the later callbacks stay required.
+module2 at `wlc_phy_radio20704_pll_tune`. Remaining channel set/tuning and the later callbacks stay required.
 The scheduler does not acquire actual runtime registry/module pointers, OTP,
 NVRAM, radio ID/subrevision, private payloads or OS resource ownership. Those
 bindings, remaining children, physical timing/calibration, DMA/IRQ/data path and

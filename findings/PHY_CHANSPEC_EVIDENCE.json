@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "scope": "Original PHY51/core130 callback13 prologue, radio-set, modules0-2 (to the radio50e0 radio20704 child) with reached children; portable metadata only",
+  "scope": "Original PHY51/core130 callback13 prologue, radio-set, modules0-2 (radio50e0 radio20704 5GHz body to pll_tune) with reached children; portable metadata only",
   "artifacts": [
     {
       "name": "wl.ko",
@@ -954,11 +954,28 @@
     "chanmgr_context_alias": "phy_ac_register_impl stores the chanmgr context at AC+0x14; phy_ac_attach passes AC as the registration context word, so CM[1] and *(PI+0x10) are one object",
     "bwinit": "AC registers phy_ac_chanmgr_bwinit (returns -22); phy_chanmgr_bwinit falls back to phy_init only for a null slot",
     "module1": "chanspec_setup_tpc returns immediately for PHY revision >46",
-    "module2": "chanspec_setup_radio: radio id u16 at public+0xa; 0x2069 and 0x50e0 arms, other ids return"
+    "module2": "chanspec_setup_radio: radio id u16 at public+0xa; 0x2069 and 0x50e0 arms, other ids return",
+    "radio20704_tune_table": {
+      "selector": "wlc_get_20704_chan_tune_table",
+      "inputs": [
+        "radio revision u8 at public+0xc",
+        "SI package word at sih+0x64",
+        "band"
+      ],
+      "row_bytes": 16,
+      "native_counts": {
+        "rev0": 86,
+        "rev3_6g": 127,
+        "rev3_5g": 72,
+        "rev3_2g": 14
+      },
+      "payload": "private; never published"
+    }
   },
   "not_claimed": [
     "executed stock ARM comparison",
-    "wlc_phy_chanspec_radio20704_setup and later modules",
+    "wlc_phy_radio20704_pll_tune, VCO calibration and later modules",
+    "radio20704 2.4GHz/6GHz branches",
     "callback13 return",
     "radio readiness"
   ]

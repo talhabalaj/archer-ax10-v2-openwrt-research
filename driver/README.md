@@ -102,7 +102,7 @@ All original code here uses the repository's MIT license.
   PHY51 noise mode child (HWACI, preempt/postfilter, HWOBSS, ELNA, MCLIP).
 - `phy_chanspec.c`: actual callback13 prologue, radio-set and module0 `chanspec_setup`
   (core-to-core sync, resetcca, phycorestate, BMAC bandwidth), module1's rev guard and
-  module2's radio-ID dispatch; `wlc_phy_chanspec_radio20704_setup` remains a gate.
+  module2's radio-ID dispatch and the radio20704 5GHz body; `pll_tune` remains a gate.
 - `dma_rx_status_fill.c` / `bmac_rx_fill.c`: actual status-pool RX fill with idle
   child and the BMAC wrapper selecting status or normal fill per FIFO.
 - `phy_channel_init.c`: actual PHY51 radar-init/MHF0-band0 and HWOBSS bodies
@@ -113,7 +113,7 @@ All original code here uses the repository's MIT license.
   registered bitmap/cursor release, composed into status timeout pool returns.
 - `phy_scheduler.c`: capacity23 registry insertion, full16 ordered init vector
   and real closed software/PHY/radio/table/PSM/SI children. Full target stops at
-  required priority13 `wlc_phy_chanspec_radio20704_setup` after eleven callbacks; isolated shorter vectors do not establish target initialization.
+  required priority13 `wlc_phy_radio20704_pll_tune` after eleven callbacks; isolated shorter vectors do not establish target initialization.
 - `dma_rx_list.c` / `dma_rx_status_list.c`: current closed bulk leaves, fresh
   discarded descriptor reads, distinct NEXT store widths and commit ordering.
 - `rx_packets.c` / `rx_status.c`: real bulk/status children, packet length/trim/

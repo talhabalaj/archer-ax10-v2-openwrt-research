@@ -21,6 +21,15 @@ struct axd_phy_chanspec_context {
     struct axd_wake_u32 bwinit_slot, ac_bwinit_label;
     /* Shared PHY object: u16 phymode at +a and current PI word at +4. */
     struct axd_wake_u32 phymode, shared_current_pi, temp_pointer, temp_state;
+    /* SI word at sih+64 (package/variant), selecting the radio20704 tune table
+     * with .radio.radio_revision. tune_rows borrows the caller-resolved PRIVATE
+     * table (16-byte LE rows: channel, MHz, per-channel bytes); tune_table must
+     * name the table the actual selector picks and tune_count its native count.
+     * Storage is immutable and outside the job through terminal state. */
+    struct axd_wake_u32 sih_package;
+    const uint8_t *tune_rows;
+    uint32_t tune_count, tune_table;
+    uint8_t tune_known;
     /* Software results, all stored in source order. */
     uint8_t chanmgr_data11, ac_flags_be, radar_indicator, chanmgr_byte29;
     uint8_t band_byte9, core_bitmap18, tempsense_byte5;
@@ -42,12 +51,20 @@ enum axd_phy_chanspec_error { AXD_CS_NO_ERROR=0, AXD_CS_BAD_ARGUMENT, AXD_CS_BIN
 enum axd_phy_chanspec_dependency { AXD_CS_NO_DEPENDENCY=0, AXD_CS_METADATA,
     AXD_CS_MAC_CHILD, AXD_CS_RESOURCE_CHILD, AXD_CS_BMAC_PHY_RESET,
     AXD_CS_PHY_INIT_FALLBACK, AXD_CS_CHIP4335_BRANCH,
-    AXD_CS_RADIO2069_SETUP, AXD_CS_RADIO20704_SETUP, AXD_CS_MODULE_SETUP_PHY };
+    AXD_CS_RADIO2069_SETUP, AXD_CS_RADIO20704_SETUP, AXD_CS_MODULE_SETUP_PHY,
+    AXD_CS_RADIO20704_2G, AXD_CS_RADIO20704_6G, AXD_CS_PLL_TUNE };
 enum axd_phy_chanspec_field { AXD_CS_NO_FIELD=0, AXD_CS_CHANSPEC, AXD_CS_COMMON,
     AXD_CS_RADAR, AXD_CS_RADAR_INFO, AXD_CS_PHY, AXD_CS_AC, AXD_CS_CHANMGR,
     AXD_CS_CHANMGR_DATA, AXD_CS_CHIP, AXD_CS_BAND_PHY, AXD_CS_BAND_TYPE,
     AXD_CS_BMAC_CHANSPEC, AXD_CS_BWINIT, AXD_CS_AC_BWINIT, AXD_CS_PHYMODE,
-    AXD_CS_SHARED_PI, AXD_CS_TEMP, AXD_CS_TEMP_STATE, AXD_CS_SI_MAPPING, AXD_CS_RADIO_ID };
+    AXD_CS_SHARED_PI, AXD_CS_TEMP, AXD_CS_TEMP_STATE, AXD_CS_SI_MAPPING, AXD_CS_RADIO_ID,
+    AXD_CS_RADIO_REVISION, AXD_CS_SIH_PACKAGE, AXD_CS_TUNE_TABLE };
+/* Actual radio20704 tune tables (rev0: one table; rev3: per band). */
+enum axd_phy_chanspec_tune { AXD_CS_TUNE_NONE=0, AXD_CS_TUNE_REV0_63178, AXD_CS_TUNE_REV0_47622A,
+    AXD_CS_TUNE_REV0_47622B, AXD_CS_TUNE_REV3_63178_6G, AXD_CS_TUNE_REV3_63178_5G,
+    AXD_CS_TUNE_REV3_63178_2G, AXD_CS_TUNE_REV3_47622A_6G, AXD_CS_TUNE_REV3_47622A_5G,
+    AXD_CS_TUNE_REV3_47622A_2G, AXD_CS_TUNE_REV3_47622B_6G, AXD_CS_TUNE_REV3_47622B_5G,
+    AXD_CS_TUNE_REV3_47622B_2G };
 struct axd_phy_chanspec {
     enum axd_phy_chanspec_phase phase; enum axd_phy_chanspec_error error;
     enum axd_phy_chanspec_dependency dependency; enum axd_phy_chanspec_field last_field;
@@ -59,6 +76,9 @@ struct axd_phy_chanspec {
     struct axd_d11_operation raw;
     uint32_t main_control;
     uint8_t radio20704_argument;
+    uint16_t tune_frequency;
+    uint32_t tune_selected;
+    const uint8_t *tune_row;
     uint16_t sync_guard, cca_sample, setup_guard;
     unsigned stage, after_child, after_cca, core_index, part, mac_enabled, cca_valid;
     unsigned modules_completed, sync_completed, cca_completed, corestate_completed;
@@ -72,7 +92,9 @@ struct axd_phy_chanspec {
  * (fresh PHY0b core count, bitmap, tempsense) and BMAC bandwidth set/reset
  * with the registered bwinit binding. Module1 chanspec_setup_tpc is its actual
  * rev>46 return. Module2 dispatches on the explicit radio ID: 50e0 runs the
- * real resetcca then reaches wlc_phy_chanspec_radio20704_setup, a DEPENDENCY;
+ * real resetcca and the radio20704 5GHz body (tune row, LOGEN reset, band,
+ * per-core and tail radio writes), then reaches its pll_tune, a DEPENDENCY;
+ * the2.4/6GHz frequency branches are DEPENDENCY gates;
  * 2069 is a DEPENDENCY; other IDs return to module3 setup_phy, a DEPENDENCY. The callback never returns until
  * all fourteen modules exist.
  * Other PHY revisions, the4335 branch, BMAC PHY reset and a null bwinit slot

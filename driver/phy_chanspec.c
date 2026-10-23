@@ -7,6 +7,8 @@ enum stage { P_DATA, P_AC, P_RADAR, P_RADAR_INFO, RADIO_SET, MODULE0,
     SETUP_READ, SETUP_SET, CORE_MODE, CORE_READ, CORE_SHARED, CORE_BITMAP,
     TEMP, TEMP_STATE, TEMP_AGAIN, BAND, BW_PHY, BW_TYPE, BW_RESET, BWINIT,
     AC_BWINIT, CHIP, SETUP_DELAY, SETUP_TAIL, MODULE1, MODULE2, RADIO20704,
+    R_TABLE, R_LOGEN, R_LOGEN_DELAY, R_LOGEN_CLEAR, R_BAND, R_88A, R_9F6, R_FREQ,
+    R_CORE, R_TAIL, R_2D, R_PLL,
     CCA_READ, CCA_SY, CCA_SHORT, CCA_FGC_ON, CCA_D1, CCA_ST6, CCA_W6, CCA_D2,
     CCA_TOGGLE_SET, CCA_D3, CCA_TOGGLE_CLEAR, CCA_D10, CCA_ST2, CCA_W2,
     CCA_FGC_OFF, CCA_D4, CCA_ST_RESTORE, CCA_W_RESTORE, CCA_TAIL,
@@ -216,7 +218,7 @@ static void setup_step(struct axd_phy_chanspec *j)
         }break;
     case RADIO20704:
         /* Third argument: AC flags bits1/2 (set by module0) as a boolean. */
-        j->radio20704_argument=(c->ac_flags_be&6u)!=0;dependency(j,AXD_CS_RADIO20704_SETUP);break;
+        j->radio20704_argument=(c->ac_flags_be&6u)!=0;j->stage=R_TABLE;break;
     default:fail(j,AXD_CS_BAD_ARGUMENT);break;
     }
 }
@@ -252,6 +254,99 @@ static void cca_step(struct axd_phy_chanspec *j)
     default:fail(j,AXD_CS_BAD_ARGUMENT);break;
     }
 }
+/* wlc_get_20704_chan_tune_table: radio revision <3 uses one table for every
+ * band, revision3 one per band; the SI package word picks the variant. */
+static uint32_t tune_select(uint32_t revision,uint32_t package,uint32_t band,uint32_t *count)
+{
+    unsigned variant=package==0x84000000u?0:package==0x85000000u?1:package==0x86000000u?2:3;
+    *count=0;if(variant==3)return AXD_CS_TUNE_NONE;
+    if(revision<3){*count=0x56;return AXD_CS_TUNE_REV0_63178+variant;}
+    if(revision!=3)return AXD_CS_TUNE_NONE;
+    if(band==0x4000){*count=0x7f;return AXD_CS_TUNE_REV3_63178_6G+variant*3;}
+    if(band==0xc000){*count=0x48;return AXD_CS_TUNE_REV3_63178_5G+variant*3;}
+    if(band==0){*count=0xe;return AXD_CS_TUNE_REV3_63178_2G+variant*3;}
+    return AXD_CS_TUNE_NONE;
+}
+/* 5/6GHz band writes: selector, mask, row byte, left shift (mask applied). */
+static const struct {uint16_t selector,mask;uint8_t byte,shift;} band56[11]={
+    {0x9f5,0xf,4,0},{0x1f4,0xf,5,0},{0x3f4,0xf,6,0},{0x6e,0xf000,7,12},{0x26e,0xf000,8,12},
+    {0x73,6,9,1},{0x273,6,10,1},{0x2d,0xf,11,0},{0x22d,0xf,12,0},{0x1c6,0x78,13,3},{0x3c6,0x78,14,3}};
+/* 5GHz per-core rows for core0; core1 adds 200; other cores use ffff. The
+ * final row is the loop tail (1f3/3f3/ffff, 1c00, c00). */
+static const uint16_t core5g[25][3]={
+    {0x1f1,1,0},{0x1f1,0x200,0},{0x1f6,0x400,0x400},{0x1f1,0x100,0},{0x1f6,0x800,0x800},
+    {0x1f2,0x100,0x100},{0x1f2,0x400,0x400},{0x1f1,0x400,0},{0x74,0x100,0},{0x74,0x4000,0x4000},
+    {0x73,1,1},{0x2e,3,0},{0x2e,4,0},{0x29,1,1},{0x1df,0x1000,0},{0x18,8,8},{0x1c6,4,4},
+    {0x29,4,4},{0x1c6,2,0},{0x2d,0x20,0},{0x1c6,1,0},{0x1c9,0x38,0x28},{0x1c9,0x7000,0x5000},
+    {0x1c9,7,5},{0x1f3,0x1c00,0xc00}};
+static const uint16_t tail5g[4][3]={{0x88a,0x38,0x18},{0x88a,0xe000,0},{0x9f6,0x4000,0x4000},{0x9f5,0xe000,0xa000}};
+static uint16_t per_core(uint16_t selector,unsigned core){return core<2?(uint16_t)(selector+core*0x200):0xffff;}
+/* wlc_phy_chanspec_radio20704_setup, 5GHz frequency branch (3001..6289MHz). */
+static void radio_step(struct axd_phy_chanspec *j)
+{
+    struct axd_phy_chanspec_context *c=&j->context;uint32_t band=c->chanspec.value&0xc000u,count,i;
+    const uint8_t *row=j->tune_row;
+    switch(j->stage){
+    case R_TABLE:
+        if(!fact(j,AXD_CS_RADIO_REVISION,c->radio.radio_revision,255,0))break;
+        if(c->radio.radio_revision.value>3){j->modules_completed=3;dependency(j,AXD_CS_MODULE_SETUP_PHY);break;}
+        if(!fact(j,AXD_CS_SIH_PACKAGE,c->sih_package,UINT32_MAX,0))break;
+        j->tune_selected=tune_select(c->radio.radio_revision.value,c->sih_package.value,band,&count);
+        /* No selected table: chan2freq returns -1 and the setup returns. */
+        if(j->tune_selected==AXD_CS_TUNE_NONE){j->modules_completed=3;dependency(j,AXD_CS_MODULE_SETUP_PHY);break;}
+        j->last_field=AXD_CS_TUNE_TABLE;j->metadata_accesses++;
+        if(!c->tune_known){dependency(j,AXD_CS_METADATA);break;}
+        if(c->tune_known!=1){fail(j,AXD_CS_BAD_ARGUMENT);break;}
+        if(!c->tune_rows || c->tune_table!=j->tune_selected || c->tune_count!=count){fail(j,AXD_CS_BINDING);break;}
+        for(i=0;i<count;i++){
+            const uint8_t *r=c->tune_rows+16u*i;
+            if((uint32_t)(r[0]|(r[1]<<8))==(c->chanspec.value&0xffu)){j->tune_row=r;break;}
+        }
+        if(!j->tune_row){j->modules_completed=3;dependency(j,AXD_CS_MODULE_SETUP_PHY);break;}
+        j->tune_frequency=(uint16_t)(j->tune_row[2]|(j->tune_row[3]<<8));j->part=0;
+        j->stage=j->radio20704_argument==1?R_LOGEN:R_BAND;break;
+    case R_LOGEN:phy(j,AXD_PHY_MODIFY,0x728,0x100,0x100,R_LOGEN_DELAY);break;
+    case R_LOGEN_DELAY:raw(j,AXD_D11_DELAY_US,0,1,R_LOGEN_CLEAR);break;
+    case R_LOGEN_CLEAR:phy(j,AXD_PHY_MODIFY,0x728,0x100,0,R_BAND);break;
+    case R_BAND:
+        if(band==0){dependency(j,AXD_CS_RADIO20704_2G);break;}
+        if((band!=0x4000 && band!=0xc000) || j->part==11){j->part=0;j->stage=R_88A;break;}
+        {uint32_t v=(uint32_t)row[band56[j->part].byte]<<band56[j->part].shift;
+            if(band56[j->part].shift==12)v&=band56[j->part].mask;
+            radio(j,band56[j->part].selector,band56[j->part].mask,(uint16_t)v,R_BAND);j->part++;}
+        break;
+    case R_88A:
+        if(j->part==0){radio(j,0x88a,0x80,0x80,R_88A);j->part=1;}
+        else {j->part=0;radio(j,0x9f6,1,0,R_FREQ);}
+        break;
+    case R_FREQ:
+        if(j->tune_frequency<=0xbb8)dependency(j,AXD_CS_RADIO20704_2G);
+        else if(j->tune_frequency>0x1891)dependency(j,AXD_CS_RADIO20704_6G);
+        else j->stage=R_9F6;
+        break;
+    case R_9F6:
+        if(fact(j,AXD_CS_SIH_PACKAGE,c->sih_package,UINT32_MAX,0)){
+            uint32_t w=c->sih_package.value,f=j->tune_frequency,k=f-0x15a4u;unsigned set;
+            if(w==0x84000000u)set=f==0x143c || f==0x1351;
+            else if(((w+0x7b000000u)&~0x1000000u)!=0)set=0;
+            else set=f==0x143c || f==0x1351 || (k<=0x1e && ((0x40100401u>>k)&1u)) || f==0x15cc || f==0x15f4 || f==0x15fe;
+            j->core_index=0;j->part=0;radio(j,0x9f6,0x2000,set?0x2000:0,R_CORE);
+        }break;
+    case R_CORE:
+        if(j->core_index>=c->hardware.phy.phy_core_count){j->core_index=0;j->part=0;j->stage=R_TAIL;break;}
+        radio(j,per_core(core5g[j->part][0],j->core_index),core5g[j->part][1],core5g[j->part][2],R_CORE);
+        if(++j->part==25){j->part=0;j->core_index++;}
+        break;
+    case R_TAIL:
+        if(j->part==4){j->part=0;j->core_index=0;j->stage=R_2D;break;}
+        radio(j,tail5g[j->part][0],tail5g[j->part][1],tail5g[j->part][2],R_TAIL);j->part++;break;
+    case R_2D:
+        if(j->core_index>=c->hardware.phy.phy_core_count){j->stage=R_PLL;break;}
+        radio(j,per_core(0x2d,j->core_index),0x10,j->tune_frequency<=0x176f?0x10:0,R_2D);j->core_index++;break;
+    case R_PLL:dependency(j,AXD_CS_PLL_TUNE);break;
+    default:fail(j,AXD_CS_BAD_ARGUMENT);break;
+    }
+}
 int axd_phy_chanspec_begin(struct axd_phy_chanspec *j,const struct axd_phy_chanspec_context *context)
 {
     const struct axd_phy_chanspec empty={0};struct axd_phy_chanspec_context c;
@@ -270,6 +365,7 @@ enum axd_phy_chanspec_phase axd_phy_chanspec_step(struct axd_phy_chanspec *j,axd
     if(j->stage>=RUN_PHY){child(j,&r);return j->phase;}
     if(j->stage>=SYNC_READ && j->stage<=SYNC_ENABLE){sync_step(j);return j->phase;}
     if(j->stage>=SETUP_READ && j->stage<=RADIO20704){setup_step(j);return j->phase;}
+    if(j->stage>=R_TABLE && j->stage<=R_PLL){radio_step(j);return j->phase;}
     if(j->stage>=CCA_READ && j->stage<=CCA_TAIL){cca_step(j);return j->phase;}
     switch(j->stage){
     case P_DATA:
