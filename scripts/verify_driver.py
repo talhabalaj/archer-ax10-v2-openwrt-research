@@ -181,8 +181,12 @@ def main():
                 result=execute([str(args.unicorn_python.absolute()),str(ROOT/'tests'/name),str(args.module.resolve()),*extra],folder,name.removesuffix('.py'))
                 report['checks'].append(result)
                 if result['state']!='passed':check_failed=True;break
+            if not check_failed and args.hnd:
+                result=execute([str(args.unicorn_python.absolute()),str(ROOT/'tests/check_hnd_math_arm.py'),str(args.hnd.resolve())],folder,'check_hnd_math_arm')
+                report['checks'].append(result);check_failed=result['state']!='passed'
             if not check_failed and not args.hnd:
                 report['checks'].append({'id':'status_fill_positive_pool_arm','state':'not_run','reason':'Pinned hnd.ko required for actual positive-pool address translation'})
+                report['checks'].append({'id':'check_hnd_math_arm','state':'not_run','reason':'Pinned hnd.ko required for the fixed-point helper comparison'})
         else:report['checks'].append({'id':'stock_arm_comparisons','state':'not_run','reason':'Pinned input and Unicorn interpreter required, or an earlier check failed'})
     report['target_initialization']={'state':target_state,'scope':'Complete16-stage synthetic PHY vector only; not enclosing BMAC initialization or device readiness'}
     report['functional_gates']=[

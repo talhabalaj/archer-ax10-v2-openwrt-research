@@ -53,8 +53,8 @@ its actual failure diagnostics even when it exits nonzero.
 
 The checkpoint scope also runs the sanitizer suite, ARMv7 builds and explicit
 private-input/Unicorn checks when supplied. The exact staged checkpoint passed
-all74 executed checks: target build/run, the54-program sanitizer/private-comparison
-suite,55 C ARMv7 objects plus the combined-header probe, and all15 pinned ARM
+all76 executed checks: target build/run, the55-program sanitizer/private-comparison
+suite,56 C ARMv7 objects plus the combined-header probe, and all16 pinned ARM
 comparison programs. The new status-fill checker executes the real wrapper,
 status fill, idle child and, with an optional pinned `--hnd` module, the actual
 HND address converter for432 positive-pool cases (1603 total, zero stubs).
@@ -91,9 +91,9 @@ fourteen-entry module table (setup, TPC, radio, PHY, common, noise, RXGCRS,
 radio/PHY/TX/RX tuning, firmware enable, cleanup, BT coexistence), then idle-TSSI
 measurement and PHY51 ADC/AFE/core-to-core branches. Modules0-2 are implemented
 ([model](docs/PHY_CHANSPEC_MODEL.md)) up to module2's radio50e0 child. The radio20704 5GHz body
-runs (channel tune-table rows are a private caller-supplied span). Next is the
-fixed-point `wlc_phy_radio20704_pll_tune` (HND math helpers; a pinned ARM
-differential is planned) and VCO calibration, then modules3-13 in execution order so the reported terminal child keeps advancing. Noise mode-bit0-clear desense and disabled-preempt branches
+runs (channel tune-table rows are a private caller-supplied span). Its HND fixed-point helpers now exist and match the
+pinned hnd.ko instructions in37246 executed cases. Next is the fixed-point
+`wlc_phy_radio20704_pll_tune` body itself and VCO calibration, then modules3-13 in execution order so the reported terminal child keeps advancing. Noise mode-bit0-clear desense and disabled-preempt branches
 also remain. Actual board ID/subrevision stays unknown.
 
 The [packet/status bodies](docs/RX_PROCESSING_MODEL.md) now compose the identified

@@ -82,6 +82,26 @@ registered object (`phy_ac_attach` passes it as the chanmgr context word1), so
 one canonical binding is used. Unknown reached inputs stop as dependencies;
 required nulls and alias mismatches fail.
 
+## HND fixed-point helpers for PLL tuning
+
+`pll_tune` derives its PLL fields with HND `math_fp_*` helpers from `hnd.ko`.
+[hnd_math_fp.c](../driver/hnd_math_fp.c) reimplements the reached closure:
+head room, 64-bit multiply/divide with Q-format shifts, 32/64-bit round, floor
+and ceiling, the local 64-bit shift routines and `math_uint64_divide`. ARM
+register-shift edge cases (byte-truncated counts, zero at32 or more) are kept.
+The vendor divide is not exact: its carry term `(0xffffffff%d+1)%d` drops one
+unit when the sum equals d (2^32/2 yields 0x7fffffff); this is reproduced on
+purpose because PLL values depend on it.
+
+[check_hnd_math_arm.py](../tests/check_hnd_math_arm.py) executes the actual pinned
+helper region, including its unnamed shift routines, with internal calls and its
+bit-length table resolved from the module's own relocations. The only external
+calls, the kernel's `__aeabi_uidiv`/`__aeabi_uidivmod`, use their ABI-defined
+unsigned semantics and are counted; any other call or relocation fails. 37246
+cases (about2.6 million executed instructions) match the C exactly, and three
+compiling mutants (shift-count width, divide carry, normalization limit) are
+rejected. `pll_tune` itself is not implemented yet.
+
 ## Failure behavior and validation
 
 Each step performs at most one synchronous callback through a combined D11/SI

@@ -36,6 +36,7 @@
 #include "../driver/dma_rx_status_fill.h"
 #include "../driver/bmac_rx_fill.h"
 #include "../driver/phy_chanspec.h"
+#include "../driver/hnd_math_fp.h"
 #include "../driver/d11_io.h"
 #include "../driver/dma_reset.h"
 #include "../driver/effective_init.h"
