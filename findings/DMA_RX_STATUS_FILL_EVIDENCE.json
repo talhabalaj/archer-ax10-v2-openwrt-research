@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "scope": "Current complete normal target130 status RX fill and reusable actual BMAC normal/status fill selection",
+  "artifact": {
+    "name": "wl.ko",
+    "version": "17.10.121.37",
+    "size_bytes": 5803056,
+    "sha256": "8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c"
+  },
+  "functions": [
+    {
+      "name": "dma_sts_rxfill",
+      "size_bytes": 456,
+      "sha256": "abdca8db4dc2d32936d9ac7e874efde859779faa91ba799dea9584b036cc246e",
+      "assembly_evidence_id": "ev_8c6fcc212be3621d4066833a1c0c87914494c4f51f4e20ac36fb128329f1eecf",
+      "pseudocode_evidence_id": "ev_fb4c5502ce6c398faf1a579978b840886f359754520d48affc6fa101eb1216e5",
+      "callees_evidence_id": "ev_bef4862eed800093bf870572885de6856e90c9d954911abb406b7860d34f95c4",
+      "calls": [
+        "dma64_dd_upd",
+        "osl_virt_to_phys",
+        "dma_rxidle.part.0"
+      ]
+    },
+    {
+      "name": "wlc_bmac_dma_rxfill",
+      "size_bytes": 52,
+      "sha256": "d009380b30974d1139ed559a5b8340cd30e8ad853f548b01d179ec140f66273f",
+      "assembly_evidence_id": "ev_3dad58e96b9694a95101fa06fa3c324a78e108a8fc51c46e4efc87bb2f1844ad",
+      "pseudocode_evidence_id": "ev_27bafb95e6dc968a2e8c2b96a4646d355cb420b0d2dbbc41bbf5ecc987e47484"
+    },
+    {
+      "name": "dma_rxidle.part.0",
+      "size_bytes": 84,
+      "sha256": "7d506ff07c05267279dc4402613f1bafe64818a3f5c660bfbf03e49a28d10e56",
+      "assembly_evidence_id": "ev_f10a4cf6dc6a4261e99a08a8b9a441d792c40a3a03c7f20f44fec89e5734aa23",
+      "calls": 0,
+      "relocations": 0
+    },
+    {
+      "name": "osl_virt_to_phys",
+      "artifact": "hnd.ko",
+      "size_bytes": 8,
+      "sha256": "156b789b61d4f1f7c768fa456f1e924676012680eb3d90fe92819d704940772e",
+      "assembly_evidence_id": "ev_192a5c7d1d6d858c8e840756b3c3bb37d0353376fe8060c49874bbc7b5d5f3f2",
+      "pseudocode_evidence_id": "ev_6036942f396a28e9101d72e955c375066eb128b91e61700ff4a7d172cfb79805",
+      "calls": 0,
+      "relocations": 0,
+      "memory_accesses": 0,
+      "transform": "ARM32 address plus0x81000000 modulo2^32"
+    },
+    {
+      "name": "dma64_dd_upd",
+      "artifact": "wl.ko",
+      "size_bytes": 200,
+      "sha256": "9748022cfb4db093dc534589086fd41751cba07d2938655408748a753ba402cd",
+      "provenance": "Existing DMA64 source audit and descriptor checker",
+      "calls": 0,
+      "relocations": 0
+    }
+  ],
+  "current_source_facts": [
+    "Inline pool HEAD/NEXT/AVAILABLE removal; no allocator callback",
+    "Two separate four-byte NEXT clears and halfword index store per node",
+    "Two independent DATA observations separated by actual data-word clear",
+    "Imported osl_virt_to_phys is a genuine OS boundary",
+    "Actual descriptor transform and ordered stores plus four fresh parity reads",
+    "Initial empty-pool idle Boolean discarded; only outstanding above target returns1",
+    "ST then producer write then software OUT",
+    "Fresh public byte1c0 read precedes FIFO compare; FIFO3 and bit0 select status DI word9"
+  ],
+  "validation": {
+    "independent_literal_tests": true,
+    "principal_callback_error_cancel_and_both_prefixes": true,
+    "strict_c11": true,
+    "address_and_undefined_sanitizers": true,
+    "freestanding_armv7_compile": true,
+    "rejected_compiling_source_mutants": 14,
+    "independent_selected_file_review": "Root source review clean against retained current assembly",
+    "actual_arm_cases": 1603,
+    "actual_arm_instructions": 153317,
+    "actual_idle_calls": 72,
+    "actual_bodies_executed": 6,
+    "rejection_probes": 5,
+    "positive_pool_arm_execution": true,
+    "external_arm_stubs": 0,
+    "hardware_operations": 0,
+    "default_actual_arm_cases": 1171,
+    "default_actual_arm_instructions": 41957,
+    "positive_pool_cases": 432,
+    "final_typed_memory_bytes_compared": true,
+    "independent_arm_checker_review": "mctrl selected-file source review clean; independent expanded actual ARM rerun passed"
+  },
+  "limits": [
+    "Core130.0/1 and stricter ring/capacity/null/binding policies narrow unchecked stock behavior",
+    "FIFO below72 is host bounds policy, not actual queue capacity evidence",
+    "Positive pool ARM comparison requires caller-supplied pinned HND module; actual HND transform does not establish live mapping policy",
+    "Actual OS address policy and serialized resource ownership require runtime backend",
+    "No concurrency, IRQ, Linux delivery, packet ownership transfer or physical/RF validation",
+    "Older 17.10.86.5 GPL material is corroboration only"
+  ],
+  "private_analysis_session": {
+    "exported": true,
+    "closed": true
+  },
+  "publication": "Original code/tests/checker/prose and selected metadata only; no raw code, payload or private paths",
+  "additional_artifact": {
+    "name": "hnd.ko",
+    "sha256": "d05ff061b3a636630955a13fdd20a953f3dfb07ee92904a987dd4c77b648b45a"
+  }
+}

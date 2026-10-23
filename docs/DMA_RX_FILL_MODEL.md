@@ -112,9 +112,10 @@ packet ownership transfer, IRQ delivery or physical reception.
 The current52-byte `wlc_bmac_dma_rxfill` unconditionally reads the eligibility
 byte at byte0x1c0 through its parent objects. FIFO3 with that byte's low bit set
 tails to `dma_sts_rxfill` using DI slot9. Otherwise it tails to `dma_rxfill` using
-DI slot `fifo+6`. Other byte bits do not select status fill. This wrapper is
-recovered scope evidence; this component does not claim to implement the
-separate status-fill body.
+DI slot `fifo+6`. Other byte bits do not select status fill. The reusable
+wrapper and separate complete status-fill model are now implemented in
+`driver/bmac_rx_fill.[ch]` and `driver/dma_rx_status_fill.[ch]`; see
+[their source order and verification boundaries](DMA_RX_STATUS_FILL_MODEL.md).
 
 ## Validation
 

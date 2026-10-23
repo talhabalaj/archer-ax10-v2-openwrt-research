@@ -85,7 +85,7 @@ def emulate(code,count,inside,outside,cached,force,mode_a,mode_b,base,labels,rea
         else:require((address==CTX+0x82 and width==2) or(address==CTX+0xe8 and width==2) or
                      (address==CTX+0xf0 and width==4),'Unexpected context write')
     cpu.hook_add(uc.UC_HOOK_CODE,instruction);cpu.hook_add(uc.UC_HOOK_MEM_READ|uc.UC_HOOK_MEM_WRITE,memory)
-    cpu.emu_start(CODE,STOP,timeout=1000000,count=100000)
+    cpu.emu_start(CODE,STOP,count=100000)
     require(cpu.reg_read(UC_ARM_REG_PC)==STOP and not remaining,'RX leaf/read queue did not complete')
     result=(*snapshot(),cpu.reg_read(UC_ARM_REG_R0))
     return events,snapshots,cleared,result,len(instructions)

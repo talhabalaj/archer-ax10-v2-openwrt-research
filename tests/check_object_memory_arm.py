@@ -135,7 +135,7 @@ def emulate(functions,command,address,selector,value,count,data,replies,deny=Non
         else:raise ValueError('Unexpected context/source write')
     cpu.hook_add(uc.UC_HOOK_CODE,instruction)
     cpu.hook_add(uc.UC_HOOK_MEM_READ|uc.UC_HOOK_MEM_WRITE,memory)
-    cpu.emu_start(functions[entry]['address'],STOP,timeout=1000000,count=20000)
+    cpu.emu_start(functions[entry]['address'],STOP,count=20000)
     require(cpu.reg_read(UC_ARM_REG_PC)==STOP,'Function did not return')
     require(not remaining,'Unconsumed ARM read replies')
     return events,len(visited)

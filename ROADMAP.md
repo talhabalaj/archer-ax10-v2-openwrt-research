@@ -79,12 +79,14 @@ mutating bring-up must follow the dependencies actually recovered from stock.
    complete registered PHY51 table-init callback now exist offline. Remaining
    radio/channel/calibration operations still require implementation. The full
    [sixteen-stage init registry](docs/PHY_SCHEDULER_MODEL.md) and real closed
-   children are now implemented. Complete target execution stops at mandatory
-   radio7 before table8. [Radio OFF/register paths](docs/RADIO_CONTROL_MODEL.md)
-   and explicit50e0 [switch-on logen/PLL/RCAL/RCCAL](docs/RADIO_POWER_MODEL.md)
-   complete offline; the registered ON register-table tail remains. Actual
-   [radar/HWOBSS helpers](docs/PHY_CHANNEL_INIT_MODEL.md) now exist, while full
-   noise/channel/calibration remains required.
+   children are now implemented. Complete target execution completes eleven
+   callbacks and stops at required priority13 channel initialization.
+   [Radio OFF/register paths](docs/RADIO_CONTROL_MODEL.md), explicit50e0
+   [switch-on](docs/RADIO_POWER_MODEL.md) with its
+   [register-table child](docs/RADIO_REGTBL_MODEL.md),
+   [radar/HWOBSS](docs/PHY_CHANNEL_INIT_MODEL.md) and the
+   [noise mode child](docs/PHY_NOISE_MODEL.md) complete offline; channel
+   set/tuning, later callbacks and calibration remain required.
 5. **Build the data path:** DMA rings and interrupts, receive parsing, transmit,
    then the selected Linux WLAN integration. Current descriptor formatting,
    descriptor-only posting and RX slot take are implemented offline. Packet
@@ -228,8 +230,8 @@ invalid inputs; no old firmware/SHM ABI is silently substituted.
   with real generic table/PMU/GPIO children. This does not close the other
   callbacks or establish the actual radio identity/calibration inputs.
   The full16 init vector and source-backed scheduler now exist, with real
-  closed software/PHY/table/radio children. It preserves the required radio7
-  dependency rather than skipping to later callbacks. Source registry ordering
+  closed software/PHY/table/radio/noise children. It preserves the required
+  priority13 dependency rather than skipping to later callbacks. Source registry ordering
   is established; complete runtime bindings and remaining children are not.
 - Document required calibration fields and precedence using private inputs;
   validate presence/format without publishing values or inventing defaults.

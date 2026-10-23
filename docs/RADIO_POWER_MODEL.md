@@ -5,7 +5,9 @@ the required logen, PLL, RCAL and RCCAL continuation. For an explicit50e0
 identity, core130.0/1 AC PHY51, chip63178 and zero channel-manager data10 flag,
 the switch command now completes the actual switch body. It does not establish
 radio readiness or the board's actual radio identity. The registered radio-on
-command still stops at its mandatory post-switch register-table child.
+command now composes its actual mandatory post-switch
+[register-table child](RADIO_REGTBL_MODEL.md); unknown reached inputs remain
+explicit dependencies.
 
 This is an addendum to [RADIO_CONTROL_MODEL.md](RADIO_CONTROL_MODEL.md), whose
 older prefix API remains available. The pinned current `wl.ko` digest and exact
@@ -89,16 +91,19 @@ after9f9 cleanup, then the actual18 final radio modifications run.
 ## Switch return and registered callback boundary
 
 The actual switch tail resolves channel-manager data. A nonzero data10 flag
-requires `wlc_phy_set_regtbl_on_pwron_acphy` and channel setup, and stops before
-either is invented. A zero flag stores PI47e=1, then checks the actual chip.
+executes `wlc_phy_set_regtbl_on_pwron_acphy` and then reaches the actual remaining
+`wlc_phy_chanspec_set_acphy` dependency before PI47e is stored. A zero flag
+stores PI47e=1, then checks the actual chip.
 Chip63178 follows the recovered return; other-chip tails remain dependencies.
 The registered AC-on prefix clears data10 itself, preserving that actual path.
 
 After the switch returns, the registered AC-on wrapper unconditionally calls
-`wlc_phy_set_regtbl_on_pwron_acphy`. `AXD_RPOWER_ON_REGISTERED` therefore reports
-`AXD_RPOWER_REGTBL_ON_PWRON` with switch-completed1 and PI47e=1, while its overall
-callback remains incomplete. It never converts this remaining child into
-success. The scheduler's priority7 child now composes this stronger job; legacy
+`wlc_phy_set_regtbl_on_pwron_acphy`. `AXD_RPOWER_ON_REGISTERED` now executes
+the [actual child](RADIO_REGTBL_MODEL.md). Its runtime/private inputs live in
+`context.regtbl`, with hardware rebound from canonical radio hardware. A real
+child return permits the registered callback to return; a missing reached input
+retains `AXD_RPOWER_REGTBL_ON_PWRON` and the child's exact field/error state.
+The scheduler's priority7 child composes this stronger job; legacy
 `context.radio` stays synchronized, while private spans and calibrated fields
 live in `context.radio_power`. Canonical PHY/PSM state remains table.hardware.
 
@@ -128,6 +133,6 @@ That ARM comparison covers the mode child, not the full switch's delay/poll/
 calibration body or registered wrapper. Those are checked with retained exact
 assembly and literal C protocols. The component does not acquire actual radio
 identity, clocks, resources, registry state, OTP/NVRAM or private data. Physical
-timing, PLL/calibration validity, the remaining register-table/channel children,
+timing, PLL/calibration validity, remaining channel children,
 OS ownership, Linux WLAN integration and real reception/transmission remain
 gates before a replacement driver can run.

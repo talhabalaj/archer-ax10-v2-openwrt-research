@@ -48,6 +48,12 @@ struct axd_phy_table_write {
 int axd_phy_table_write_begin(struct axd_phy_table_write *,
                                const struct axd_phy_table_write_request *,
                                const struct axd_phy_table_context *);
+/* Actual wlc_phy_table_write_ext_acphy entry: proven no-op target HWACI
+ * leaves plus the same generic data writer. No outer MAC/maincontrol/19e
+ * wrapper is introduced; caller owns the source-established surrounding guard. */
+int axd_phy_table_write_ext_begin(struct axd_phy_table_write *,
+                                   const struct axd_phy_table_write_request *,
+                                   const struct axd_phy_table_context *);
 /* Exact direct phy_utils_write_phyreg leaf for selector<c000, including the
  * u16 counter/threshold flush and packed ST/W32(3fc) write. This entry does
  * not invoke the table wrapper/MAC/guard. High selectors are unsupported here.

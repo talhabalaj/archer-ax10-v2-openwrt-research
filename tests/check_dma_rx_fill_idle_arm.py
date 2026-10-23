@@ -55,7 +55,7 @@ def emulate(code,mask,replies,deny=None):
             else:require(touched<=stack,'Uninitialized stack read')
         else:require(access==uc.UC_MEM_READ and width==4 and address in fields,'Unknown context read/write')
     cpu.hook_add(uc.UC_HOOK_CODE,instruction);cpu.hook_add(uc.UC_HOOK_MEM_READ|uc.UC_HOOK_MEM_WRITE,memory)
-    cpu.emu_start(CODE,STOP,timeout=1000000,count=1000)
+    cpu.emu_start(CODE,STOP,count=1000)
     require(cpu.reg_read(UC_ARM_REG_PC)==STOP and not remaining,'Idle child/read queue incomplete')
     return events,cpu.reg_read(UC_ARM_REG_R0),len(instructions)
 

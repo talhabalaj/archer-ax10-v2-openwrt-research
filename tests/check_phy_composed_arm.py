@@ -255,7 +255,7 @@ def emulate(functions, entry, count=1, snapshot=True, replies=(), saved=(0x111, 
 
     cpu.hook_add(uc.UC_HOOK_CODE, instruction)
     cpu.hook_add(uc.UC_HOOK_MEM_READ | uc.UC_HOOK_MEM_WRITE, memory)
-    cpu.emu_start(functions[entry]["address"], STOP, timeout=1000000, count=10000)
+    cpu.emu_start(functions[entry]["address"], STOP, count=10000)
     require(cpu.reg_read(UC_ARM_REG_PC) == STOP and not remaining, "Bound/reply mismatch")
     result = lambda address: int.from_bytes(cpu.mem_read(address, 2), "little")
     return (events, result(PI + 0x104), tuple(result(SAVE + i * 2) for i in range(4)),

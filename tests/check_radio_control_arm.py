@@ -78,7 +78,7 @@ def emulate(leaves, command, selector, mask, value, bus, revision, counter, thre
             else:require(address==PI+0x104 and size==2,"Unexpected radio context write")
         else:raise ValueError("Unexpected radio memory region")
     cpu.hook_add(uc.UC_HOOK_CODE,instruction);cpu.hook_add(uc.UC_HOOK_MEM_READ|uc.UC_HOOK_MEM_WRITE,memory)
-    cpu.emu_start(entry,STOP,timeout=1000000,count=1500)
+    cpu.emu_start(entry,STOP,count=1500)
     require(cpu.reg_read(UC_ARM_REG_PC)==STOP and not remaining,"Radio leaf did not consume queue and return")
     return events,cpu.reg_read(UC_ARM_REG_R0)&0xffff,int.from_bytes(cpu.mem_read(PI+0x104,2),"little")
 

@@ -95,7 +95,13 @@ All original code here uses the repository's MIT license.
 - `radio_control.c`: actual target63178 OFF, radio register read/write/modify and
   recovered identity50e0 ON prefix. Every ON remains a reached dependency.
 - `radio_power.c`: real22-RMW logen and explicit50e0 PLL/RCAL/RCCAL switch-on,
-  per-core setup/calibration stores, with mandatory registered regtbl tail still open.
+  per-core setup/calibration stores, then the real registered regtbl child.
+- `radio_regtbl.c`: actual PHY51 power-on register-table body: TSSI/PAPD predicates,
+  coreunit leaf, guard, cold EXT static/zero tables and mandatory clears.
+- `phy_table_read.c` / `phy_noise.c`: generic width8 AC table reader and the actual
+  PHY51 noise mode child (HWACI, preempt/postfilter, HWOBSS, ELNA, MCLIP).
+- `dma_rx_status_fill.c` / `bmac_rx_fill.c`: actual status-pool RX fill with idle
+  child and the BMAC wrapper selecting status or normal fill per FIFO.
 - `phy_channel_init.c`: actual PHY51 radar-init/MHF0-band0 and HWOBSS bodies
   with runtime thresholds and real packed/register/object children.
 - `dma_rx_fill.c`: actual normal allocate/account/pull/trim/translate/tracking/
@@ -104,7 +110,7 @@ All original code here uses the repository's MIT license.
   registered bitmap/cursor release, composed into status timeout pool returns.
 - `phy_scheduler.c`: capacity23 registry insertion, full16 ordered init vector
   and real closed software/PHY/radio/table/PSM/SI children. Full target stops at
-  required radio7 regtbl tail; isolated shorter vectors do not establish target initialization.
+  required priority13 channel init after eleven callbacks; isolated shorter vectors do not establish target initialization.
 - `dma_rx_list.c` / `dma_rx_status_list.c`: current closed bulk leaves, fresh
   discarded descriptor reads, distinct NEXT store widths and commit ordering.
 - `rx_packets.c` / `rx_status.c`: real bulk/status children, packet length/trim/

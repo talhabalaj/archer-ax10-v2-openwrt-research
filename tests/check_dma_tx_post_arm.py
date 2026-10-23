@@ -81,7 +81,7 @@ def emulate(code,count,inside,outside,base,flags,burst,commit,descriptor,replies
                     (address==CTX+0x5e and width==2),'Unexpected context write')
     cpu.hook_add(uc.UC_HOOK_CODE,instruction)
     cpu.hook_add(uc.UC_HOOK_MEM_READ|uc.UC_HOOK_MEM_WRITE,access)
-    cpu.emu_start(CODE,STOP,timeout=1000000,count=1000)
+    cpu.emu_start(CODE,STOP,count=1000)
     require(cpu.reg_read(UC_ARM_REG_PC)==STOP and not remaining,'Leaf/read queue did not complete')
     output=(int.from_bytes(cpu.mem_read(CTX,4),'little'),int.from_bytes(cpu.mem_read(CTX+0x10,4),'little'),
             int.from_bytes(cpu.mem_read(CTX+0x5e,2),'little'),*struct.unpack('<4I',cpu.mem_read(INPUT,16)),

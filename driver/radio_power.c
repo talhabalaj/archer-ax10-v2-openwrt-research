@@ -10,7 +10,7 @@ enum stage { ENTRY, PREFIX, MODE_SPAN, MODE_WRITE, MODE_NEXT, CORE_FIRST,
     STORE_SAVED6, STORE_RESULT8, STORE_RESULT_MULTIPLIER,
     RCCAL_FINISH, RCCAL_NEXT, CORE_FINAL, FINAL_MULTIPLIER,
     CHANMGR_BIND, CHANMGR_DATA_BIND, CHANMGR_TEST, STORE_ON, CHIP,
-    SWITCH_RETURN, FINISH, RUN_REGISTER, RUN_PACKED };
+    SWITCH_RETURN, REGTBL_BEGIN, RUN_REGTBL, CHANMGR_CHANNEL, FINISH, RUN_REGISTER, RUN_PACKED };
 enum sequence { PHY_POWER, PLL_START, PLL_FINISH, RCAL_FINISH, RADIO_FINISH };
 enum action { MODIFY=1, PACKED, DELAY };
 struct item {unsigned action;uint16_t selector,mask,value;};
@@ -65,6 +65,7 @@ static int perform(struct relay *r,const struct axd_d11_operation *op,uint32_t *
     struct axd_radio_power *j=r->j;
     if(j->stage==PREFIX || j->stage==RUN_REGISTER)j->context.radio=j->control_job.context;
     else if(j->stage==RUN_PACKED)j->context.radio.hardware=j->packed_job.context;
+    else if(j->stage==RUN_REGTBL){j->context.regtbl=j->regtbl_job.context;j->context.radio.hardware=j->regtbl_job.context.hardware;}
     if(!r->io){fail(j,AXD_RPOWER_BAD_ARGUMENT);return -1;}
     j->attempted_ops++;
     if(r->io(r->opaque,op,reply)){fail(j,AXD_RPOWER_IO_ERROR);return -1;}
@@ -278,14 +279,29 @@ enum axd_radio_power_phase axd_radio_power_step(struct axd_radio_power *j,axd_d1
     case FINAL_MULTIPLIER:c->rccal_saved_a=(uint16_t)c->rccal_multiplier;j->software_stores++;start_sequence(j,RADIO_FINISH);break;
     case CHANMGR_BIND:if(fact(j,AXD_RPOWER_CHANMGR,c->radio.chanmgr_pointer,1))j->stage=CHANMGR_DATA_BIND;break;
     case CHANMGR_DATA_BIND:if(fact(j,AXD_RPOWER_CHANMGR_DATA,c->radio.chanmgr_data_pointer,1))j->stage=CHANMGR_TEST;break;
-    case CHANMGR_TEST:if(c->radio.chanmgr_data10)dependency(j,AXD_RPOWER_REGTBL_CHANNEL_TAIL);else j->stage=STORE_ON;break;
+    case CHANMGR_TEST:
+        if(c->radio.chanmgr_data10){j->after_child=CHANMGR_CHANNEL;j->stage=REGTBL_BEGIN;}else j->stage=STORE_ON;break;
     case STORE_ON:c->radio.pi47e=1;j->software_stores++;j->stage=CHIP;break;
     case CHIP:
         if(fact(j,AXD_RPOWER_CHIP,c->radio.chip_id,0)){
             if(c->radio.chip_id.value==63178)j->stage=SWITCH_RETURN;
             else dependency(j,AXD_RPOWER_OTHER_CHIP_TAIL);
         }break;
-    case SWITCH_RETURN:j->switch_completed=1;if(j->command==AXD_RPOWER_ON_REGISTERED)dependency(j,AXD_RPOWER_REGTBL_ON_PWRON);else j->stage=FINISH;break;
+    case SWITCH_RETURN:j->switch_completed=1;j->after_child=FINISH;j->stage=j->command==AXD_RPOWER_ON_REGISTERED?REGTBL_BEGIN:FINISH;break;
+    case REGTBL_BEGIN:
+        j->context.regtbl.hardware=j->context.radio.hardware;
+        if(axd_radio_regtbl_begin(&j->regtbl_job,&j->context.regtbl))fail(j,AXD_RPOWER_CHILD_ERROR);
+        else j->stage=RUN_REGTBL;break;
+    case RUN_REGTBL:{
+        enum axd_radio_regtbl_phase p=axd_radio_regtbl_step(&j->regtbl_job,io,&r);
+        j->context.regtbl=j->regtbl_job.context;j->context.radio.hardware=j->regtbl_job.context.hardware;
+        if(j->phase!=AXD_RPOWER_RUNNING)break;
+        if(p==AXD_RRT_TRACE_COMPLETE){j->regtbl_completed=1;j->stage=j->after_child;}
+        else if(p==AXD_RRT_DEPENDENCY)dependency(j,j->after_child==CHANMGR_CHANNEL?AXD_RPOWER_REGTBL_CHANNEL_TAIL:AXD_RPOWER_REGTBL_ON_PWRON);
+        else if(p==AXD_RRT_CANCELLED)j->phase=AXD_RPOWER_CANCELLED;
+        else if(p!=AXD_RRT_RUNNING)fail(j,AXD_RPOWER_CHILD_ERROR);
+        break;}
+    case CHANMGR_CHANNEL:dependency(j,AXD_RPOWER_CHANSPEC_TAIL);break;
     case FINISH:j->phase=AXD_RPOWER_TRACE_COMPLETE;break;
     default:fail(j,AXD_RPOWER_BAD_ARGUMENT);break;
     }
@@ -297,5 +313,6 @@ enum axd_radio_power_phase axd_radio_power_cancel(struct axd_radio_power *j)
     if(j->phase==AXD_RPOWER_RUNNING){j->phase=AXD_RPOWER_CANCELLED;
         if(j->stage==PREFIX || j->stage==RUN_REGISTER)axd_radio_control_cancel(&j->control_job);
         else if(j->stage==RUN_PACKED)axd_phy_table_write_cancel(&j->packed_job);
+        else if(j->stage==RUN_REGTBL)axd_radio_regtbl_cancel(&j->regtbl_job);
     }return j->phase;
 }

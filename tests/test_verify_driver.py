@@ -86,4 +86,25 @@ class VerificationTests(unittest.TestCase):
         self.assertEqual(verifier.compare(before,after),'terminal_changed_requires_review')
         self.assertEqual(verifier.compare([],after),'insufficient_observations')
 
+    def test_hnd_requires_module_and_pinned_identity(self):
+        with patch.object(verifier.sys,'argv',['verify_driver.py','--hnd','hnd.ko']),\
+             contextlib.redirect_stderr(io.StringIO()),self.assertRaises(SystemExit):verifier.main()
+        with tempfile.TemporaryDirectory(prefix='axd-verifier-unit-') as temporary:
+            root=Path(temporary)/'source';root.mkdir()
+            for name in('driver','tests','scripts'):(root/name).mkdir()
+            module=Path(temporary)/'wl.ko';module.write_bytes(b'module')
+            hnd=Path(temporary)/'hnd.ko';hnd.write_bytes(b'not pinned')
+            output=Path(temporary)/'report'
+            def execute(command,folder,label,timeout=1800):
+                raise AssertionError('no check may run after an identity failure')
+            with patch.object(verifier,'ROOT',root),patch.object(verifier,'execute',execute),\
+                 patch.object(verifier,'MODULE_SHA256',verifier.hashlib.sha256(b'module').hexdigest()),\
+                 patch.object(verifier.subprocess,'check_output',return_value='unit-test'),\
+                 patch.object(verifier.sys,'argv',['verify_driver.py','--module',str(module),'--hnd',str(hnd),'--report-dir',str(output)]),\
+                 contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(verifier.main(),1)
+            report=json.loads((output/'report.json').read_text())
+            self.assertEqual(report['checks'][0]['id'],'input_identity')
+            self.assertNotIn('input_hnd',report)
+
 if __name__=='__main__':unittest.main()

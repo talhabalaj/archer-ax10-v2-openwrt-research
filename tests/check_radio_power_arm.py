@@ -77,7 +77,7 @@ def emulate(leaves,mode_data,mode,bus,revision,counter,threshold,read_offset,rep
         elif access==uc.UC_MEM_READ:require(address in fields and fields[address][0]==width,"Uninitialized mode/context read")
         else:require(address==PI+0x104 and width==2,"Unexpected mode context write")
     cpu.hook_add(uc.UC_HOOK_CODE,instruction);cpu.hook_add(uc.UC_HOOK_MEM_READ|uc.UC_HOOK_MEM_WRITE,memory)
-    cpu.emu_start(CODE+0x3000,STOP,timeout=2000000,count=20000)
+    cpu.emu_start(CODE+0x3000,STOP,count=20000)
     require(cpu.reg_read(UC_ARM_REG_PC)==STOP and not remaining,"Mode child/queue did not return")
     return events,int.from_bytes(cpu.mem_read(PI+0x104,2),"little")
 

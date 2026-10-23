@@ -1,11 +1,12 @@
 # Current progress and continuation checkpoint
 
-Updated 2026-10-15. This checkpoint adds a functional verification loop and
-an executable full16-stage synthetic PHY probe on implementation checkpoint
-`830db0b`. The probe reports actual completed required callbacks and the first
-unresolved child separately from passing regression tests. Radio-on/calibration,
-normal RX fill, registered status release/SI and radar/HWOBSS remain the latest
-implemented bodies. These are offline components, not a working radio driver.
+Updated 2026-10-23. This checkpoint advances the full16-stage synthetic PHY
+probe from five to **eleven completed required callbacks**. New real bodies:
+the registered [radio-on register table](docs/RADIO_REGTBL_MODEL.md), the PHY51
+[noise mode child](docs/PHY_NOISE_MODEL.md) with a generic width8
+[table reader](docs/PHY_TABLE_READ_MODEL.md), and
+[status-pool RX fill](docs/DMA_RX_STATUS_FILL_MODEL.md) with its BMAC wrapper.
+These are offline components, not a working radio driver.
 Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
 
 ## Current reset checkpoint
@@ -29,10 +30,17 @@ components, with no hardware backend or claimed working Wi-Fi driver.
 Run `python3 scripts/verify_driver.py --scope target`; see the complete
 [loop and functional gates](docs/VERIFICATION_LOOP.md). The real probe preserves
 all16 required PHY callbacks, uses explicit synthetic50e0/5GHz20MHz/channel36
-inputs and consumes a joined independent1163-event prefix/radio oracle.
+inputs and consumes a joined independent28039-event oracle (the count derives
+from original synthetic table fixtures, so it is not itself a progress metric).
 
-The baseline observation is: **five callbacks completed, current radio7,
-real switch completed, required `wlc_phy_set_regtbl_on_pwron_acphy` unresolved**.
+The current observation is: **eleven callbacks completed (priorities1-12),
+current priority13, required `phy_ac_chanmgr_init_chanspec` unresolved**.
+The published predecessor stopped after five callbacks at the radio7 regtbl
+tail. Because the fixture changed, the verifier reports
+`fixture_changed_requires_review`. An independent review compared the regtbl,
+noise, status-fill and BMAC wrapper bodies with retained assembly (no mismatch)
+and found the new probe inputs to be explicit facts for newly reached stages;
+reverting unrelated label/allocator moves gave the identical observation.
 There is no final return or slice-up store. The command returns2 (incomplete),
 not a functional pass merely because existing tests expect this boundary.
 Unexpected operations, unused read queues, bad input identity, compiler/check
@@ -40,13 +48,21 @@ failures or changing sources invalidate the run. A genuine failed probe retains
 its actual failure diagnostics even when it exits nonzero.
 
 The checkpoint scope also runs the sanitizer suite, ARMv7 builds and explicit
-private-input/Unicorn checks when supplied. The exact staged baseline was run
-through that complete command: all67 executed checks passed (target build/run,
-48-program sanitizer/private-comparison suite,49 C ARMv7 objects plus combined
-header probe, and all14 pinned ARM comparison programs). Its overall result
-remained incomplete/exit2, preserving the real required-child dependency.
-An initial run caught a virtual-environment launcher bug; preserving the supplied
-venv path fixed it, and the complete corrected command was rerun successfully. Reports, logs and build outputs go
+private-input/Unicorn checks when supplied. The exact staged checkpoint passed
+all73 executed checks: target build/run, the53-program sanitizer/private-comparison
+suite,54 C ARMv7 objects plus the combined-header probe, and all15 pinned ARM
+comparison programs. The new status-fill checker executes the real wrapper,
+status fill, idle child and, with an optional pinned `--hnd` module, the actual
+HND address converter for432 positive-pool cases (1603 total, zero stubs).
+Without `--hnd` that positive-pool proof is recorded as `not_run`. The overall
+result remains incomplete/exit2, preserving the real required-child dependency.
+
+Integration fixes in this checkpoint: the five new components were missing from
+the shared runner and header probe (link failure); ARM checkers used a wall-clock
+emulation timeout, so host load could fail an unchanged program, and now stop on
+their instruction-count bound only; the regtbl fixture's descriptors are now
+arbitrary synthetic rows rather than the stock rev51 tuples, and the native9/8
+row counts are enforced exactly. Reports, logs and build outputs go
 to a fresh external directory; optional previous reports compare only coherent
 same-fixture observations. A fixture change requires independent source review.
 Four verifier regression tests reject false success, partial vectors, a2GHz
@@ -62,14 +78,17 @@ or performed by this tool.
 
 ## Resume here
 
-**Next: close the mandatory registered radio-on register-table tail, remaining
-noise/channel/calibration children, status fill and BMAC/IRQ integration.** The
+**Next: implement required priority13 channel initialization, then the
+remaining callbacks16-21, then BMAC/IRQ integration.** The
 [scheduler](docs/PHY_SCHEDULER_MODEL.md) preserves all sixteen required stages.
-The full target still stops at required priority7: its real explicit50e0 switch
-now executes logen, PLL/RCAL/RCCAL and software calibration operations, then
-reaches `wlc_phy_set_regtbl_on_pwron_acphy`. That required child cannot be skipped
-to claim table8 or later target initialization. See
-[radio power](docs/RADIO_POWER_MODEL.md). Actual board ID/subrevision stays unknown.
+`phy_ac_chanmgr_init_chanspec` performs software stores, the optional radar
+indicator, then `wlc_phy_chanspec_set_acphy`: a chanspec store followed by a
+fourteen-entry module table (setup, TPC, radio, PHY, common, noise, RXGCRS,
+radio/PHY/TX/RX tuning, firmware enable, cleanup, BT coexistence), then idle-TSSI
+measurement and PHY51 ADC/AFE/core-to-core branches. The radio and common setup
+modules are large; implement them in execution order so the terminal child
+advances observably. Noise mode-bit0-clear desense and disabled-preempt branches
+also remain. Actual board ID/subrevision stays unknown.
 
 The [packet/status bodies](docs/RX_PROCESSING_MODEL.md) now compose the identified
 [registered release and SI switch/restore](docs/OFFLOAD_STATUS_MODEL.md) when
@@ -120,8 +139,8 @@ means a simulated software trace ended, not that firmware ran or became ready.
 | D0 offline foundation | Implemented and host-tested within stated limits | Four C components, pinned object inspector, synthetic/fault tests and private-input comparisons. |
 | D1 reset/start/acknowledgement | Partial implementation, host-tested | AI-wrapper/startup, PSM control, DMA reset, D11/ChipCommon clock, table/all-core TSSI, target PHY reset and BF cleaner implemented. SI/WL clock and enclosing core-reset composition are implemented offline; higher initialization, runtime/OS resources and MBSS/fatal recovery remain. |
 | D2 complete register/SHM/context contracts | Partial implementation, host-tested | Effective-init now lowers through real physical object writers; addend acquisition, complete register map and SHM ABI remain. |
-| D3 PHY 51/radio/channel/calibration | Partial implementation, host-tested | Full16 init order, table/SMC, radio OFF/register, explicit50e0 switch-on and radar/HWOBSS implemented; registered priority7 regtbl tail, noise/channel/calibration and runtime board inputs remain. |
-| D4 DMA/interrupt/RX | Partial offline implementation | Current descriptors, slot/bulk/status-list/packet bodies, normal RX fill and identified status-release child implemented; native OS/coherency, status fill, BMAC parsing/IRQ and kernel resources remain. |
+| D3 PHY 51/radio/channel/calibration | Partial implementation, host-tested | Full16 init order, table/SMC, radio OFF/register, explicit50e0 switch-on with regtbl, radar/HWOBSS and noise mode child implemented; eleven callbacks complete. Priority13 channel set/tune, callbacks16-21, calibration and runtime board inputs remain. |
+| D4 DMA/interrupt/RX | Partial offline implementation | Current descriptors, slot/bulk/status-list/packet bodies, normal and status-pool RX fill, BMAC fill wrapper and identified status-release child implemented; native OS/coherency, BMAC parsing/IRQ and kernel resources remain. |
 | D5 TX/Linux WLAN integration | Descriptor-only TX leaf implemented offline | Actual descriptor posting is implemented; normal packet TX/completion and Linux WLAN architecture/integration remain. |
 | D6 HE/features/stability | Not implemented | Requires validated baseline driver and hardware tests. |
 | B0 flash/boot investigation | Partial | 21 vendor-declared regions and NOR rootfs corroboration; physical geometry/authentication/calibration coverage unresolved. |
@@ -581,9 +600,9 @@ Critical distinctions to preserve:
 2. Follow the [actual BMAC initialization groups](docs/DRIVER_BMAC_INIT_AUDIT.md)
    and the earlier lifecycle caller that invokes core reset. Reuse the real
    reset/upload/start/object/SMC/table-init and full16 scheduler components.
-   The explicit50e0 logen/PLL/RCAL/RCCAL switch body now exists. Close its
-   required registered `wlc_phy_set_regtbl_on_pwron_acphy` tail, remaining PHY
-   noise/channel/calibration children and reached other-radio dispatches.
+   Radio-on with regtbl and the noise mode child now execute. Implement the
+   required priority13 `wlc_phy_chanspec_set_acphy` module table, remaining
+   noise desense branches, callbacks16-21 and reached other-radio dispatches.
    Implement actual common BT/switch and channel-manager operations; acquire
    observed radio ID/subrevision and reached board inputs. Keep conditional
    VASIP, BMC, coexistence, offload and diagnostic operations explicit; no

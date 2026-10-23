@@ -303,7 +303,7 @@ def emulate(functions, c, deny=None):
         return False
     cpu.hook_add(uc.UC_HOOK_MEM_READ_UNMAPPED, unmapped)
     try:
-        cpu.emu_start(functions[ENTRY]["address"], STOP, timeout=1000000, count=5000)
+        cpu.emu_start(functions[ENTRY]["address"], STOP, count=5000)
     except uc.UcError:
         require(state.get("unmapped", False), "Unexpected emulator fault")
         raise ValueError("Unmapped policy pointer") from None

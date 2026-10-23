@@ -83,7 +83,7 @@ def emulate(function, value, replies, query):
 
     cpu.hook_add(uc.UC_HOOK_CODE, instruction)
     cpu.hook_add(uc.UC_HOOK_MEM_READ | uc.UC_HOOK_MEM_WRITE, memory)
-    cpu.emu_start(CODE, STOP, timeout=1000000, count=1000)
+    cpu.emu_start(CODE, STOP, count=1000)
     require(cpu.reg_read(UC_ARM_REG_PC) == STOP, "Radio leaf did not return within bound")
     require(not remaining, "Unconsumed stock radio replies")
     fields_after = struct.unpack("<HBB", cpu.mem_read(PUBLIC + 0xa, 4))

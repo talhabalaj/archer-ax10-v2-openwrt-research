@@ -25,13 +25,13 @@ sites. Successful common-module attachment registers these16 init functions:
 | 4 | `phy_chanmgr_set_bw` | Different bandwidth reaches missing BMAC reset/bwinit; equal bandwidth runs real SI flags read/check. |
 | 5 | `_phy_init` | Actual type dispatcher slot5 is null in this AC registration; returns0. |
 | 6 | `phy_noise_reset` | Registered `phy_ac_noise_reset`: conditional shared interference-mode store. |
-| 7 | `phy_radio_on` | Registered AC radio-on child, including its real explicit50e0 logen/PLL/RCAL/RCCAL switch; required registered regtbl tail remains explicit. |
+| 7 | `phy_radio_on` | Registered AC radio-on child, including its real explicit50e0 logen/PLL/RCAL/RCCAL switch, then the actual [register-table child](RADIO_REGTBL_MODEL.md). |
 | 8 | `phy_tbl_init` | Real common/AC wrapper and complete implemented target51 table-init child. |
 | 9 | `phy_tpc_init` | Registered `phy_ac_tpc_init`: source-ordered per-core target51 byte pairs. |
 | 10 | `_phy_radar_init` | Non-5GHz guard returns0; 5GHz composes the real target51 radar/MHF child with explicit runtime enable/threshold facts. |
 | 11 | `phy_antdiv_init` | Real clock/MAC guard and PSM children around actual AC setter, whose body is `bx lr`. |
-| 12 | `phy_noise_init` | Real guards, mode selection/clamping and shared store; reached AC mode programming remains a dependency. |
-| 13 | `phy_chanmgr_init_chanspec` | Registered AC channel initialization remains a dependency. |
+| 12 | `phy_noise_init` | Real guards, mode selection/clamping and shared store, the actual [AC mode child](PHY_NOISE_MODEL.md), then a separate PI378 store after it returns. |
+| 13 | `phy_chanmgr_init_chanspec` | Registered AC channel initialization (`wlc_phy_chanspec_set_acphy`: radio_set plus a fourteen-module table) is the first unresolved required child. |
 | 16 | `phy_papdcal_init_cb` | Actual `mov0;return` leaf. This does not implement PAPD calibration. |
 | 19 | `phy_rxgcrs_init` | Registered AC conditional clear and channel-state chanspec store. |
 | 20 | `phy_btcx_init` | Registered AC byte18=FF store. |
@@ -149,15 +149,13 @@ ASan/UBSan tests and freestanding ARMv7 compilation pass. Seven private semantic
 mutants are rejected. This scheduler has not been executed as stock ARM code;
 the existing selected leaf instruction checks remain separate evidence.
 
-The full target vector currently reaches the radio callback after five
-completed prefix callbacks, provided the actual allocations and matching
-bandwidth inputs permit that prefix. Real radio-on remains incomplete and
-prevents table and later stages from being claimed as completed initialization.
-An earlier differing-bandwidth branch is also explicitly unimplemented. Later
-noise mode and channel/tuning/calibration children remain required. The real
-[radar child](PHY_CHANNEL_INIT_MODEL.md) executes at stage10 when reached; it
-does not permit bypassing radio7. A separate [radio-power suite](RADIO_POWER_MODEL.md)
-checks complete switch composition and its actual registered regtbl dependency.
+The full target vector currently completes eleven callbacks (priorities1-12)
+and stops at priority13, provided the actual allocations and matching bandwidth
+inputs permit that prefix. Radio-on with its cold register-table child, table,
+TPC, the real [radar child](PHY_CHANNEL_INIT_MODEL.md), antdiv and the noise mode
+child now execute. An earlier differing-bandwidth branch and the noise mode-bit0
+clear desense branch remain explicitly unimplemented. Channel set/tuning and the
+later callbacks remain required; nothing after priority13 is claimed.
 The scheduler does not acquire actual runtime registry/module pointers, OTP,
 NVRAM, radio ID/subrevision, private payloads or OS resource ownership. Those
 bindings, remaining children, physical timing/calibration, DMA/IRQ/data path and

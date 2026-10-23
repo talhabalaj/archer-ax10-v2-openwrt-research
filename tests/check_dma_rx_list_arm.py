@@ -92,7 +92,7 @@ def emulate(code,status,count,inside,outside,cached,force,budget,current,termina
         else:require((address,width) in [(CTX+0x82,2),(CTX+0xe8,2),(CTX+0x124,4),(CTX+0x128,4),
                     (CTX+0xf0,4),(LINKED+0x82,2),(LINKED+0xf0,4)],'Unexpected context write')
     cpu.hook_add(uc.UC_HOOK_CODE,instruction);cpu.hook_add(uc.UC_HOOK_MEM_READ|uc.UC_HOOK_MEM_WRITE,memory)
-    cpu.emu_start(CODE,STOP,timeout=2000000,count=100000)
+    cpu.emu_start(CODE,STOP,count=100000)
     require(cpu.reg_read(UC_ARM_REG_PC)==STOP and not remaining,'List leaf/read queue did not complete')
     return events,snapshots,writes,(*snapshot(),cpu.reg_read(UC_ARM_REG_R0)),len(instructions)
 

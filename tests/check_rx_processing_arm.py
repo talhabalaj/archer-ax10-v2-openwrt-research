@@ -198,7 +198,7 @@ def emulate(functions,case,deny=None):
             if observed:event(path,W8 if width==1 else W32,address,width,value)
     cpu.hook_add(uc.UC_HOOK_CODE,instruction);cpu.hook_add(uc.UC_HOOK_MEM_READ|uc.UC_HOOK_MEM_WRITE,access)
     entry=STATUS if case['mode'] else PACKET
-    cpu.emu_start(functions[entry]['address'],STOP,timeout=2000000,count=200000)
+    cpu.emu_start(functions[entry]['address'],STOP,count=200000)
     require(cpu.reg_read(UC_ARM_REG_PC)==STOP and not any(queues.values()),'Processing/read queues did not complete')
     return events,snapshots,memory.snapshot(),memory.bytes,len(executed),calls
 

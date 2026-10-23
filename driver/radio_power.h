@@ -2,8 +2,10 @@
 #ifndef AXD_RADIO_POWER_H
 #define AXD_RADIO_POWER_H
 #include "radio_control.h"
+#include "radio_regtbl.h"
 struct axd_radio_power_context {
     struct axd_radio_control_context radio;
+    struct axd_radio_regtbl_context regtbl;
     /* Borrowed immutable private .rodata spans, original LE layout: mode18
      * bytes (three-byte row at0, six-byte rows at4 and12), RCCAL8 bytes
      * (u16 at0 and u32 at4). Outside all jobs until terminal. */
@@ -24,7 +26,8 @@ enum axd_radio_power_error { AXD_RPOWER_NO_ERROR=0, AXD_RPOWER_BAD_ARGUMENT,
 enum axd_radio_power_dependency { AXD_RPOWER_NO_DEPENDENCY=0,
     AXD_RPOWER_METADATA, AXD_RPOWER_PREFIX_CHILD, AXD_RPOWER_REGISTER_CHILD,
     AXD_RPOWER_DIVISION_BY_ZERO, AXD_RPOWER_REGTBL_CHANNEL_TAIL,
-    AXD_RPOWER_REGTBL_ON_PWRON, AXD_RPOWER_OTHER_CHIP_TAIL };
+    AXD_RPOWER_REGTBL_ON_PWRON, AXD_RPOWER_OTHER_CHIP_TAIL,
+    AXD_RPOWER_CHANSPEC_TAIL };
 enum axd_radio_power_field { AXD_RPOWER_NO_FIELD=0, AXD_RPOWER_MODE_DATA,
     AXD_RPOWER_RCCAL_DATA, AXD_RPOWER_AC, AXD_RPOWER_AC_RADIO,
     AXD_RPOWER_AC_DATA, AXD_RPOWER_CLOCK, AXD_RPOWER_CHANMGR,
@@ -38,12 +41,13 @@ struct axd_radio_power {
     struct axd_radio_power_context context;
     struct axd_radio_control control_job;
     struct axd_phy_table_write packed_job;
+    struct axd_radio_regtbl regtbl_job;
     uint32_t difference, quotient, division_result;
     uint16_t sample, rccal_first, rcal_value;
     unsigned mode, stage, after_child, index, core_index, part, sequence;
     unsigned poll_count, pll_reads, rcal_reads, rccal_reads[2];
     unsigned pll_locked, rcal_done, rccal_done, rccal_iteration;
-    unsigned logen_completed, switch_completed, prefix_completed, software_stores;
+    unsigned logen_completed, switch_completed, prefix_completed, regtbl_completed, software_stores;
     unsigned metadata_accesses;
     uint64_t attempted_ops, completed_ops;
 };
@@ -53,9 +57,9 @@ struct axd_radio_power {
  * Core130.0/1 AC PHY51 identity/resources are checked by the existing prefix.
  * A zero chanmgr flag and chip63178 permit actual switch completion; no radio
  * identity is inferred. Nonzero flag reaches real regtbl/channel dependencies.
- * ON_REGISTERED composes common slot1+AC early stores, real switch, then stops
- * at its mandatory post-switch regtbl-on-poweron child. It NEVER completes the
- * registered radio callback until that real remaining child is implemented.
+ * ON_REGISTERED composes common slot1+AC early stores, real switch, then the
+ * actual mandatory post-switch regtbl child. Its explicit runtime/static
+ * inputs are .regtbl; hardware is rebound from canonical .radio.hardware.
  * All whole-ON entries use mode0 exactly; mode parameter must be0 for them.
  * Native poll limits101/101/10000 are preserved, including exhaustion fallbacks.
  * A reached zero divisor reports the unresolved ABI zero-divide dependency.

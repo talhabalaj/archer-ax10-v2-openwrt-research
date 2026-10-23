@@ -2,13 +2,13 @@
 #include "phy_scheduler.h"
 #include <stddef.h>
 enum stage { ENTRY, DISPATCH, CALLBACK, RETURN_CALLBACK, NEXT,
-    RUN_PHY, RUN_TABLE, RUN_RADIO, RUN_MAC, RUN_SI, RUN_CHANNEL, BW_RESULT,
+    RUN_PHY, RUN_TABLE, RUN_RADIO, RUN_MAC, RUN_SI, RUN_CHANNEL, RUN_NOISE, BW_RESULT,
     ANT_READ, ANT_SY, ANT_CHOOSE, ANT_SETTER, ANT_ENABLE,
     CACHE_ALLOC_REUSE, CACHE_REUSE_FLAG, CACHE_REUSE_POINTER,
     CACHE_TABLE, CACHE_TABLE_BYTES, CACHE_ALLOC_TABLE, CACHE_USED, CACHE_POINTER,
     TPC_MIN, TPC_MAX, TPC_NEXT, RX_CLEAR, RX_POINTER, RX_CHANNEL,
     HIRSSI_FIRST, HIRSSI_SECOND, HIRSSI_THIRD, HIRSSI_FOURTH,
-    NOISE_MODE_STORE, NOISE_MODE_CHILD, SLICE, SLICE_STORE, FINISH };
+    NOISE_MODE_STORE, NOISE_MODE_CHILD, NOISE_MODE_RESULT, SLICE, SLICE_STORE, FINISH };
 static int callback_valid(enum axd_phy_init_callback c)
 {
     return c==AXD_INIT_UNKNOWN || c==AXD_INIT_CACHE || (c>=AXD_INIT_ANALOG && c<=AXD_INIT_CHANSPEC) ||
@@ -87,6 +87,7 @@ static int d11_io(void *opaque,const struct axd_d11_operation *d,uint32_t *value
     else if(j->stage==RUN_MAC)j->context.table.hardware.mac=j->mac_job.context;
     else if(j->stage==RUN_RADIO){j->context.radio_power=j->radio_job.context;j->context.radio=j->radio_job.context.radio;j->context.table.hardware=j->radio_job.context.radio.hardware;}
     else if(j->stage==RUN_CHANNEL){j->context.channel=j->channel_job.context;j->context.table.hardware=j->channel_job.context.hardware;}
+    else if(j->stage==RUN_NOISE){j->context.noise=j->noise_job.context;j->context.channel=j->noise_job.context.channel;j->context.radio=j->noise_job.context.radio;j->context.table.hardware=j->noise_job.context.hardware;}
     o.path=AXD_PS_D11;o.d11=*d;result=perform(r,&o,&reply);*value=reply.value;return result;
 }
 static int table_io(void *opaque,const struct axd_phy_init_operation *a,struct axd_phy_init_reply *value)
@@ -105,7 +106,7 @@ static void finish_child(struct axd_phy_scheduler *j,unsigned done,unsigned miss
 {
     if(j->phase!=AXD_PS_RUNNING)return;
     if(done)j->stage=j->after_child;
-    else if(missing)dependency(j,j->stage==RUN_CHANNEL?AXD_PS_RADAR_CHILD:j->stage==RUN_RADIO?AXD_PS_RADIO_CHILD:
+    else if(missing)dependency(j,j->stage==RUN_NOISE?AXD_PS_NOISE_MODE:j->stage==RUN_CHANNEL?AXD_PS_RADAR_CHILD:j->stage==RUN_RADIO?AXD_PS_RADIO_CHILD:
         j->stage==RUN_TABLE?AXD_PS_TABLE_CHILD:j->stage==RUN_MAC?AXD_PS_MAC_CHILD:AXD_PS_SI_CHILD);
     else if(cancelled)j->phase=AXD_PS_CANCELLED;
     else fail(j,AXD_PS_CHILD_ERROR);
@@ -128,6 +129,10 @@ static void run_child(struct axd_phy_scheduler *j,struct relay *r)
         enum axd_phy_channel_phase p=axd_phy_channel_init_step(&j->channel_job,d11_io,r);
         j->context.channel=j->channel_job.context;j->context.table.hardware=j->channel_job.context.hardware;
         if(p!=AXD_CHANNEL_RUNNING)finish_child(j,p==AXD_CHANNEL_TRACE_COMPLETE,p==AXD_CHANNEL_DEPENDENCY,p==AXD_CHANNEL_CANCELLED);
+    }else if(j->stage==RUN_NOISE){
+        enum axd_phy_noise_phase p=axd_phy_noise_step(&j->noise_job,d11_io,r);
+        j->context.noise=j->noise_job.context;j->context.channel=j->noise_job.context.channel;j->context.radio=j->noise_job.context.radio;j->context.table.hardware=j->noise_job.context.hardware;
+        if(p!=AXD_NOISE_RUNNING)finish_child(j,p==AXD_NOISE_TRACE_COMPLETE,p==AXD_NOISE_DEPENDENCY,p==AXD_NOISE_CANCELLED);
     }else if(j->stage==RUN_MAC){
         enum axd_psm_phase p=axd_psm_control_step(&j->mac_job,d11_io,r);
         j->context.table.hardware.mac=j->mac_job.context;
@@ -272,7 +277,7 @@ enum axd_phy_scheduler_phase axd_phy_scheduler_step(struct axd_phy_scheduler *j,
         if(j->callback_result){j->return_value=j->callback_result;j->return_valid=1;j->phase=AXD_PS_TRACE_COMPLETE;}
         else {j->callbacks_completed++;j->stage=NEXT;}break;
     case NEXT:j->index++;j->stage=j->index<j->registry.init_count?DISPATCH:SLICE;break;
-    case RUN_PHY:case RUN_TABLE:case RUN_RADIO:case RUN_MAC:case RUN_SI:case RUN_CHANNEL:run_child(j,&r);break;
+    case RUN_PHY:case RUN_TABLE:case RUN_RADIO:case RUN_MAC:case RUN_SI:case RUN_CHANNEL:case RUN_NOISE:run_child(j,&r);break;
     case BW_RESULT:
         if(known(j,c->hardware_chanspec,65535,0)){
             uint32_t flags=0;
@@ -299,7 +304,12 @@ enum axd_phy_scheduler_phase axd_phy_scheduler_step(struct axd_phy_scheduler *j,
     case NOISE_MODE_STORE:
         c->interference_current=(struct axd_wake_u32){j->selected_mode,1};
         if(j->current==AXD_INIT_NOISE_RESET)complete(j);else j->stage=NOISE_MODE_CHILD;break;
-    case NOISE_MODE_CHILD:dependency(j,AXD_PS_NOISE_MODE);break;
+    case NOISE_MODE_CHILD:
+        c->noise.hardware=c->table.hardware;c->noise.channel=c->channel;c->noise.radio=c->radio;
+        c->noise.chanspec=c->chanspec;c->noise.shared_mode=c->interference_current;
+        if(axd_phy_noise_begin(&j->noise_job,AXD_NOISE_INIT_MODE,j->selected_mode,&c->noise))fail(j,AXD_PS_CHILD_ERROR);
+        else {j->stage=RUN_NOISE;j->after_child=NOISE_MODE_RESULT;}break;
+    case NOISE_MODE_RESULT:c->noise_mode378=j->selected_mode;complete(j);break;
     case TPC_MIN:c->tpc_min[j->core_index]=0x32;j->stage=TPC_MAX;break;
     case TPC_MAX:c->tpc_max[j->core_index]=c->tpc_min[j->core_index];j->stage=TPC_NEXT;break;
     case TPC_NEXT:
@@ -334,6 +344,7 @@ enum axd_phy_scheduler_phase axd_phy_scheduler_cancel(struct axd_phy_scheduler *
         j->phase=AXD_PS_CANCELLED;axd_phy_init_cancel(&j->table_job);axd_phy_register_cancel(&j->phy_job);
         axd_psm_control_cancel(&j->mac_job);axd_radio_power_cancel(&j->radio_job);axd_si_core_cancel(&j->si_job);
         axd_phy_channel_init_cancel(&j->channel_job);
+        axd_phy_noise_cancel(&j->noise_job);
     }
     return j->phase;
 }

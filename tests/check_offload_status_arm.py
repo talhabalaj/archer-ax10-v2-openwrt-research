@@ -91,7 +91,7 @@ def emulate(code,count,consumer,producer,index,initial,deny=None):
             require(address==OFFLOAD+0x68 and width==4,'Unknown software store');stores.append(value)
         else:require(width==4 and address in fields,'Unsupplied context field')
     cpu.hook_add(uc.UC_HOOK_CODE,instruction);cpu.hook_add(uc.UC_HOOK_MEM_READ|uc.UC_HOOK_MEM_WRITE,memory)
-    cpu.emu_start(CODE,STOP,timeout=2000000,count=1500000)
+    cpu.emu_start(CODE,STOP,count=1500000)
     require(cpu.reg_read(UC_ARM_REG_PC)==STOP,'No actual return')
     return events,int.from_bytes(cpu.mem_read(OFFLOAD+0x68,4),'little'),bytes(cpu.mem_read(BITMAP,len(initial))),len(stores),len(instructions)
 

@@ -20,6 +20,7 @@ import time
 
 ROOT=Path(__file__).resolve().parents[1]
 MODULE_SHA256='8f35f1afa1f228a3a74cab2b8cc6315a17489e76547396d8e2faf66045bb332c'
+HND_SHA256='d05ff061b3a636630955a13fdd20a953f3dfb07ee92904a987dd4c77b648b45a'
 PRIORITIES=[1,3,4,5,6,7,8,9,10,11,12,13,16,19,20,21]
 ARM_CHECKERS=(
     'check_phy_arm.py','check_phy_composed_arm.py','check_wake_policy_arm.py',
@@ -28,7 +29,7 @@ ARM_CHECKERS=(
     'check_radio_identity_arm.py','check_radio_control_arm.py',
     'check_dma_rx_list_arm.py','check_rx_processing_arm.py',
     'check_radio_power_arm.py','check_dma_rx_fill_idle_arm.py',
-    'check_offload_status_arm.py')
+    'check_offload_status_arm.py','check_status_fill_arm.py')
 
 def fingerprint(paths):
     digest=hashlib.sha256()
@@ -104,10 +105,12 @@ def main():
     parser.add_argument('--scope',choices=('target','checkpoint'),default='target')
     parser.add_argument('--module',type=Path,help='Optional caller-supplied pinned wl.ko')
     parser.add_argument('--unicorn-python',type=Path,help='Python containing pinned Unicorn2.1.4; requires --module')
+    parser.add_argument('--hnd',type=Path,help='Optional pinned hnd.ko; closes actual positive status-pool ARM translation; requires --module')
     parser.add_argument('--report-dir',type=Path,help='NEW directory outside checkout; default external temporary directory')
     parser.add_argument('--previous-report',type=Path,help='Prior report.json for same-fixture gate comparison')
     args=parser.parse_args()
     if args.unicorn_python and not args.module:parser.error('--unicorn-python requires --module')
+    if args.hnd and not args.module:parser.error('--hnd requires --module')
     if args.report_dir:
         folder=args.report_dir.resolve()
         if folder==ROOT or ROOT in folder.parents:parser.error('Report directory must be outside checkout')
@@ -136,6 +139,11 @@ def main():
             digest=hashlib.sha256(args.module.read_bytes()).hexdigest()
             if digest!=MODULE_SHA256:raise ValueError('identity')
             report['input']={'name':'wl.ko','sha256':digest}
+            if args.hnd:
+                if args.hnd.stat().st_size>64*1024*1024:raise ValueError('size')
+                hnd=hashlib.sha256(args.hnd.read_bytes()).hexdigest()
+                if hnd!=HND_SHA256:raise ValueError('identity')
+                report['input_hnd']={'name':'hnd.ko','sha256':hnd}
         except (OSError,ValueError):
             report['checks'].append({'id':'input_identity','state':'failed','reason':'Pinned input identity was not established'})
             check_failed=True
@@ -169,9 +177,12 @@ def main():
             for name in ARM_CHECKERS:
                 # Preserve the venv launcher path: resolving its symlink to the
                 # global Python executable discards that environment's modules.
-                result=execute([str(args.unicorn_python.absolute()),str(ROOT/'tests'/name),str(args.module.resolve())],folder,name.removesuffix('.py'))
+                extra=['--hnd',str(args.hnd.resolve())] if name=='check_status_fill_arm.py' and args.hnd else []
+                result=execute([str(args.unicorn_python.absolute()),str(ROOT/'tests'/name),str(args.module.resolve()),*extra],folder,name.removesuffix('.py'))
                 report['checks'].append(result)
                 if result['state']!='passed':check_failed=True;break
+            if not check_failed and not args.hnd:
+                report['checks'].append({'id':'status_fill_positive_pool_arm','state':'not_run','reason':'Pinned hnd.ko required for actual positive-pool address translation'})
         else:report['checks'].append({'id':'stock_arm_comparisons','state':'not_run','reason':'Pinned input and Unicorn interpreter required, or an earlier check failed'})
     report['target_initialization']={'state':target_state,'scope':'Complete16-stage synthetic PHY vector only; not enclosing BMAC initialization or device readiness'}
     report['functional_gates']=[

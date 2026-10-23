@@ -8,8 +8,9 @@ does not report a completed radio-on operation or a ready radio.
 
 The higher [radio-power composition](RADIO_POWER_MODEL.md) now consumes this
 exact prefix boundary and implements the actual logen/PLL/RCAL/RCCAL continuation.
-It can complete the explicit50e0 target switch body; registered radio-on still
-requires its mandatory post-switch register-table child. The incomplete ON
+It can complete the explicit50e0 target switch body and now composes the
+[actual mandatory register-table child](RADIO_REGTBL_MODEL.md). Registered
+radio-on can return when all reached inputs are bound. The incomplete ON
 statements below describe this lower `radio_control` API itself.
 
 The source is the pinned stock `wl.ko`, SHA-256
@@ -105,10 +106,10 @@ their first required unimplemented child. Consequently every ON command in
 this lower API remains incomplete.
 
 That remains the lower API's boundary. The scheduler now uses `radio_power`
-to execute the recovered continuation; its remaining priority7 dependency is
-the actual registered wrapper's post-switch register-table operation. See the
-linked addendum for exact polls, calibration stores, private-span provenance
-and the distinction between switch completion and callback completion.
+to execute the recovered continuation and actual post-switch register-table
+operation. See the linked addenda for exact polls, calibration stores,
+private-span provenance and required runtime bindings. Completion of that
+callback remains one stage of the full initialization vector.
 
 ## Actual radio register protocol
 

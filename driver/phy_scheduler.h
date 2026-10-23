@@ -4,6 +4,7 @@
 #include "phy_init.h"
 #include "radio_power.h"
 #include "phy_channel_init.h"
+#include "phy_noise.h"
 #include "si_core.h"
 
 #define AXD_PHY_REGISTRY_CAPACITY 23u
@@ -56,6 +57,7 @@ struct axd_phy_scheduler_context {
      * spans/calibration fields live here, with .radio synchronized on dispatch. */
     struct axd_radio_power_context radio_power;
     struct axd_phy_channel_context channel;
+    struct axd_phy_noise_context noise;
     struct axd_phy_scheduler_cache cache;
     struct axd_wake_u32 allocator, flags3b0, chanspec, bandwidth_state;
     struct axd_wake_u32 hardware_chanspec, interference2g, interference5g;
@@ -68,6 +70,7 @@ struct axd_phy_scheduler_context {
     uint8_t tpc_min[4], tpc_max[4], btcx_byte18, rxgcrs_bytea8;
     uint8_t hirssi_byte16, hirssi_byte17;
     uint16_t hirssi_half18, hirssi_half1a, channel_state_chanspec;
+    uint32_t noise_mode378;
 };
 enum axd_phy_scheduler_phase { AXD_PS_INVALID=0, AXD_PS_RUNNING,
     AXD_PS_TRACE_COMPLETE, AXD_PS_DEPENDENCY, AXD_PS_FAILED, AXD_PS_CANCELLED };
@@ -103,6 +106,7 @@ struct axd_phy_scheduler {
     struct axd_phy_init table_job;
     struct axd_radio_power radio_job;
     struct axd_phy_channel_init channel_job;
+    struct axd_phy_noise noise_job;
     struct axd_phy_register phy_job;
     struct axd_psm_control mac_job;
     struct axd_si_core_job si_job;

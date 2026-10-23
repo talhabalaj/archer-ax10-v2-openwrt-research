@@ -129,7 +129,7 @@ def emulate(function, command, selector, mask, value, bookkeeping, replies):
 
     cpu.hook_add(uc.UC_HOOK_CODE, instruction)
     cpu.hook_add(uc.UC_HOOK_MEM_READ | uc.UC_HOOK_MEM_WRITE, memory)
-    cpu.emu_start(CODE, STOP, timeout=1000000, count=1000)
+    cpu.emu_start(CODE, STOP, count=1000)
     require(cpu.reg_read(UC_ARM_REG_PC) == STOP, "Function did not return within bound")
     require(not remaining, "Unconsumed ARM read replies")
     return events, cpu.reg_read(UC_ARM_REG_R0) & 0xffff, int.from_bytes(cpu.mem_read(PI + 0x104, 2), "little")

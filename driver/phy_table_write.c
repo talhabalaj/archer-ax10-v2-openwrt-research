@@ -181,6 +181,14 @@ int axd_phy_packed_write_begin(struct axd_phy_table_write *j, uint16_t selector,
     j->direct = 1; j->packed_selector = selector; j->packed_value = value; j->stage = PACKED;
     return 0;
 }
+int axd_phy_table_write_ext_begin(struct axd_phy_table_write *j,
+                                   const struct axd_phy_table_write_request *request,
+                                   const struct axd_phy_table_context *context)
+{
+    if (axd_phy_table_write_begin(j, request, context) != 0) return -1;
+    j->stage = PROGRAM_ID;
+    return 0;
+}
 enum axd_phy_table_write_phase axd_phy_table_write_step(struct axd_phy_table_write *j,
                                                         axd_d11_io_fn io, void *context)
 {
