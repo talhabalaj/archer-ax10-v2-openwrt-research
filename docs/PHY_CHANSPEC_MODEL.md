@@ -1,4 +1,4 @@
-# Registered PHY51 channel initialization: module 0
+# Registered PHY51 channel initialization: modules 0-2
 
 [phy_chanspec.c](../driver/phy_chanspec.c) implements the first part of the
 priority13 callback `phy_ac_chanmgr_init_chanspec` for core130.0/1 AC PHY51,
@@ -20,8 +20,12 @@ writes the argument back to PI38c, then walks a fourteen-entry, null-terminated
 module table in `.data`: setup, setup_tpc, setup_radio, setup_phy, setup_cmn,
 noise, setup_rxgcrs, tune_radio, tune_phy, tune_txpath, tune_rxpath, fw_enab,
 cleanup and btcx. Idle-TSSI measurement and PHY51 ADC/AFE/core-to-core branches
-follow. Only module0, `chanspec_setup`, is implemented. Module1 `chanspec_setup_tpc`
-is the reported gate; nothing after it is claimed.
+follow. Module0 `chanspec_setup` is implemented. Module1 `chanspec_setup_tpc` is
+its actual `rev>46` return for PHY51. Module2 `chanspec_setup_radio` dispatches on
+the explicit radio ID at public+0xa: 2069 is an explicit gate, other IDs return,
+and 50e0 runs the real resetcca then reaches
+`wlc_phy_chanspec_radio20704_setup(PI, chanspec, AC flags bits1/2)`, the reported
+gate. Nothing after it is claimed; no radio ID is inferred from the board.
 
 ## Module0 order
 
@@ -88,7 +92,7 @@ count stores are modeled as one software store. The BMAC chanspec word and PI396
 bandwidth state are rebound from and published to the scheduler's canonical
 values, so callback4's bandwidth check and callback13's set share one state.
 
-The full-vector probe executes module0 inside callback13 and consumes its
-joined independent trace; its reported terminal child moved from the opaque
-callback name to `chanspec_setup_tpc`. Completed callbacks remain eleven:
+The full-vector probe executes modules0-2 inside callback13 and consumes its
+joined independent trace (28417 events); its reported terminal child moved from
+the opaque callback name to `wlc_phy_chanspec_radio20704_setup`. Completed callbacks remain eleven:
 callback13 returns only after all fourteen modules and its epilogue exist.

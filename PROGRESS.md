@@ -6,8 +6,8 @@ the registered [radio-on register table](docs/RADIO_REGTBL_MODEL.md), the PHY51
 [noise mode child](docs/PHY_NOISE_MODEL.md) with a generic width8
 [table reader](docs/PHY_TABLE_READ_MODEL.md), and
 [status-pool RX fill](docs/DMA_RX_STATUS_FILL_MODEL.md) with its BMAC wrapper.
-Callback13 now executes its real module0 and
-[stops at module1](docs/PHY_CHANSPEC_MODEL.md) `chanspec_setup_tpc`.
+Callback13 now executes its real modules0-2 and
+[stops inside module2](docs/PHY_CHANSPEC_MODEL.md) at `wlc_phy_chanspec_radio20704_setup`.
 These are offline components, not a working radio driver.
 Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
 
@@ -36,8 +36,8 @@ inputs and consumes a joined independent28039-event oracle (the count derives
 from original synthetic table fixtures, so it is not itself a progress metric).
 
 The current observation is: **eleven callbacks completed (priorities1-12),
-current priority13 executing its real module0, required module1
-`chanspec_setup_tpc` unresolved** (28374 trace events consumed). Completed
+current priority13 executing its real modules0-2, required
+`wlc_phy_chanspec_radio20704_setup` unresolved** (28417 trace events consumed). Completed
 callbacks stay at eleven until callback13 returns after all fourteen modules.
 The published predecessor stopped after five callbacks at the radio7 regtbl
 tail. Because the fixture changed, the verifier reports
@@ -89,10 +89,12 @@ remaining callbacks16-21, then BMAC/IRQ integration.** The
 indicator, then `wlc_phy_chanspec_set_acphy`: a chanspec store followed by a
 fourteen-entry module table (setup, TPC, radio, PHY, common, noise, RXGCRS,
 radio/PHY/TX/RX tuning, firmware enable, cleanup, BT coexistence), then idle-TSSI
-measurement and PHY51 ADC/AFE/core-to-core branches. Module0 is implemented
-([model](docs/PHY_CHANSPEC_MODEL.md)); next is module1 `chanspec_setup_tpc`,
-then the large radio and common setup modules, in execution order so the
-reported terminal child keeps advancing. Noise mode-bit0-clear desense and disabled-preempt branches
+measurement and PHY51 ADC/AFE/core-to-core branches. Modules0-2 are implemented
+([model](docs/PHY_CHANSPEC_MODEL.md)) up to module2's radio50e0 child. Next is
+`wlc_phy_chanspec_radio20704_setup`: its5GHz radio writes (channel tune-table
+rows are a private caller-supplied span), the fixed-point `pll_tune` (using HND
+math helpers; a pinned ARM differential is planned) and VCO calibration, then
+modules3-13 in execution order so the reported terminal child keeps advancing. Noise mode-bit0-clear desense and disabled-preempt branches
 also remain. Actual board ID/subrevision stays unknown.
 
 The [packet/status bodies](docs/RX_PROCESSING_MODEL.md) now compose the identified
@@ -606,8 +608,8 @@ Critical distinctions to preserve:
    and the earlier lifecycle caller that invokes core reset. Reuse the real
    reset/upload/start/object/SMC/table-init and full16 scheduler components.
    Radio-on with regtbl, the noise mode child and callback13 module0 now
-   execute. Implement the remaining thirteen `wlc_phy_chanspec_set_acphy` modules
-   from module1 `chanspec_setup_tpc`, remaining
+   execute. Implement `wlc_phy_chanspec_radio20704_setup` and the remaining
+   `wlc_phy_chanspec_set_acphy` modules3-13, remaining
    noise desense branches, callbacks16-21 and reached other-radio dispatches.
    Implement actual common BT/switch and channel-manager operations; acquire
    observed radio ID/subrevision and reached board inputs. Keep conditional

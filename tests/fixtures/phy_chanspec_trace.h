@@ -9,7 +9,7 @@
  * production output never generates it. Replies are explicit and fresh. */
 struct cs_event {enum axd_phy_chanspec_path path;unsigned kind;uint32_t offset,value,reply;};
 struct cs_script {struct cs_event *events;size_t count,capacity;};
-struct cs_options {unsigned cores,mac_enabled,cca_sample,sync_guard,setup_guard,core_reply,phymode;};
+struct cs_options {unsigned cores,mac_enabled,cca_sample,sync_guard,setup_guard,core_reply,phymode,module2_cca;};
 static void cs_add(struct cs_script *s,enum axd_phy_chanspec_path p,unsigned k,uint32_t o,uint32_t v,uint32_t r)
 {assert(s->count<s->capacity);s->events[s->count++]=(struct cs_event){p,k,o,v,r};}
 static void cs_d(struct cs_script *s,enum axd_d11_kind k,uint32_t o,uint32_t v,uint32_t r){cs_add(s,AXD_CS_D11,k,o,v,r);}
@@ -68,6 +68,8 @@ static void cs_module0(struct cs_script *s,const struct cs_options *o)
     cs_read(s,0xb,o->core_reply);
     cs_cflags(s,0x8c0,0x40);cs_delay(s,2);cs_modify(s,3,0x100,0x100);
 }
+/* Module1 (setup_tpc) is a rev>46 return; module2 radio50e0 runs resetcca first. */
+static void cs_module2(struct cs_script *s,const struct cs_options *o){cs_resetcca(s,(uint16_t)o->module2_cca);}
 static struct axd_phy_chanspec_context cs_context(void)
 {
     struct axd_phy_chanspec_context c={0};struct axd_radio_control_context *a=&c.radio;

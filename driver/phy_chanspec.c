@@ -6,7 +6,7 @@ enum stage { P_DATA, P_AC, P_RADAR, P_RADAR_INFO, RADIO_SET, MODULE0,
     SYNC_RADIO, SYNC_16B, SYNC_ENABLE,
     SETUP_READ, SETUP_SET, CORE_MODE, CORE_READ, CORE_SHARED, CORE_BITMAP,
     TEMP, TEMP_STATE, TEMP_AGAIN, BAND, BW_PHY, BW_TYPE, BW_RESET, BWINIT,
-    AC_BWINIT, CHIP, SETUP_DELAY, SETUP_TAIL, MODULE1,
+    AC_BWINIT, CHIP, SETUP_DELAY, SETUP_TAIL, MODULE1, MODULE2, RADIO20704,
     CCA_READ, CCA_SY, CCA_SHORT, CCA_FGC_ON, CCA_D1, CCA_ST6, CCA_W6, CCA_D2,
     CCA_TOGGLE_SET, CCA_D3, CCA_TOGGLE_CLEAR, CCA_D10, CCA_ST2, CCA_W2,
     CCA_FGC_OFF, CCA_D4, CCA_ST_RESTORE, CCA_W_RESTORE, CCA_TAIL,
@@ -206,7 +206,17 @@ static void setup_step(struct axd_phy_chanspec *j)
     case SETUP_TAIL:
         c->ac_flags_be|=2;j->software_stores++;
         phy(j,AXD_PHY_MODIFY,3,0x100,(c->chanspec.value&0xc000u)?0x100:0,MODULE1);break;
-    case MODULE1:j->modules_completed=1;dependency(j,AXD_CS_MODULE_SETUP_TPC);break;
+    /* chanspec_setup_tpc returns immediately for PHY revisions above46. */
+    case MODULE1:j->modules_completed=1;if(c->hardware.phy.phy_revision>46){j->modules_completed=2;j->stage=MODULE2;}else fail(j,AXD_CS_UNSUPPORTED);break;
+    case MODULE2:
+        if(fact(j,AXD_CS_RADIO_ID,c->radio.radio_id,0xffff,0)){
+            if(c->radio.radio_id.value==0x2069)dependency(j,AXD_CS_RADIO2069_SETUP);
+            else if(c->radio.radio_id.value==0x50e0){j->after_cca=RADIO20704;j->stage=CCA_READ;}
+            else {j->modules_completed=3;dependency(j,AXD_CS_MODULE_SETUP_PHY);}
+        }break;
+    case RADIO20704:
+        /* Third argument: AC flags bits1/2 (set by module0) as a boolean. */
+        j->radio20704_argument=(c->ac_flags_be&6u)!=0;dependency(j,AXD_CS_RADIO20704_SETUP);break;
     default:fail(j,AXD_CS_BAD_ARGUMENT);break;
     }
 }
@@ -259,7 +269,7 @@ enum axd_phy_chanspec_phase axd_phy_chanspec_step(struct axd_phy_chanspec *j,axd
     r.j=j;r.io=io;r.opaque=opaque;c=&j->context;
     if(j->stage>=RUN_PHY){child(j,&r);return j->phase;}
     if(j->stage>=SYNC_READ && j->stage<=SYNC_ENABLE){sync_step(j);return j->phase;}
-    if(j->stage>=SETUP_READ && j->stage<=MODULE1){setup_step(j);return j->phase;}
+    if(j->stage>=SETUP_READ && j->stage<=RADIO20704){setup_step(j);return j->phase;}
     if(j->stage>=CCA_READ && j->stage<=CCA_TAIL){cca_step(j);return j->phase;}
     switch(j->stage){
     case P_DATA:

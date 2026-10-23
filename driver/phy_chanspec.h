@@ -42,12 +42,12 @@ enum axd_phy_chanspec_error { AXD_CS_NO_ERROR=0, AXD_CS_BAD_ARGUMENT, AXD_CS_BIN
 enum axd_phy_chanspec_dependency { AXD_CS_NO_DEPENDENCY=0, AXD_CS_METADATA,
     AXD_CS_MAC_CHILD, AXD_CS_RESOURCE_CHILD, AXD_CS_BMAC_PHY_RESET,
     AXD_CS_PHY_INIT_FALLBACK, AXD_CS_CHIP4335_BRANCH,
-    AXD_CS_MODULE_SETUP_TPC };
+    AXD_CS_RADIO2069_SETUP, AXD_CS_RADIO20704_SETUP, AXD_CS_MODULE_SETUP_PHY };
 enum axd_phy_chanspec_field { AXD_CS_NO_FIELD=0, AXD_CS_CHANSPEC, AXD_CS_COMMON,
     AXD_CS_RADAR, AXD_CS_RADAR_INFO, AXD_CS_PHY, AXD_CS_AC, AXD_CS_CHANMGR,
     AXD_CS_CHANMGR_DATA, AXD_CS_CHIP, AXD_CS_BAND_PHY, AXD_CS_BAND_TYPE,
     AXD_CS_BMAC_CHANSPEC, AXD_CS_BWINIT, AXD_CS_AC_BWINIT, AXD_CS_PHYMODE,
-    AXD_CS_SHARED_PI, AXD_CS_TEMP, AXD_CS_TEMP_STATE, AXD_CS_SI_MAPPING };
+    AXD_CS_SHARED_PI, AXD_CS_TEMP, AXD_CS_TEMP_STATE, AXD_CS_SI_MAPPING, AXD_CS_RADIO_ID };
 struct axd_phy_chanspec {
     enum axd_phy_chanspec_phase phase; enum axd_phy_chanspec_error error;
     enum axd_phy_chanspec_dependency dependency; enum axd_phy_chanspec_field last_field;
@@ -58,6 +58,7 @@ struct axd_phy_chanspec {
     struct axd_si_core_job si_job;
     struct axd_d11_operation raw;
     uint32_t main_control;
+    uint8_t radio20704_argument;
     uint16_t sync_guard, cca_sample, setup_guard;
     unsigned stage, after_child, after_cca, core_index, part, mac_enabled, cca_valid;
     unsigned modules_completed, sync_completed, cca_completed, corestate_completed;
@@ -69,8 +70,11 @@ struct axd_phy_chanspec {
  * (argument0) with fresh MAC-control sample and real PSM suspend/enable,
  * guarded resetcca with real PHY-clock force/release cflags, phycorestate
  * (fresh PHY0b core count, bitmap, tempsense) and BMAC bandwidth set/reset
- * with the registered bwinit binding. Module1 chanspec_setup_tpc is then a
- * DEPENDENCY: the callback never returns until all fourteen modules exist.
+ * with the registered bwinit binding. Module1 chanspec_setup_tpc is its actual
+ * rev>46 return. Module2 dispatches on the explicit radio ID: 50e0 runs the
+ * real resetcca then reaches wlc_phy_chanspec_radio20704_setup, a DEPENDENCY;
+ * 2069 is a DEPENDENCY; other IDs return to module3 setup_phy, a DEPENDENCY. The callback never returns until
+ * all fourteen modules exist.
  * Other PHY revisions, the4335 branch, BMAC PHY reset and a null bwinit slot
  * (phy_init fallback) are explicit gates, not successful no-ops. */
 int axd_phy_chanspec_begin(struct axd_phy_chanspec *,const struct axd_phy_chanspec_context *);

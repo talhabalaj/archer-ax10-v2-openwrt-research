@@ -30,8 +30,9 @@ static size_t run(struct axd_phy_chanspec *j,const struct cs_script *s,size_t fa
     assert(j->attempted_ops==f.cursor && j->completed_ops==f.cursor-(fail && f.cursor==fail));
     return f.cursor;
 }
-static const struct cs_options base={2,0,0x11,0x1232,1,2,0};
-static size_t expect(struct cs_script *s,const struct cs_options *o){s->count=0;cs_module0(s,o);return s->count;}
+static const struct cs_options base={2,0,0x11,0x1232,1,2,0,0x12};
+static size_t n0;
+static size_t expect(struct cs_script *s,const struct cs_options *o){s->count=0;cs_module0(s,o);n0=s->count;cs_module2(s,o);return s->count;}
 int main(void)
 {
     struct cs_script s={0};struct axd_phy_chanspec j;struct axd_phy_chanspec_context c=cs_context();
@@ -39,8 +40,9 @@ int main(void)
     s.capacity=4096;s.events=malloc(s.capacity*sizeof(*s.events));assert(s.events);
     n=expect(&s,&o);
     assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n);
-    assert(j.phase==AXD_CS_DEPENDENCY && j.dependency==AXD_CS_MODULE_SETUP_TPC && j.modules_completed==1);
-    assert(j.sync_completed && j.cca_completed==1 && j.corestate_completed && j.bandwidth_completed);
+    assert(j.phase==AXD_CS_DEPENDENCY && j.dependency==AXD_CS_RADIO20704_SETUP && j.modules_completed==2);
+    assert(j.cca_completed==2 && j.radio20704_argument==1);
+    assert(j.sync_completed && j.corestate_completed && j.bandwidth_completed);
     assert(j.context.chanmgr_data11==0 && j.context.ac_flags_be==7 && j.context.radar_indicator==1);
     assert(j.context.chanmgr_byte29==1 && j.context.band_byte9==0 && j.context.core_bitmap18==3);
     assert(j.context.tempsense_byte5==0x33 && j.context.common_previous_chanspec==0xd024);
@@ -53,7 +55,7 @@ int main(void)
     }
     /* cca sample with bit1 set omits the conditional 1us delay. */
     o=base;o.cca_sample=0x13;n=expect(&s,&o);assert(!axd_phy_chanspec_begin(&j,&c));
-    assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_MODULE_SETUP_TPC);
+    assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_RADIO20704_SETUP);
     /* Fresh PHY0b sample drives the stored count: 7>>1 under nonzero phymode. */
     o=base;o.core_reply=0xff;n=expect(&s,&o);c=cs_context();c.phymode.value=1;
     assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n);
@@ -62,7 +64,7 @@ int main(void)
     o=base;n=expect(&s,&o);c=cs_context();c.phymode.value=7;c.shared_current_pi.value=0x1111;
     assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n);
     /* A null current-PI word is only compared, never dereferenced. */
-    c.shared_current_pi.value=0;assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_MODULE_SETUP_TPC);
+    c.shared_current_pi.value=0;assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.dependency==AXD_CS_RADIO20704_SETUP);
     {unsigned stores=j.software_stores;c.shared_current_pi=c.radio.phy_pointer;
         assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==n && j.software_stores==stores-1);}
     /* Corestate runs after sync: a one-core sample updates the count without
@@ -80,7 +82,7 @@ int main(void)
     assert(!axd_phy_chanspec_begin(&j,&c));assert(run(&j,&s,0,0)==2 && j.dependency==AXD_CS_MAC_CHILD && j.mac_enabled);
     /* Gates after the bandwidth store. */
     o=base;n=expect(&s,&o);
-    {size_t before_cflags=n-(6+1+6);
+    {size_t before_cflags=n0-(6+1+6);
         c=cs_context();c.bwinit_slot.value=0;assert(!axd_phy_chanspec_begin(&j,&c));
         assert(run(&j,&s,0,0)==before_cflags+6 && j.dependency==AXD_CS_PHY_INIT_FALLBACK && j.context.bwstate396==0x1000);
         c=cs_context();c.bwinit_slot.value=0xf999;assert(!axd_phy_chanspec_begin(&j,&c));
@@ -90,6 +92,14 @@ int main(void)
         c=cs_context();c.band_phy_pointer.value=0x1004;assert(!axd_phy_chanspec_begin(&j,&c));
         assert(run(&j,&s,0,0)==before_cflags && j.phase==AXD_CS_FAILED && j.error==AXD_CS_BINDING);
     }
+    /* Module2 dispatches on the explicit radio ID; no ID is inferred. */
+    o=base;n=expect(&s,&o);
+    c=cs_context();c.radio.radio_id.value=0x2069;assert(!axd_phy_chanspec_begin(&j,&c));
+    assert(run(&j,&s,0,0)==n0 && j.dependency==AXD_CS_RADIO2069_SETUP && j.modules_completed==2);
+    c=cs_context();c.radio.radio_id.value=0x1234;assert(!axd_phy_chanspec_begin(&j,&c));
+    assert(run(&j,&s,0,0)==n0 && j.dependency==AXD_CS_MODULE_SETUP_PHY && j.modules_completed==3);
+    c=cs_context();c.radio.radio_id.known=0;assert(!axd_phy_chanspec_begin(&j,&c));
+    assert(run(&j,&s,0,0)==n0 && j.dependency==AXD_CS_METADATA && j.last_field==AXD_CS_RADIO_ID);
     /* Unknown SI mapping stops at the first actual cflags (inside resetcca). */
     c=cs_context();c.si_known=0;assert(!axd_phy_chanspec_begin(&j,&c));run(&j,&s,0,0);
     assert(j.phase==AXD_CS_DEPENDENCY && j.dependency==AXD_CS_METADATA && j.last_field==AXD_CS_SI_MAPPING);
