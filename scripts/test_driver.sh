@@ -23,9 +23,11 @@ for axd_test in init_table effective_init ucode_upload status_poll psm_start ai_
         driver/dma_rx_fill.c driver/radio_power.c driver/phy_channel_init.c \
         driver/radio_regtbl.c driver/phy_table_read.c driver/phy_noise.c \
         driver/dma_rx_status_fill.c driver/bmac_rx_fill.c driver/phy_chanspec.c driver/hnd_math_fp.c \
+        driver/radio20704_pll.c \
         "tests/test_$axd_test.c" -o "$axd_build_dir/test_$axd_test"
     "$axd_build_dir/test_$axd_test"
 done
+python3 tests/check_radio20704_pll.py
 if [ "$#" -gt 0 ]; then
     case $(uname -s) in
         Darwin) axd_library="$axd_build_dir/libaxd_offline.dylib"; axd_shared_flag=-dynamiclib ;;
@@ -46,6 +48,7 @@ if [ "$#" -gt 0 ]; then
         driver/dma_rx_fill.c driver/radio_power.c driver/phy_channel_init.c \
         driver/radio_regtbl.c driver/phy_table_read.c driver/phy_noise.c \
         driver/dma_rx_status_fill.c driver/bmac_rx_fill.c driver/phy_chanspec.c driver/hnd_math_fp.c \
+        driver/radio20704_pll.c \
         tests/smc_stock_adapter.c \
         -o "$axd_library"
     python3 tests/check_stock_firmware.py "$1" "$axd_library"

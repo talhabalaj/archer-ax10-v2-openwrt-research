@@ -144,6 +144,7 @@ static const char *chanspec_symbol(const struct axd_phy_chanspec *j)
     switch(j->dependency){
     case AXD_CS_RADIO20704_SETUP:return "wlc_phy_chanspec_radio20704_setup";
     case AXD_CS_PLL_TUNE:return "wlc_phy_radio20704_pll_tune";
+    case AXD_CS_VCOCAL:return "wlc_phy_20704_radio_vcocal";
     case AXD_CS_RADIO20704_2G:return "radio20704_setup_2g_branch";
     case AXD_CS_RADIO20704_6G:return "radio20704_setup_6g_branch";
     case AXD_CS_RADIO2069_SETUP:return "chanspec_setup_radio_2069";
@@ -224,7 +225,7 @@ int main(void)
         expected[total++]=(struct prefix_event){AXD_PS_D11,e->kind,e->offset,e->value,e->reply};
     }
     /* Callback13 module0 for the same2-core5GHz20MHz scenario, MAC inactive. */
-    {static struct cs_event events[1024];struct cs_script cs={events,0,1024};
+    {static struct cs_event events[4096];struct cs_script cs={events,0,4096};
         const struct cs_options o={2,0,0x11,0x1232,1,2,0,0x12,0,0};cs_module0(&cs,&o);cs_module2(&cs,&o);
         assert(total+cs.count<capacity);
         for(i=0;i<cs.count;i++)expected[total++]=(struct prefix_event){cs.events[i].path==AXD_CS_SI?AXD_PS_SI:AXD_PS_D11,

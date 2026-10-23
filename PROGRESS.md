@@ -7,7 +7,8 @@ the registered [radio-on register table](docs/RADIO_REGTBL_MODEL.md), the PHY51
 [table reader](docs/PHY_TABLE_READ_MODEL.md), and
 [status-pool RX fill](docs/DMA_RX_STATUS_FILL_MODEL.md) with its BMAC wrapper.
 Callback13 now executes its real modules0-2 and
-[stops inside module2](docs/PHY_CHANSPEC_MODEL.md) at `wlc_phy_radio20704_pll_tune`.
+[completes modules0-2](docs/PHY_CHANSPEC_MODEL.md), including radio20704 PLL tuning and VCO
+calibration, and stops at module3 `chanspec_setup_phy`.
 These are offline components, not a working radio driver.
 Read [ROADMAP.md](ROADMAP.md) for the full objective and acceptance criteria.
 
@@ -36,8 +37,8 @@ inputs and consumes a joined independent28039-event oracle (the count derives
 from original synthetic table fixtures, so it is not itself a progress metric).
 
 The current observation is: **eleven callbacks completed (priorities1-12),
-current priority13 executing its real modules0-2, required
-`wlc_phy_radio20704_pll_tune` unresolved** (28990 trace events consumed). Completed
+current priority13 having completed its real modules0-2, required module3
+`chanspec_setup_phy` unresolved** (29680 trace events consumed). Completed
 callbacks stay at eleven until callback13 returns after all fourteen modules.
 The published predecessor stopped after five callbacks at the radio7 regtbl
 tail. Because the fixture changed, the verifier reports
@@ -53,7 +54,7 @@ its actual failure diagnostics even when it exits nonzero.
 
 The checkpoint scope also runs the sanitizer suite, ARMv7 builds and explicit
 private-input/Unicorn checks when supplied. The exact staged checkpoint passed
-all77 executed checks: target build/run, the56-program sanitizer/private-comparison
+all78 executed checks: target build/run, the57-program sanitizer/private-comparison
 suite,56 C ARMv7 objects plus the combined-header probe, the warning-free Linux
 6.12 kernel module build (`--kernel-build`), and all16 pinned ARM
 comparison programs. The new status-fill checker executes the real wrapper,
@@ -92,9 +93,9 @@ fourteen-entry module table (setup, TPC, radio, PHY, common, noise, RXGCRS,
 radio/PHY/TX/RX tuning, firmware enable, cleanup, BT coexistence), then idle-TSSI
 measurement and PHY51 ADC/AFE/core-to-core branches. Modules0-2 are implemented
 ([model](docs/PHY_CHANSPEC_MODEL.md)) up to module2's radio50e0 child. The radio20704 5GHz body
-runs (channel tune-table rows are a private caller-supplied span). Its HND fixed-point helpers now exist and match the
-pinned hnd.ko instructions in37246 executed cases. Next is the fixed-point
-`wlc_phy_radio20704_pll_tune` body itself and VCO calibration, then modules3-13 in execution order so the reported terminal child keeps advancing. Noise mode-bit0-clear desense and disabled-preempt branches
+runs (channel tune-table rows are a private caller-supplied span). Its HND fixed-point helpers match the pinned hnd.ko
+instructions; `pll_tune` (double-entry checked, not instruction-executed) and VCO
+calibration now run. Next is module3 `chanspec_setup_phy` and VCO calibration, then modules3-13 in execution order so the reported terminal child keeps advancing. Noise mode-bit0-clear desense and disabled-preempt branches
 also remain. Actual board ID/subrevision stays unknown.
 
 The [packet/status bodies](docs/RX_PROCESSING_MODEL.md) now compose the identified
@@ -608,7 +609,7 @@ Critical distinctions to preserve:
    and the earlier lifecycle caller that invokes core reset. Reuse the real
    reset/upload/start/object/SMC/table-init and full16 scheduler components.
    Radio-on with regtbl, the noise mode child and callback13 module0 now
-   execute. Implement radio20704 `pll_tune`/VCO calibration and the remaining
+   execute, through module2. Implement the remaining
    `wlc_phy_chanspec_set_acphy` modules3-13, remaining
    noise desense branches, callbacks16-21 and reached other-radio dispatches.
    Implement actual common BT/switch and channel-manager operations; acquire

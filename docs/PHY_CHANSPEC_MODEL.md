@@ -24,8 +24,9 @@ follow. Module0 `chanspec_setup` is implemented. Module1 `chanspec_setup_tpc` is
 its actual `rev>46` return for PHY51. Module2 `chanspec_setup_radio` dispatches on
 the explicit radio ID at public+0xa: 2069 is an explicit gate, other IDs return,
 and 50e0 runs the real resetcca then
-`wlc_phy_chanspec_radio20704_setup(PI, chanspec, AC flags bits1/2)`. Its5GHz body
-is implemented up to `wlc_phy_radio20704_pll_tune`, the reported gate. Nothing
+`wlc_phy_chanspec_radio20704_setup(PI, chanspec, AC flags bits1/2)`. Its5GHz body,
+`wlc_phy_radio20704_pll_tune` and VCO calibration are implemented, completing
+module2; module3 `chanspec_setup_phy` is the reported gate. Nothing
 after it is claimed; no radio ID or revision is inferred from the board.
 
 ## radio20704 5GHz body
@@ -81,6 +82,33 @@ The prologue's AC object and `chanspec_setup`'s `*(PI+10)` are the same
 registered object (`phy_ac_attach` passes it as the chanmgr context word1), so
 one canonical binding is used. Unknown reached inputs stop as dependencies;
 required nulls and alias mismatches fail.
+
+## PLL tuning and VCO calibration
+
+[radio20704_pll.c](../driver/radio20704_pll.c) computes the PLL value block of
+`wlc_phy_radio20704_pll_tune` from the channel frequency and a runtime
+configuration (reference word, reference shift, mode byte) reached through the
+AC radio object. Only the offsets the actual code stores are updated in the
+caller-owned u16 block; the rest keep their values. The chain keeps the actual
+64-bit/32-bit boundaries, including two deliberate low-word truncations (the
+doubled loop constant and the 10^9 product) and 64-bit signed clamped
+differences. A mode byte above2 is the actual early return (no stores, no
+writes). Where a divisor would be0 or1 the vendor divide leaves its output
+untouched, so the actual code would read an uninitialized stack slot; such
+inputs are refused as a binding failure instead of inventing a value. The
+channel job then writes all73 register fields through caller-bound selector,
+mask and shift descriptors (ARM shift semantics), sets 9f6 bits14 and15, and
+runs the VCO calibration sequence (eleven radio writes, two 10us delays).
+
+Verification limits: the HND helpers are matched to the pinned instructions,
+but this routine is checked by a double-entry comparison, not by executing its
+instructions. [check_radio20704_pll.py](../tests/check_radio20704_pll.py)
+holds a second, separately written Python transcription (with its own helper
+implementations); it agrees with the C on 16896 cases (7875 full computations
+at crystal-scale references). Both derive from the same recovered order, so a
+shared misreading would not be caught. The 0x6c saturation at127 is not
+reached by realistic inputs and is untested. The channel tests write the
+fields from Python-generated value tables, not from the C.
 
 ## HND fixed-point helpers for PLL tuning
 

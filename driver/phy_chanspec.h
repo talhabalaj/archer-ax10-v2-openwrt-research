@@ -3,6 +3,7 @@
 #define AXD_PHY_CHANSPEC_H
 #include "radio_control.h"
 #include "si_core.h"
+#include "radio20704_pll.h"
 /* Registered AC channel initialization, core130.0/1 AC PHY51, chip63178.
  * Canonical pointers (.radio.phy/ac/chanmgr/chanmgr_data, .radio.chip_id)
  * are shared with radio-on; aliases are checked, never assumed. */
@@ -30,6 +31,15 @@ struct axd_phy_chanspec_context {
     const uint8_t *tune_rows;
     uint32_t tune_count, tune_table;
     uint8_t tune_known;
+    /* radio20704 PLL: runtime configuration reached via the AC radio object,
+     * its AXD_R20704_PLL_FIELDS register-field descriptors (selector, mask,
+     * shift) and the caller-owned u16 value block the computation updates in
+     * place. Borrowed; storage outlives the job. pll_known must be1. */
+    struct axd_radio20704_pll_config pll_config;
+    const uint16_t *pll_selectors, *pll_masks;
+    const uint8_t *pll_shifts;
+    uint16_t *pll_values;
+    uint8_t pll_known;
     /* Software results, all stored in source order. */
     uint8_t chanmgr_data11, ac_flags_be, radar_indicator, chanmgr_byte29;
     uint8_t band_byte9, core_bitmap18, tempsense_byte5;
@@ -52,13 +62,13 @@ enum axd_phy_chanspec_dependency { AXD_CS_NO_DEPENDENCY=0, AXD_CS_METADATA,
     AXD_CS_MAC_CHILD, AXD_CS_RESOURCE_CHILD, AXD_CS_BMAC_PHY_RESET,
     AXD_CS_PHY_INIT_FALLBACK, AXD_CS_CHIP4335_BRANCH,
     AXD_CS_RADIO2069_SETUP, AXD_CS_RADIO20704_SETUP, AXD_CS_MODULE_SETUP_PHY,
-    AXD_CS_RADIO20704_2G, AXD_CS_RADIO20704_6G, AXD_CS_PLL_TUNE };
+    AXD_CS_RADIO20704_2G, AXD_CS_RADIO20704_6G, AXD_CS_PLL_TUNE, AXD_CS_VCOCAL };
 enum axd_phy_chanspec_field { AXD_CS_NO_FIELD=0, AXD_CS_CHANSPEC, AXD_CS_COMMON,
     AXD_CS_RADAR, AXD_CS_RADAR_INFO, AXD_CS_PHY, AXD_CS_AC, AXD_CS_CHANMGR,
     AXD_CS_CHANMGR_DATA, AXD_CS_CHIP, AXD_CS_BAND_PHY, AXD_CS_BAND_TYPE,
     AXD_CS_BMAC_CHANSPEC, AXD_CS_BWINIT, AXD_CS_AC_BWINIT, AXD_CS_PHYMODE,
     AXD_CS_SHARED_PI, AXD_CS_TEMP, AXD_CS_TEMP_STATE, AXD_CS_SI_MAPPING, AXD_CS_RADIO_ID,
-    AXD_CS_RADIO_REVISION, AXD_CS_SIH_PACKAGE, AXD_CS_TUNE_TABLE };
+    AXD_CS_RADIO_REVISION, AXD_CS_SIH_PACKAGE, AXD_CS_TUNE_TABLE, AXD_CS_PLL };
 /* Actual radio20704 tune tables (rev0: one table; rev3: per band). */
 enum axd_phy_chanspec_tune { AXD_CS_TUNE_NONE=0, AXD_CS_TUNE_REV0_63178, AXD_CS_TUNE_REV0_47622A,
     AXD_CS_TUNE_REV0_47622B, AXD_CS_TUNE_REV3_63178_6G, AXD_CS_TUNE_REV3_63178_5G,
@@ -79,6 +89,8 @@ struct axd_phy_chanspec {
     uint16_t tune_frequency;
     uint32_t tune_selected;
     const uint8_t *tune_row;
+    int pll_result;
+    unsigned pll_writes;
     uint16_t sync_guard, cca_sample, setup_guard;
     unsigned stage, after_child, after_cca, core_index, part, mac_enabled, cca_valid;
     unsigned modules_completed, sync_completed, cca_completed, corestate_completed;
@@ -93,7 +105,8 @@ struct axd_phy_chanspec {
  * with the registered bwinit binding. Module1 chanspec_setup_tpc is its actual
  * rev>46 return. Module2 dispatches on the explicit radio ID: 50e0 runs the
  * real resetcca and the radio20704 5GHz body (tune row, LOGEN reset, band,
- * per-core and tail radio writes), then reaches its pll_tune, a DEPENDENCY;
+ * per-core and tail radio writes), then pll_tune (computed values, the73 field writes and final 9f6 bits),
+ * then reaches VCO calibration, a DEPENDENCY;
  * the2.4/6GHz frequency branches are DEPENDENCY gates;
  * 2069 is a DEPENDENCY; other IDs return to module3 setup_phy, a DEPENDENCY. The callback never returns until
  * all fourteen modules exist.

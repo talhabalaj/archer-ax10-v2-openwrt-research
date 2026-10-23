@@ -8,7 +8,7 @@ enum stage { P_DATA, P_AC, P_RADAR, P_RADAR_INFO, RADIO_SET, MODULE0,
     TEMP, TEMP_STATE, TEMP_AGAIN, BAND, BW_PHY, BW_TYPE, BW_RESET, BWINIT,
     AC_BWINIT, CHIP, SETUP_DELAY, SETUP_TAIL, MODULE1, MODULE2, RADIO20704,
     R_TABLE, R_LOGEN, R_LOGEN_DELAY, R_LOGEN_CLEAR, R_BAND, R_88A, R_9F6, R_FREQ,
-    R_CORE, R_TAIL, R_2D, R_PLL,
+    R_CORE, R_TAIL, R_2D, R_PLL, R_PLL_WRITE, R_PLL_TAIL, R_VCO, R_VCO_DELAY, MODULE3,
     CCA_READ, CCA_SY, CCA_SHORT, CCA_FGC_ON, CCA_D1, CCA_ST6, CCA_W6, CCA_D2,
     CCA_TOGGLE_SET, CCA_D3, CCA_TOGGLE_CLEAR, CCA_D10, CCA_ST2, CCA_W2,
     CCA_FGC_OFF, CCA_D4, CCA_ST_RESTORE, CCA_W_RESTORE, CCA_TAIL,
@@ -281,6 +281,11 @@ static const uint16_t core5g[25][3]={
     {0x29,4,4},{0x1c6,2,0},{0x2d,0x20,0},{0x1c6,1,0},{0x1c9,0x38,0x28},{0x1c9,0x7000,0x5000},
     {0x1c9,7,5},{0x1f3,0x1c00,0xc00}};
 static const uint16_t tail5g[4][3]={{0x88a,0x38,0x18},{0x88a,0xe000,0},{0x9f6,0x4000,0x4000},{0x9f5,0xe000,0xa000}};
+/* wlc_phy_20704_radio_vcocal (tail-calls the 20709 body): radio writes with
+ * two 10us delays (selector 0 marks a delay). */
+static const uint16_t vcocal[14][3]={
+    {0x9f9,0x8000,0x8000},{0x841,0x300,0x300},{0x84f,0x7ff,0},{0x85c,1,1},{0x841,0x40,0x40},
+    {0x841,0xc00,0xc00},{0x841,1,1},{0x841,0x80,0},{0,0,10},{0x841,0x80,0x80},{0x82a,1,0},{0,0,10},{0x82a,1,1},{0,0,0}};
 static uint16_t per_core(uint16_t selector,unsigned core){return core<2?(uint16_t)(selector+core*0x200):0xffff;}
 /* wlc_phy_chanspec_radio20704_setup, 5GHz frequency branch (3001..6289MHz). */
 static void radio_step(struct axd_phy_chanspec *j)
@@ -344,7 +349,33 @@ static void radio_step(struct axd_phy_chanspec *j)
     case R_2D:
         if(j->core_index>=c->hardware.phy.phy_core_count){j->stage=R_PLL;break;}
         radio(j,per_core(0x2d,j->core_index),0x10,j->tune_frequency<=0x176f?0x10:0,R_2D);j->core_index++;break;
-    case R_PLL:dependency(j,AXD_CS_PLL_TUNE);break;
+    case R_PLL:
+        /* wlc_phy_radio20704_pll_tune: compute into the caller-owned block. */
+        j->last_field=AXD_CS_PLL;j->metadata_accesses++;
+        if(!c->pll_known){dependency(j,AXD_CS_METADATA);break;}
+        if(c->pll_known!=1){fail(j,AXD_CS_BAD_ARGUMENT);break;}
+        if(!c->pll_selectors || !c->pll_masks || !c->pll_shifts || !c->pll_values){fail(j,AXD_CS_BINDING);break;}
+        j->pll_result=axd_radio20704_pll_compute(j->tune_frequency,&c->pll_config,c->pll_values);
+        /* Mode above2 is the actual early return: no stores, no writes. */
+        if(j->pll_result<0)fail(j,AXD_CS_BINDING);
+        else if(j->pll_result==1)j->stage=R_VCO;
+        else {j->software_stores++;j->part=0;j->stage=R_PLL_WRITE;}
+        break;
+    case R_PLL_WRITE:
+        if(j->part==AXD_R20704_PLL_FIELDS){j->part=0;j->stage=R_PLL_TAIL;break;}
+        {uint32_t shift=c->pll_shifts[j->part],value=shift>=32?0:(uint32_t)c->pll_values[j->part]<<shift;
+            radio(j,c->pll_selectors[j->part],c->pll_masks[j->part],(uint16_t)value,R_PLL_WRITE);}
+        j->part++;j->pll_writes++;break;
+    case R_PLL_TAIL:
+        if(j->part==0){radio(j,0x9f6,0x4000,0x4000,R_PLL_TAIL);j->part=1;}
+        else {j->part=0;radio(j,0x9f6,0x8000,0x8000,R_VCO);}
+        break;
+    case R_VCO:
+        if(j->part==13){j->part=0;j->modules_completed=3;j->stage=MODULE3;break;}
+        if(!vcocal[j->part][0]){j->stage=R_VCO_DELAY;break;}
+        radio(j,vcocal[j->part][0],vcocal[j->part][1],vcocal[j->part][2],R_VCO);j->part++;break;
+    case R_VCO_DELAY:raw(j,AXD_D11_DELAY_US,0,vcocal[j->part][2],R_VCO);j->part++;break;
+    case MODULE3:dependency(j,AXD_CS_MODULE_SETUP_PHY);break;
     default:fail(j,AXD_CS_BAD_ARGUMENT);break;
     }
 }
@@ -368,7 +399,7 @@ enum axd_phy_chanspec_phase axd_phy_chanspec_step(struct axd_phy_chanspec *j,axd
     if(j->stage>=RUN_PHY){child(j,&r);return j->phase;}
     if(j->stage>=SYNC_READ && j->stage<=SYNC_ENABLE){sync_step(j);return j->phase;}
     if(j->stage>=SETUP_READ && j->stage<=RADIO20704){setup_step(j);return j->phase;}
-    if(j->stage>=R_TABLE && j->stage<=R_PLL){radio_step(j);return j->phase;}
+    if(j->stage>=R_TABLE && j->stage<=MODULE3){radio_step(j);return j->phase;}
     if(j->stage>=CCA_READ && j->stage<=CCA_TAIL){cca_step(j);return j->phase;}
     switch(j->stage){
     case P_DATA:

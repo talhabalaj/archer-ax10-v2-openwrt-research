@@ -38,6 +38,7 @@
 #include "../driver/phy_chanspec.h"
 #include "../driver/hnd_math_fp.h"
 #include "../driver/job_reset.h"
+#include "../driver/radio20704_pll.h"
 #include "../driver/d11_io.h"
 #include "../driver/dma_reset.h"
 #include "../driver/effective_init.h"
