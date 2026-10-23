@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "scope": "Original PHY51/core130 callback13 prologue, radio-set and modules0-2 (radio50e0 radio20704 5GHz body, PLL tuning, VCO calibration) with reached children; portable metadata only",
+  "scope": "Original PHY51/core130 callback13 prologue, radio-set and modules0-3 (radio50e0 radio20704 5GHz body, PLL tuning, VCO calibration) with reached children; portable metadata only",
   "artifacts": [
     {
       "name": "wl.ko",
@@ -17,8 +17,8 @@
     "provider": "ghidra",
     "version": "12.1.4",
     "rea_agents": "6.5.0",
-    "sessions": 3,
-    "records": 100,
+    "sessions": 4,
+    "records": 116,
     "sessions_closed": true
   },
   "records": [
@@ -921,6 +921,150 @@
         "procedure": "wlc_phy_radio20704_pll_tune"
       },
       "evidence_id": "ev_24e10ce87f021f830b04af3a15b16d0a2e58c3b7663363f9a93d51f861769dd4"
+    },
+    {
+      "record": "assembly-chanspec_setup_phy",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "chanspec_setup_phy"
+      },
+      "evidence_id": "ev_addeec34ca85cafb16ba57ace61617ee3672029f599e60967c541124ab51c0db"
+    },
+    {
+      "record": "assembly-phy_ac_chanmgr_get_data",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_get_data"
+      },
+      "evidence_id": "ev_634e7549518d9979571c2bd9b97d61cb8afc866f80e213fa32cdc9781f3a9a32"
+    },
+    {
+      "record": "assembly-phy_ac_hirssi_set_timer",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_hirssi_set_timer"
+      },
+      "evidence_id": "ev_00cb22f6387c6a597b6545f637f791c7d8620c5a891f11dc81f81dc99cb3aaf8"
+    },
+    {
+      "record": "assembly-phy_ac_hirssi_shmem_read_clear",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_hirssi_shmem_read_clear"
+      },
+      "evidence_id": "ev_86b786dd26c60a50f5a1775630a16ecaf3cc455d34e2134a58506423ec9827c7"
+    },
+    {
+      "record": "assembly-phy_ac_hirssi_shmem_read_clear.part.0",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_hirssi_shmem_read_clear.part.0"
+      },
+      "evidence_id": "ev_92f05ba946f08f18fd76bd159aeba7431645033e64cbfcbd42c84cceec113aa7"
+    },
+    {
+      "record": "assembly-phy_ac_rxgcrs_lesi",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_ac_rxgcrs_lesi"
+      },
+      "evidence_id": "ev_3de979c46c1b0e64675db7bd2ae5b3c53ed19ca16ca28e78318939c2768d9d52"
+    },
+    {
+      "record": "assembly-phy_stf_get_data",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "phy_stf_get_data"
+      },
+      "evidence_id": "ev_61c933b514d24b78df4938d48710e041139e1c2c812709d380ff02650decf6f4"
+    },
+    {
+      "record": "assembly-wlc_phy_smth",
+      "artifact": "wl.ko",
+      "operation": "procedure_assembly",
+      "parameters": {
+        "procedure": "wlc_phy_smth"
+      },
+      "evidence_id": "ev_829f8d16aa53a99c53efe611fedd08a61dbcdef8101fc275ff95327eab0b0b27"
+    },
+    {
+      "record": "pseudo-chanspec_setup_phy",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "chanspec_setup_phy"
+      },
+      "evidence_id": "ev_070e7da0dddfa448c59a6993e92e400512df75a890f88298747dd9e228291fb2"
+    },
+    {
+      "record": "pseudo-phy_ac_chanmgr_get_data",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_chanmgr_get_data"
+      },
+      "evidence_id": "ev_c82905c77685f00de9e8856c3f90f1944a0632afe43647fd0f92fb15a9ee207d"
+    },
+    {
+      "record": "pseudo-phy_ac_hirssi_set_timer",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_hirssi_set_timer"
+      },
+      "evidence_id": "ev_035391513482890f2085adb27b26338f4a6c4e81a481f86e2f66cfc092664fca"
+    },
+    {
+      "record": "pseudo-phy_ac_hirssi_shmem_read_clear",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_hirssi_shmem_read_clear"
+      },
+      "evidence_id": "ev_7b681637a0fe9fb21693772e62da59aec93ef61c6fca5cf7ed6cc112b451d39c"
+    },
+    {
+      "record": "pseudo-phy_ac_hirssi_shmem_read_clear.part.0",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_hirssi_shmem_read_clear.part.0"
+      },
+      "evidence_id": "ev_522bd1741239b31adbdfdbc6f4d331bc359fd94afa1bca26643db6babb88fcb3"
+    },
+    {
+      "record": "pseudo-phy_ac_rxgcrs_lesi",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_ac_rxgcrs_lesi"
+      },
+      "evidence_id": "ev_ea1e9e82af016a36eb6484e8c67fc9f639769d6e81e8a80fc552e1a5d5354b9b"
+    },
+    {
+      "record": "pseudo-phy_stf_get_data",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "phy_stf_get_data"
+      },
+      "evidence_id": "ev_27dcc10a07a283d99786286861634802271d62d97e5c6ba569b766eacbc1e8a0"
+    },
+    {
+      "record": "pseudo-wlc_phy_smth",
+      "artifact": "wl.ko",
+      "operation": "procedure_pseudo_code",
+      "parameters": {
+        "procedure": "wlc_phy_smth"
+      },
+      "evidence_id": "ev_acb0dade47b6c35aab284d2a63151424820f2d4e03ad7738b0b2eedaad05d939"
     }
   ],
   "derived_facts": {
@@ -977,11 +1121,12 @@
       "verification": "double-entry Python transcription; HND helpers instruction-matched",
       "not_executed": "pll_tune instructions not executed"
     },
-    "vcocal": "wlc_phy_20704_radio_vcocal tail-calls the 20709 body: 11 radio writes, two 10us delays"
+    "vcocal": "wlc_phy_20704_radio_vcocal tail-calls the 20709 body: 11 radio writes, two 10us delays",
+    "module3": "chanspec_setup_phy: rev==0x33 skips hi-RSSI/LESI/smoothing; PHY70 bit12 pulse, 10us, then write_phyreg(107d, chanspec low byte)"
   },
   "not_claimed": [
     "executed stock ARM comparison of pll_tune or the channel modules",
-    "modules3-13 and the callback13 epilogue",
+    "modules4-13 and the callback13 epilogue",
     "radio20704 2.4GHz/6GHz branches",
     "callback13 return",
     "radio readiness"

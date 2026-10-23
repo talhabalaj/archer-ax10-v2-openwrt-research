@@ -103,7 +103,7 @@ All original code here uses the repository's MIT license.
 - `phy_chanspec.c`: actual callback13 prologue, radio-set and module0 `chanspec_setup`
   (core-to-core sync, resetcca, phycorestate, BMAC bandwidth), module1's rev guard and
   module2's radio-ID dispatch, the radio20704 5GHz body, PLL tuning and VCO
-  calibration; module3 `chanspec_setup_phy` remains a gate.
+  calibration, and module3; module4 `chanspec_setup_cmn` remains a gate.
 - `radio20704_pll.c`: radio20704 PLL value computation (double-entry checked).
 - `job_reset.h`: kernel-stack-safe job reset used by large `begin` functions.
 - `hnd_math_fp.c`: HND fixed-point helpers for PLL tuning, matched against the pinned
@@ -118,7 +118,7 @@ All original code here uses the repository's MIT license.
   registered bitmap/cursor release, composed into status timeout pool returns.
 - `phy_scheduler.c`: capacity23 registry insertion, full16 ordered init vector
   and real closed software/PHY/radio/table/PSM/SI children. Full target stops at
-  required priority13 module3 `chanspec_setup_phy` after eleven callbacks; isolated shorter vectors do not establish target initialization.
+  required priority13 module4 `chanspec_setup_cmn` after eleven callbacks; isolated shorter vectors do not establish target initialization.
 - `dma_rx_list.c` / `dma_rx_status_list.c`: current closed bulk leaves, fresh
   discarded descriptor reads, distinct NEXT store widths and commit ordering.
 - `rx_packets.c` / `rx_status.c`: real bulk/status children, packet length/trim/

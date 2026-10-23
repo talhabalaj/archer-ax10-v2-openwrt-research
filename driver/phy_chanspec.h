@@ -62,7 +62,8 @@ enum axd_phy_chanspec_dependency { AXD_CS_NO_DEPENDENCY=0, AXD_CS_METADATA,
     AXD_CS_MAC_CHILD, AXD_CS_RESOURCE_CHILD, AXD_CS_BMAC_PHY_RESET,
     AXD_CS_PHY_INIT_FALLBACK, AXD_CS_CHIP4335_BRANCH,
     AXD_CS_RADIO2069_SETUP, AXD_CS_RADIO20704_SETUP, AXD_CS_MODULE_SETUP_PHY,
-    AXD_CS_RADIO20704_2G, AXD_CS_RADIO20704_6G, AXD_CS_PLL_TUNE, AXD_CS_VCOCAL };
+    AXD_CS_RADIO20704_2G, AXD_CS_RADIO20704_6G, AXD_CS_PLL_TUNE, AXD_CS_VCOCAL,
+    AXD_CS_MODULE_SETUP_CMN };
 enum axd_phy_chanspec_field { AXD_CS_NO_FIELD=0, AXD_CS_CHANSPEC, AXD_CS_COMMON,
     AXD_CS_RADAR, AXD_CS_RADAR_INFO, AXD_CS_PHY, AXD_CS_AC, AXD_CS_CHANMGR,
     AXD_CS_CHANMGR_DATA, AXD_CS_CHIP, AXD_CS_BAND_PHY, AXD_CS_BAND_TYPE,
@@ -83,6 +84,7 @@ struct axd_phy_chanspec {
     struct axd_radio_control radio_job;
     struct axd_psm_control mac_job;
     struct axd_si_core_job si_job;
+    struct axd_phy_table_write packed_job;
     struct axd_d11_operation raw;
     uint32_t main_control;
     uint8_t radio20704_argument;

@@ -99,6 +99,13 @@ static void cs_pll_build(void)
     for(k=0;k<73;k++){cs_pll_values[k]=(uint16_t)(0x1111u*(k+3));cs_pll_selectors[k]=(uint16_t)(0x500+k);
         cs_pll_masks[k]=k%3?0x0ff0:0xffff;cs_pll_shifts[k]=(uint8_t)(k%5);}
 }
+/* Module3 chanspec_setup_phy, rev51: PHY70 bit12 pulse, then the actual
+ * packed phy_utils_write_phyreg of the chanspec low byte to 107d. */
+static void cs_module3(struct cs_script *s,unsigned chanspec)
+{
+    cs_modify(s,0x70,0x1000,0x1000);cs_delay(s,10);cs_modify(s,0x70,0x1000,0);
+    cs_st(s);cs_d(s,AXD_D11_WRITE32,0x3fc,0x107du|((chanspec&0xffu)<<16),0);
+}
 static void cs_pll_writes(struct cs_script *s,unsigned mhz)
 {
     unsigned e,k;
@@ -110,6 +117,7 @@ static void cs_pll_writes(struct cs_script *s,unsigned mhz)
     cs_radio(s,0x9f9,0x8000,0x8000);cs_radio(s,0x841,0x300,0x300);cs_radio(s,0x84f,0x7ff,0);cs_radio(s,0x85c,1,1);
     cs_radio(s,0x841,0x40,0x40);cs_radio(s,0x841,0xc00,0xc00);cs_radio(s,0x841,1,1);cs_radio(s,0x841,0x80,0);
     cs_delay(s,10);cs_radio(s,0x841,0x80,0x80);cs_radio(s,0x82a,1,0);cs_delay(s,10);cs_radio(s,0x82a,1,1);
+    cs_module3(s,0xd024);
 }
 /* Module1 (setup_tpc) is a rev>46 return. Module2 radio50e0: resetcca, then
  * radio20704 5GHz: LOGEN pulse, band bytes, 88a/9f6, bit13, per-core rows,

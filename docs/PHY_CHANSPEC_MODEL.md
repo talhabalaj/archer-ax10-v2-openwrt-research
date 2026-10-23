@@ -1,4 +1,4 @@
-# Registered PHY51 channel initialization: modules 0-2
+# Registered PHY51 channel initialization: modules 0-3
 
 [phy_chanspec.c](../driver/phy_chanspec.c) implements the first part of the
 priority13 callback `phy_ac_chanmgr_init_chanspec` for core130.0/1 AC PHY51,
@@ -26,7 +26,12 @@ the explicit radio ID at public+0xa: 2069 is an explicit gate, other IDs return,
 and 50e0 runs the real resetcca then
 `wlc_phy_chanspec_radio20704_setup(PI, chanspec, AC flags bits1/2)`. Its5GHz body,
 `wlc_phy_radio20704_pll_tune` and VCO calibration are implemented, completing
-module2; module3 `chanspec_setup_phy` is the reported gate. Nothing
+module2. Module3 `chanspec_setup_phy` is implemented for rev51: the hi-RSSI,
+LESI and smoothing block runs only when the revision is not0x33, so PHY51
+executes the PHY70 bit12 pulse around a 10us delay and the actual
+`phy_utils_write_phyreg(107d, chanspec low byte)`. Paths where module2 returns
+early (other radio IDs, no table or row) continue into module3, as in the
+actual code. Module4 `chanspec_setup_cmn` is the reported gate. Nothing
 after it is claimed; no radio ID or revision is inferred from the board.
 
 ## radio20704 5GHz body

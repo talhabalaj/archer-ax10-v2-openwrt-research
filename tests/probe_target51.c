@@ -149,6 +149,7 @@ static const char *chanspec_symbol(const struct axd_phy_chanspec *j)
     case AXD_CS_RADIO20704_6G:return "radio20704_setup_6g_branch";
     case AXD_CS_RADIO2069_SETUP:return "chanspec_setup_radio_2069";
     case AXD_CS_MODULE_SETUP_PHY:return "chanspec_setup_phy";
+    case AXD_CS_MODULE_SETUP_CMN:return "chanspec_setup_cmn";
     case AXD_CS_MAC_CHILD:return "wlc_bmac_suspend_mac_and_wait";
     case AXD_CS_BMAC_PHY_RESET:return "wlc_bmac_phy_reset";
     case AXD_CS_PHY_INIT_FALLBACK:return "phy_init";

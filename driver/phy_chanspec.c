@@ -9,10 +9,11 @@ enum stage { P_DATA, P_AC, P_RADAR, P_RADAR_INFO, RADIO_SET, MODULE0,
     AC_BWINIT, CHIP, SETUP_DELAY, SETUP_TAIL, MODULE1, MODULE2, RADIO20704,
     R_TABLE, R_LOGEN, R_LOGEN_DELAY, R_LOGEN_CLEAR, R_BAND, R_88A, R_9F6, R_FREQ,
     R_CORE, R_TAIL, R_2D, R_PLL, R_PLL_WRITE, R_PLL_TAIL, R_VCO, R_VCO_DELAY, MODULE3,
+    M3_DELAY, M3_CLEAR, M3_WRITE, MODULE4,
     CCA_READ, CCA_SY, CCA_SHORT, CCA_FGC_ON, CCA_D1, CCA_ST6, CCA_W6, CCA_D2,
     CCA_TOGGLE_SET, CCA_D3, CCA_TOGGLE_CLEAR, CCA_D10, CCA_ST2, CCA_W2,
     CCA_FGC_OFF, CCA_D4, CCA_ST_RESTORE, CCA_W_RESTORE, CCA_TAIL,
-    RUN_PHY, RUN_RADIO, RUN_MAC, RUN_SI, RUN_RAW };
+    RUN_PHY, RUN_RADIO, RUN_MAC, RUN_SI, RUN_RAW, RUN_PACKED };
 static void fail(struct axd_phy_chanspec *j,enum axd_phy_chanspec_error e){j->phase=AXD_CS_FAILED;j->error=e;}
 static void dependency(struct axd_phy_chanspec *j,enum axd_phy_chanspec_dependency d){j->phase=AXD_CS_DEPENDENCY;j->dependency=d;}
 static int fact(struct axd_phy_chanspec *j,enum axd_phy_chanspec_field field,struct axd_wake_u32 f,uint32_t limit,unsigned nonnull)
@@ -38,6 +39,7 @@ static void publish(struct axd_phy_chanspec *j)
     if(j->stage==RUN_PHY)c->hardware.phy=j->phy_job.context;
     else if(j->stage==RUN_RADIO){c->radio=j->radio_job.context;c->hardware=j->radio_job.context.hardware;}
     else if(j->stage==RUN_MAC)c->hardware.mac=j->mac_job.context;
+    else if(j->stage==RUN_PACKED)c->hardware=j->packed_job.context;
     c->radio.hardware=c->hardware;
 }
 static int send(struct relay *r,const struct axd_phy_chanspec_operation *op,uint32_t *reply)
@@ -86,6 +88,7 @@ static void child(struct axd_phy_chanspec *j,struct relay *r)
     case RUN_MAC:{enum axd_psm_phase p=axd_psm_control_step(&j->mac_job,d11,r);done=p==AXD_PSM_DONE;running=p==AXD_PSM_RUNNING;missing=p==AXD_PSM_DEPENDENCY;cancelled=p==AXD_PSM_CANCELLED;j->pending_callouts|=j->mac_job.pending_callouts;break;}
     case RUN_SI:{enum axd_si_core_phase p=axd_si_core_step(&j->si_job,si,r);done=p==AXD_SICO_DONE;running=p==AXD_SICO_RUNNING;missing=p==AXD_SICO_DEPENDENCY;cancelled=p==AXD_SICO_CANCELLED;break;}
     case RUN_RAW:{uint32_t v=0;if(!d11(r,&j->raw,&v)){j->raw.value=v;done=1;}break;}
+    case RUN_PACKED:{enum axd_phy_table_write_phase p=axd_phy_table_write_step(&j->packed_job,d11,r);done=p==AXD_TW_TRACE_COMPLETE;running=p==AXD_TW_RUNNING;missing=p==AXD_TW_DEPENDENCY;cancelled=p==AXD_TW_CANCELLED;break;}
     default:break;
     }
     publish(j);
@@ -215,7 +218,7 @@ static void setup_step(struct axd_phy_chanspec *j)
         if(fact(j,AXD_CS_RADIO_ID,c->radio.radio_id,0xffff,0)){
             if(c->radio.radio_id.value==0x2069)dependency(j,AXD_CS_RADIO2069_SETUP);
             else if(c->radio.radio_id.value==0x50e0){j->after_cca=RADIO20704;j->stage=CCA_READ;}
-            else {j->modules_completed=3;dependency(j,AXD_CS_MODULE_SETUP_PHY);}
+            else {j->modules_completed=3;j->stage=MODULE3;}
         }break;
     case RADIO20704:
         /* Third argument: AC flags bits1/2 (set by module0) as a boolean. */
@@ -295,11 +298,11 @@ static void radio_step(struct axd_phy_chanspec *j)
     switch(j->stage){
     case R_TABLE:
         if(!fact(j,AXD_CS_RADIO_REVISION,c->radio.radio_revision,255,0))break;
-        if(c->radio.radio_revision.value>3){j->modules_completed=3;dependency(j,AXD_CS_MODULE_SETUP_PHY);break;}
+        if(c->radio.radio_revision.value>3){j->modules_completed=3;j->stage=MODULE3;break;}
         if(!fact(j,AXD_CS_SIH_PACKAGE,c->sih_package,UINT32_MAX,0))break;
         j->tune_selected=tune_select(c->radio.radio_revision.value,c->sih_package.value,band,&count);
         /* No selected table: chan2freq returns -1 and the setup returns. */
-        if(j->tune_selected==AXD_CS_TUNE_NONE){j->modules_completed=3;dependency(j,AXD_CS_MODULE_SETUP_PHY);break;}
+        if(j->tune_selected==AXD_CS_TUNE_NONE){j->modules_completed=3;j->stage=MODULE3;break;}
         j->last_field=AXD_CS_TUNE_TABLE;j->metadata_accesses++;
         if(!c->tune_known){dependency(j,AXD_CS_METADATA);break;}
         if(c->tune_known!=1){fail(j,AXD_CS_BAD_ARGUMENT);break;}
@@ -308,7 +311,7 @@ static void radio_step(struct axd_phy_chanspec *j)
             const uint8_t *r=c->tune_rows+16u*i;
             if((uint32_t)(r[0]|(r[1]<<8))==(c->chanspec.value&0xffu)){j->tune_row=r;break;}
         }
-        if(!j->tune_row){j->modules_completed=3;dependency(j,AXD_CS_MODULE_SETUP_PHY);break;}
+        if(!j->tune_row){j->modules_completed=3;j->stage=MODULE3;break;}
         j->tune_frequency=(uint16_t)(j->tune_row[2]|(j->tune_row[3]<<8));j->part=0;
         j->stage=j->radio20704_argument==1?R_LOGEN:R_BAND;break;
     case R_LOGEN:phy(j,AXD_PHY_MODIFY,0x728,0x100,0x100,R_LOGEN_DELAY);break;
@@ -375,7 +378,17 @@ static void radio_step(struct axd_phy_chanspec *j)
         if(!vcocal[j->part][0]){j->stage=R_VCO_DELAY;break;}
         radio(j,vcocal[j->part][0],vcocal[j->part][1],vcocal[j->part][2],R_VCO);j->part++;break;
     case R_VCO_DELAY:raw(j,AXD_D11_DELAY_US,0,vcocal[j->part][2],R_VCO);j->part++;break;
-    case MODULE3:dependency(j,AXD_CS_MODULE_SETUP_PHY);break;
+    /* Module3 chanspec_setup_phy, rev51: PHY70 bit12 pulse around a 10us
+     * delay, then phy_utils_write_phyreg(107d, chanspec low byte). The
+     * hi-RSSI/LESI/smoothing block is skipped exactly when rev==51. */
+    case MODULE3:phy(j,AXD_PHY_MODIFY,0x70,0x1000,0x1000,M3_DELAY);break;
+    case M3_DELAY:raw(j,AXD_D11_DELAY_US,0,10,M3_CLEAR);break;
+    case M3_CLEAR:phy(j,AXD_PHY_MODIFY,0x70,0x1000,0,M3_WRITE);break;
+    case M3_WRITE:
+        if(axd_phy_packed_write_begin(&j->packed_job,0x107d,(uint16_t)(c->chanspec.value&0xffu),&c->hardware))fail(j,AXD_CS_CHILD_ERROR);
+        else {j->stage=RUN_PACKED;j->after_child=MODULE4;}
+        break;
+    case MODULE4:j->modules_completed=4;dependency(j,AXD_CS_MODULE_SETUP_CMN);break;
     default:fail(j,AXD_CS_BAD_ARGUMENT);break;
     }
 }
@@ -399,7 +412,7 @@ enum axd_phy_chanspec_phase axd_phy_chanspec_step(struct axd_phy_chanspec *j,axd
     if(j->stage>=RUN_PHY){child(j,&r);return j->phase;}
     if(j->stage>=SYNC_READ && j->stage<=SYNC_ENABLE){sync_step(j);return j->phase;}
     if(j->stage>=SETUP_READ && j->stage<=RADIO20704){setup_step(j);return j->phase;}
-    if(j->stage>=R_TABLE && j->stage<=MODULE3){radio_step(j);return j->phase;}
+    if(j->stage>=R_TABLE && j->stage<=MODULE4){radio_step(j);return j->phase;}
     if(j->stage>=CCA_READ && j->stage<=CCA_TAIL){cca_step(j);return j->phase;}
     switch(j->stage){
     case P_DATA:
@@ -435,6 +448,7 @@ enum axd_phy_chanspec_phase axd_phy_chanspec_cancel(struct axd_phy_chanspec *j)
         else if(j->stage==RUN_RADIO)axd_radio_control_cancel(&j->radio_job);
         else if(j->stage==RUN_MAC)axd_psm_control_cancel(&j->mac_job);
         else if(j->stage==RUN_SI)axd_si_core_cancel(&j->si_job);
+        else if(j->stage==RUN_PACKED)axd_phy_table_write_cancel(&j->packed_job);
     }
     return j->phase;
 }
